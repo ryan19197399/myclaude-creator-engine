@@ -1,0 +1,31 @@
+# Active builds — products are local until /package copies them out
+workspace/
+!workspace/.gitkeep
+
+# Creator profile — personal, not shared
+creator.yaml
+
+# Engine runtime state
+.engine-meta.yaml
+
+# Market intelligence cache
+references/market/cache/
+
+# Distribution packages
+*.zip
+
+# Node / npm
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo

@@ -1,0 +1,169 @@
+# {{PROJECT_TYPE}} — Claude Code Configuration
+
+<!-- GUIDANCE: Header identifies the project type, not the project name. -->
+<!-- GUIDANCE: This config is generic enough to reuse across projects of this type. -->
+<!-- GUIDANCE: Do not include project-specific names, paths, or credentials. -->
+
+> Claude Code configuration for {{PROJECT_TYPE_DESCRIPTION}} projects.
+> Enforces {{KEY_CONVENTIONS}} conventions and {{ARCHITECTURE_APPROACH}} architecture.
+
+**Version:** {{VERSION}}
+**Target Stack:** {{TECH_STACK}}
+**Team Size:** {{TEAM_SIZE}}
+<!-- GUIDANCE: Options: Solo | Small Team (2-5) | Enterprise (5+) -->
+**Author:** {{AUTHOR_USERNAME}}
+
+---
+
+## First Action (Boot Sequence)
+
+<!-- GUIDANCE: CE-D34 analog for CLAUDE.md — defines what to load at session start. -->
+<!-- GUIDANCE: A boot sequence prevents Claude Code from operating without context. -->
+<!-- GUIDANCE: Order: architecture docs first, then current state (git, TODOs). -->
+
+At the start of every session, before responding to any request:
+
+1. **Read project architecture:** Read `docs/architecture.md` if it exists
+   — Understand current system design, key decisions, and off-limits changes
+2. **Check git state:** Run `git status` and `git log --oneline -10`
+   — Know what's in progress and recent history
+3. **Check for open work:** Read `TODO.md` or open GitHub Issues if mentioned
+4. **Read the current file:** If the user references specific files, read them before responding
+5. **Apply rules:** All rules in this file are active immediately after boot
+
+---
+
+## Architecture Overview
+
+<!-- GUIDANCE: Summarize the key architectural decisions Claude Code must know. -->
+<!-- GUIDANCE: Include directory structure with what lives where. -->
+<!-- GUIDANCE: Explain why (not just what) for the most important decisions. -->
+
+### Project Structure
+
+```
+{{PROJECT_ROOT}}/
+├── {{DIR_1}}/          # {{DIR_1_PURPOSE}}
+├── {{DIR_2}}/          # {{DIR_2_PURPOSE}}
+├── {{DIR_3}}/          # {{DIR_3_PURPOSE}}
+└── {{CONFIG_FILES}}
+```
+
+### Key Decisions
+
+| Decision | Rationale | Implication |
+|----------|-----------|-------------|
+| {{DECISION_1}} | {{RATIONALE_1}} | {{IMPLICATION_1}} |
+| {{DECISION_2}} | {{RATIONALE_2}} | {{IMPLICATION_2}} |
+| {{DECISION_3}} | {{RATIONALE_3}} | {{IMPLICATION_3}} |
+
+### Do Not Change Without Discussion
+
+- {{DO_NOT_CHANGE_1}} — reason: {{REASON_1}}
+- {{DO_NOT_CHANGE_2}} — reason: {{REASON_2}}
+
+---
+
+## Coding Conventions
+
+<!-- GUIDANCE: Specific, enforceable rules. Not "write clean code". -->
+<!-- GUIDANCE: Each rule should be testable — you can observe whether it's followed. -->
+
+### Naming
+
+- Files: {{FILE_NAMING_CONVENTION}} (e.g., `kebab-case.ts`, `PascalCase.tsx`)
+- Functions/methods: {{FUNCTION_NAMING_CONVENTION}}
+- Variables: {{VARIABLE_NAMING_CONVENTION}}
+- Constants: {{CONSTANT_NAMING_CONVENTION}}
+- Types/Interfaces: {{TYPE_NAMING_CONVENTION}}
+
+### Code Structure
+
+- {{STRUCTURE_RULE_1}}
+- {{STRUCTURE_RULE_2}}
+- {{STRUCTURE_RULE_3}}
+- Maximum function length: {{MAX_FUNCTION_LENGTH}} lines (split into helpers beyond this)
+- Import order: {{IMPORT_ORDER_RULE}}
+
+### TypeScript (if applicable)
+
+- `strict: true` is non-negotiable
+- No `any` — use `unknown` for truly unknown types
+- {{TYPESCRIPT_RULE_1}}
+- {{TYPESCRIPT_RULE_2}}
+
+### Testing
+
+- {{TESTING_CONVENTION_1}}
+- {{TESTING_CONVENTION_2}}
+- Test files: co-located with source files in `{{TEST_FILE_PATTERN}}`
+
+---
+
+## Security Rules
+
+<!-- GUIDANCE: Non-negotiable rules Claude Code must always follow. -->
+<!-- GUIDANCE: These prevent the most common and dangerous mistakes. -->
+
+Claude Code MUST NEVER:
+
+1. Hardcode secrets, API keys, credentials, or tokens in any file
+   — Use environment variables: `process.env.{{VARIABLE_NAME}}`
+2. Write `eval()`, `new Function()`, or equivalent dynamic code execution
+3. Make network calls to URLs not listed in the allowed domains below
+4. Write files outside the project directory
+5. {{SECURITY_RULE_5}}
+
+**Allowed external domains:**
+- {{ALLOWED_DOMAIN_1}}
+- {{ALLOWED_DOMAIN_2}}
+
+**Credentials pattern:**
+All secrets use `{{CREDENTIALS_PATTERN}}` (e.g., `.env` file, vault reference, etc.)
+
+---
+
+## Workflow Rules
+
+<!-- GUIDANCE: How work should be done in this project. -->
+<!-- GUIDANCE: Rules that apply to the development process, not just the code. -->
+
+### Branching
+
+- Branch naming: `{{BRANCH_NAMING_PATTERN}}`
+  (e.g., `feat/add-auth`, `fix/login-redirect`, `chore/update-deps`)
+- Branch from: `{{BASE_BRANCH}}`
+
+### Commits
+
+Format: `{{COMMIT_MESSAGE_FORMAT}}`
+(e.g., `type(scope): description` — conventional commits)
+
+Types: `feat`, `fix`, `chore`, `docs`, `refactor`, `test`
+
+### Before Modifying Existing Code
+
+1. Read the file being modified
+2. Understand why the code is written as it is
+3. Justify why the change is necessary
+4. Verify the change doesn't revert a previous intentional decision
+
+### Breaking Changes
+
+{{BREAKING_CHANGE_PROTOCOL}}
+
+---
+
+## Error Handling
+
+<!-- GUIDANCE: How Claude Code should handle and report errors. -->
+
+- All async functions must have try/catch or equivalent error boundaries
+- Error messages must be: human-readable, actionable, and include context
+- {{ERROR_HANDLING_RULE_1}}
+- {{ERROR_HANDLING_RULE_2}}
+
+---
+<!-- GUIDANCE: Above covers MCS-1 (CLAUDE.md + README). -->
+<!-- GUIDANCE: For MCS-2: break into rules/ directory, add architecture.md -->
+<!-- GUIDANCE: For MCS-3: add hook configurations, MCP integration patterns -->

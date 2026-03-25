@@ -1,0 +1,136 @@
+# ============================================
+# GENESIS GENERATION MANIFEST
+# ============================================
+# System: MyClaude Creator Engine
+# Generated: 2026-03-25
+# GENESIS Version: 3.0.0 (Dream Team Engine Edition)
+# Engine Used: true (Engine-enhanced cognitive architecture)
+# ============================================
+
+system:
+  name: "MyClaude Creator Engine"
+  slug: "myclaude-creator-engine"
+  version: "1.0.0"
+  type: "HYBRID (TECHNICAL + OPERATIONAL)"
+  complexity: "HIGH"
+  source_framework: "docs/frameworks/myclaude-creator-engine.md"
+  framework_decisions: 42  # CE-D1 through CE-D42
+  target_project: "D:\\vault-marketplace"
+
+generation:
+  timestamp: "2026-03-25"
+  genesis_version: "3.0.0"
+  engine_used: true
+  engine_enhancement: "7-layer cognitive architecture for quality-reviewer, 5-layer for remaining 4 agents"
+  pipeline_phases: ["P0-INTERPRET", "P1-CLASSIFY", "P2-STRUCTURE", "P3-P6-GENERATE", "P7-ASSEMBLE", "P8-VALIDATE"]
+  gates_passed: ["G0", "G1", "G2", "G7", "G8"]
+  parallel_agents: 4
+  total_generation_time: "~40 minutes"
+
+files:
+  total: 58  # 57 system files + 1 manifest
+
+  config:
+    - CLAUDE.md
+    - README.md
+    - LICENSE
+    - .gitignore
+    - .claude/settings.json
+
+  skills:
+    - skills/onboarder/SKILL.md
+    - skills/scaffolder/SKILL.md
+    - skills/scaffolder/references/discovery-questions.md
+    - skills/validator/SKILL.md
+    - skills/validator/references/mcs-1-checks.md
+    - skills/validator/references/mcs-2-checks.md
+    - skills/validator/references/mcs-3-checks.md
+    - skills/publisher/SKILL.md
+
+  agents:
+    - agents/quality-reviewer.md       # META_COGNITIVE, 7-layer, 647 lines
+    - agents/market-analyst.md          # THINKER, 5-layer, 483 lines
+    - agents/packaging-specialist.md    # HYBRID, 5-layer, 495 lines
+    - agents/domain-expert.md           # THINKER, 5-layer, 496 lines
+    - agents/differentiation-coach.md   # THINKER, 5-layer, 537 lines
+
+  product_specs:
+    - references/product-specs/skill-spec.md
+    - references/product-specs/agent-spec.md
+    - references/product-specs/squad-spec.md
+    - references/product-specs/workflow-spec.md
+    - references/product-specs/design-system-spec.md
+    - references/product-specs/prompt-spec.md
+    - references/product-specs/claude-md-spec.md
+    - references/product-specs/application-spec.md
+    - references/product-specs/system-spec.md
+
+  templates:
+    - templates/skill/SKILL.md.template
+    - templates/agent/AGENT.md.template
+    - templates/squad/SQUAD.md.template
+    - templates/workflow/WORKFLOW.md.template
+    - templates/design-system/DESIGN-SYSTEM.md.template
+    - templates/prompt/PROMPT.md.template
+    - templates/claude-md/CLAUDE.md.template
+    - templates/application/README.md.template
+    - templates/system/SYSTEM.md.template
+
+  exemplars:
+    - references/exemplars/skill-exemplar.md
+    - references/exemplars/agent-exemplar.md
+    - references/exemplars/squad-exemplar.md
+    - references/exemplars/workflow-exemplar.md
+    - references/exemplars/design-system-exemplar.md
+    - references/exemplars/prompt-exemplar.md
+    - references/exemplars/claude-md-exemplar.md
+    - references/exemplars/application-exemplar.md
+    - references/exemplars/system-exemplar.md
+
+  quality_references:
+    - references/quality/mcs-spec.md
+    - references/quality/anti-patterns.md
+    - references/quality/anti-commodity.md
+    - references/quality/review-criteria.md
+
+  best_practices:
+    - references/best-practices/skill-best-practices.md
+    - references/best-practices/naming-guide.md
+    - references/best-practices/readme-guide.md
+    - references/best-practices/versioning-guide.md
+    - references/best-practices/licensing-guide.md
+
+  market_references:
+    - references/market/categories.md
+    - references/market/pricing-guide.md
+
+  workspace:
+    - workspace/.gitkeep
+
+validation:
+  completeness: 100.0  # 57/57 files
+  consistency: 100.0    # All cross-references valid
+  principles: 95.0      # 19/20 applicable principles
+  overall: 98.5         # (100*0.35 + 100*0.35 + 95*0.30)
+  status: "CERTIFIED"
+
+  checks:
+    placeholder_content: "PASS — 0 actual placeholders (51 meta-references are legitimate)"
+    cross_references: "PASS — product-specs, skills, agents all resolve"
+    ce_decisions: "PASS — 87 CE-D references across 20 files"
+    mcs_integration: "PASS — 393 MCS references across 47 files"
+    cognitive_architecture: "PASS — 2,658 total lines across 5 agents"
+
+dream_team:
+  total_agents: 5
+  cognitive_types:
+    META_COGNITIVE: 1  # quality-reviewer (7-layer)
+    THINKER: 3         # market-analyst, domain-expert, differentiation-coach
+    HYBRID: 1          # packaging-specialist
+  muse_inspirations:
+    - "Michael Feathers + W. Edwards Deming + Karl Popper"
+    - "Ben Thompson + Andrew Chen + Peter Thiel"
+    - "David Ogilvy + Claude Hopkins"
+    - "Andrej Karpathy + Rich Hickey"
+    - "Michael Porter + Seth Godin + Al Ries"
+  total_agent_lines: 2658

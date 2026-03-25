@@ -1,0 +1,177 @@
+# {{SKILL_NAME}}
+
+<!-- GUIDANCE: The title should match the file slug exactly. Use Title Case. -->
+<!-- GUIDANCE: The one-liner is the first thing buyers and Claude Code read. -->
+<!-- GUIDANCE: Be specific: "Analyzes security vulnerabilities in Node.js code" > "Helps with security" -->
+
+> {{SKILL_ONE_LINER}}
+
+**Version:** {{VERSION}}
+**Category:** Skills
+**Author:** {{AUTHOR_USERNAME}}
+
+---
+
+## When to Use
+
+<!-- GUIDANCE: List specific trigger conditions — not general use cases. -->
+<!-- GUIDANCE: Each bullet should be a concrete scenario a user would recognize. -->
+<!-- GUIDANCE: 3-5 bullets is the sweet spot. -->
+
+- {{TRIGGER_CONDITION_1}}
+- {{TRIGGER_CONDITION_2}}
+- {{TRIGGER_CONDITION_3}}
+
+## When NOT to Use
+
+<!-- GUIDANCE: Explicit anti-use cases prevent misuse and support confusion. -->
+<!-- GUIDANCE: Think about what adjacent skill does the job better in these cases. -->
+
+- {{ANTI_USE_CASE_1}} (use {{ALTERNATIVE_INSTEAD}} instead)
+- {{ANTI_USE_CASE_2}}
+
+---
+
+## Activation Protocol
+
+<!-- GUIDANCE: CE-D34 — this section is MANDATORY. It defines what Claude Code loads -->
+<!-- GUIDANCE: before producing any output. Without this, the knowledge base is unused. -->
+<!-- GUIDANCE: Order matters: load general context first, specific context second. -->
+<!-- GUIDANCE: The protocol runs ONCE per invocation, before any other processing. -->
+
+Before responding to any invocation of this skill, execute in this order:
+
+1. **Load domain knowledge:** Read `references/domain-knowledge.md`
+   — Contains: {{WHAT_DOMAIN_KNOWLEDGE_CONTAINS}}
+2. **Load exemplars:** Read `references/exemplars.md`
+   — Contains: {{WHAT_EXEMPLARS_TEACH}}
+3. **Identify user intent:** Parse the input to determine:
+   - What specific output is being requested
+   - What context is available vs. missing
+   - Which mode/variant is most appropriate
+4. **Check for missing inputs:** If required information is absent, ask before proceeding
+   (see Question System below)
+5. **Apply instructions:** Execute Core Instructions with loaded context
+
+---
+
+## Question System
+
+<!-- GUIDANCE: CE-D36 / H11 — "Best products are question systems, not answer systems" -->
+<!-- GUIDANCE: Before generating output, ask structured questions to clarify ambiguous input. -->
+<!-- GUIDANCE: Define EXACTLY which inputs require questions vs. which can be assumed. -->
+<!-- GUIDANCE: Maximum 3 questions at once — more is friction, not quality. -->
+
+When invoked, check for the following required inputs:
+
+| Input | Required | If Missing |
+|-------|----------|-----------|
+| `{{INPUT_1_NAME}}` | Yes | Ask: "{{INPUT_1_QUESTION}}" |
+| `{{INPUT_2_NAME}}` | Yes | Ask: "{{INPUT_2_QUESTION}}" |
+| `{{INPUT_3_NAME}}` | No | Assume default: {{INPUT_3_DEFAULT}} |
+
+**When multiple inputs are missing:** Ask for the required ones in a single message,
+grouped logically. Do not ask for optional inputs unless the user has specifically
+indicated they want to customize.
+
+---
+
+## Core Instructions
+
+<!-- GUIDANCE: This is the actual skill logic. Be specific and behavioral. -->
+<!-- GUIDANCE: Use imperative voice ("Analyze the...", "Generate a...", "Check that...") -->
+<!-- GUIDANCE: Structure as a decision tree if there are multiple paths. -->
+<!-- GUIDANCE: Reference files from references/ explicitly — don't repeat the content here. -->
+
+### Processing Logic
+
+{{STEP_1_INSTRUCTION}}
+
+{{STEP_2_INSTRUCTION}}
+
+{{STEP_3_INSTRUCTION}}
+
+### Handling Ambiguity
+
+<!-- GUIDANCE: Document how to handle unclear inputs BEFORE they become support questions. -->
+
+If input is ambiguous:
+- {{AMBIGUITY_CASE_1}} → {{HOW_TO_HANDLE_1}}
+- {{AMBIGUITY_CASE_2}} → {{HOW_TO_HANDLE_2}}
+- General ambiguity → State the interpretation being used, then proceed
+
+### Modes
+
+<!-- GUIDANCE: Progressive depth modes are required for MCS-3 (CE-D36). -->
+<!-- GUIDANCE: Even at MCS-1, defining modes sets the foundation for upgrading. -->
+
+| Mode | When to Use | What Changes |
+|------|------------|-------------|
+| `surface` | Quick scan, time-constrained | {{SURFACE_MODE_DESCRIPTION}} |
+| `dive` | Standard analysis | {{DIVE_MODE_DESCRIPTION}} |
+| `radical` | Deep expertise, no time constraint | {{RADICAL_MODE_DESCRIPTION}} |
+
+Default mode: `dive` unless user specifies otherwise or context implies urgency.
+
+---
+
+## Output Structure
+
+<!-- GUIDANCE: Define the exact format output must take. -->
+<!-- GUIDANCE: If output can vary, define each variant. -->
+<!-- GUIDANCE: Include structural templates where helpful. -->
+
+```
+{{OUTPUT_STRUCTURE_TEMPLATE}}
+```
+
+**Format rules:**
+- {{FORMAT_RULE_1}}
+- {{FORMAT_RULE_2}}
+
+---
+
+## Quality Gate
+
+<!-- GUIDANCE: This checklist runs AFTER generating output, BEFORE delivering it. -->
+<!-- GUIDANCE: Each check should be specific enough to actually pass or fail. -->
+<!-- GUIDANCE: Include a failure action (what to do if the check fails). -->
+
+Before delivering output, verify:
+
+- [ ] {{QUALITY_CHECK_1}}
+- [ ] {{QUALITY_CHECK_2}}
+- [ ] {{QUALITY_CHECK_3}}
+- [ ] Output is self-contained (buyer can act on it without needing more context)
+- [ ] Output matches the requested format from Output Structure above
+
+**If any check fails:** {{FAILURE_ACTION}} (e.g., "revise the relevant section" or "ask the user for clarification")
+
+---
+
+## Anti-Patterns
+
+<!-- GUIDANCE: Document what this skill should NOT do. Saves support questions (H6). -->
+<!-- GUIDANCE: 3-5 anti-patterns is standard for MCS-2. -->
+
+- **{{ANTI_PATTERN_1_NAME}}:** {{ANTI_PATTERN_1_DESCRIPTION}}
+- **{{ANTI_PATTERN_2_NAME}}:** {{ANTI_PATTERN_2_DESCRIPTION}}
+- **{{ANTI_PATTERN_3_NAME}}:** {{ANTI_PATTERN_3_DESCRIPTION}}
+
+---
+
+## Composability
+
+<!-- GUIDANCE: Describe how this skill works with other MyClaude products. -->
+<!-- GUIDANCE: This section enables buyers to build systems and workflows with this skill. -->
+
+This skill is designed to be composable:
+
+- **As input to:** {{COMPOSABLE_DOWNSTREAM}} (this skill's output can be used as input to these)
+- **As output from:** {{COMPOSABLE_UPSTREAM}} (this skill works well after these)
+- **In workflows:** This skill can be embedded as step `{{WORKFLOW_STEP_NAME}}` in a workflow
+
+---
+<!-- GUIDANCE: The lines above are the required content for MCS-1. -->
+<!-- GUIDANCE: For MCS-2, ensure exemplars.md has 3+ concrete examples. -->
+<!-- GUIDANCE: For MCS-3, add cognitive architecture rationale and differentiation. -->

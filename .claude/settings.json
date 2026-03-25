@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(myclaude *)",
+      "Read",
+      "Write",
+      "Edit",
+      "Glob",
+      "Grep"
+    ]
+  },
+  "hooks": {
+    "post-create": "echo 'Product scaffolded. Run /validate to check quality.'",
+    "pre-publish": "echo 'Running final MCS validation before publish...'"
+  }
+}

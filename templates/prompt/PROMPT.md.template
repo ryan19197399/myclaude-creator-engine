@@ -1,0 +1,133 @@
+# {{PROMPT_NAME}}
+
+<!-- GUIDANCE: Name the prompt by its task, not its output. "Technical Writing Prompt" (task) -->
+<!-- GUIDANCE: not "Technical Writer" (persona). Personas belong in agents. -->
+
+**Version:** {{VERSION}}
+**Use Case:** {{PROMPT_USE_CASE}}
+<!-- GUIDANCE: Who uses this and for what. "For software developers writing API documentation" -->
+**Tone:** {{PROMPT_TONE}}
+<!-- GUIDANCE: formal | professional | conversational | technical | creative -->
+**Output Format:** {{OUTPUT_FORMAT}}
+<!-- GUIDANCE: markdown | JSON | prose | structured text | code | mixed -->
+**Author:** {{AUTHOR_USERNAME}}
+
+---
+
+## System Prompt
+
+<!-- GUIDANCE: This is the core product. Everything else is documentation around it. -->
+<!-- GUIDANCE: Use explicit constraints: "always", "never", "when X do Y" -->
+<!-- GUIDANCE: Establish context before giving instructions. -->
+<!-- GUIDANCE: Handle the most common edge cases inline. -->
+<!-- GUIDANCE: Variables use {{VARIABLE_NAME}} syntax and are documented below. -->
+
+You are a {{CONTEXT_ROLE_DESCRIPTION}}.
+
+Your task is to {{CORE_TASK_INSTRUCTION}}.
+
+**Context you're operating in:**
+- Audience: {{AUDIENCE}}
+- Output format: {{FORMAT}}
+- Tone: {{TONE}}
+- Constraints: {{CONSTRAINTS}}
+
+**Instructions:**
+
+1. {{INSTRUCTION_1}}
+2. {{INSTRUCTION_2}}
+3. {{INSTRUCTION_3}}
+
+**When the input is ambiguous:**
+{{AMBIGUITY_HANDLING_INSTRUCTION}}
+
+**Output structure:**
+{{OUTPUT_STRUCTURE_INSTRUCTION}}
+
+**What to always include:**
+- {{ALWAYS_INCLUDE_1}}
+- {{ALWAYS_INCLUDE_2}}
+
+**What to never do:**
+- Never {{NEVER_DO_1}}
+- Never {{NEVER_DO_2}}
+
+---
+
+## Variables
+
+<!-- GUIDANCE: Every {{VARIABLE}} in the prompt must be documented here. -->
+<!-- GUIDANCE: Include the default value — many users will use the prompt as-is. -->
+<!-- GUIDANCE: Keep variables to the minimum needed. Each one adds complexity. -->
+
+| Variable | Default | Description | Example |
+|----------|---------|-------------|---------|
+| `{{AUDIENCE}}` | `{{AUDIENCE_DEFAULT}}` | Who the output is written for | "senior software engineers" |
+| `{{FORMAT}}` | `{{FORMAT_DEFAULT}}` | Output format | "markdown with headers" |
+| `{{TONE}}` | `{{TONE_DEFAULT}}` | Communication tone | "professional but approachable" |
+| `{{CONSTRAINTS}}` | `{{CONSTRAINTS_DEFAULT}}` | Additional limits | "under 500 words" |
+
+---
+
+## Usage
+
+<!-- GUIDANCE: Show exactly how to use this prompt. Concrete is better than general. -->
+
+### As a System Prompt
+
+Paste the System Prompt section into your Claude Code system prompt or project CLAUDE.md:
+
+```markdown
+## Context
+[Paste system prompt here with variables substituted]
+```
+
+### Customizing Variables
+
+To customize for your use case, replace variables before pasting:
+
+**Example — for marketing writers:**
+```
+{{AUDIENCE}} → "non-technical marketing managers"
+{{FORMAT}} → "bullet points with headers"
+{{TONE}} → "enthusiastic and jargon-free"
+```
+
+### Selecting a Variant
+
+| Variant | Use When | File |
+|---------|---------|------|
+| Concise | Quick output, limited context | `variants/concise.md` |
+| Detailed | Thorough output, full context | `variants/detailed.md` |
+| Expert | Specialized audience, technical depth | `variants/expert.md` |
+
+---
+
+## Limitations
+
+<!-- GUIDANCE: Be honest about where the prompt breaks down. -->
+<!-- GUIDANCE: This prevents buyer disappointment and support questions. -->
+
+This prompt works well for:
+- {{GOOD_USE_CASE_1}}
+- {{GOOD_USE_CASE_2}}
+
+This prompt degrades when:
+- **{{LIMITATION_1}}:** {{LIMITATION_1_WHY}} — Use {{ALTERNATIVE_1}} instead
+- **{{LIMITATION_2}}:** {{LIMITATION_2_WHY}}
+- **Very long inputs:** Performance degrades beyond {{INPUT_LENGTH_LIMIT}} — split into sections
+
+---
+
+## Anti-Patterns
+
+<!-- GUIDANCE: Misuse patterns that will lead to poor outputs. -->
+
+- **{{ANTI_PATTERN_1}}:** {{ANTI_PATTERN_1_DESCRIPTION}}
+- **{{ANTI_PATTERN_2}}:** {{ANTI_PATTERN_2_DESCRIPTION}}
+- **Using without context substitution:** Using the raw template with {{VARIABLE}} placeholders as literals produces garbage output. Always substitute variables.
+
+---
+<!-- GUIDANCE: Above covers MCS-1 (core prompt + 1 example + README). -->
+<!-- GUIDANCE: For MCS-2: add variants/, 3+ examples/, variables.yaml -->
+<!-- GUIDANCE: For MCS-3: add context engineering docs, composability patterns -->
