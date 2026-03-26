@@ -1,3 +1,14 @@
+---
+name: onboard
+description: >-
+  Set up or update your myClaude creator profile through guided conversation.
+  Builds creator.yaml with expertise domains, goals, technical level, and publishing
+  preferences. Use when first opening the Creator Engine, when asked to set up a profile,
+  or when the creator says their info is outdated. Also triggers on "who am I", "my profile",
+  "get started", or "configure".
+argument-hint: "[update]"
+---
+
 # Onboarder
 
 Discover and persist creator profile through guided conversation. Build `creator.yaml`.

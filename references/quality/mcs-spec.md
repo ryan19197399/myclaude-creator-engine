@@ -47,15 +47,15 @@ The minimum bar for marketplace listing. Validates automatically via `/validate`
 
 | Type | Required Files | Additional Requirements |
 |------|---------------|------------------------|
-| Skill | SKILL.md + 1 file in references/ + README | Activation Protocol section, 1+ trigger conditions |
+| Skill | SKILL.md + README | Activation Protocol section, 1+ trigger conditions |
 | Agent | AGENT.md + README | Identity section, tool list |
-| Squad | SQUAD.md + 2+ agent files + routing-table.md + README | Routing logic, 1+ workflow defined |
-| Workflow | WORKFLOW.md + 3+ step files + README | Step dependencies, inputs/outputs |
-| Design System | DESIGN-SYSTEM.md + colors.yaml + typography.yaml + spacing.yaml + 1 export + README | Semantic token layer |
-| Prompt | PROMPT.md + 1 example + README | Variables documented |
+| Squad | SQUAD.md + agents/ (2+ agent definitions) + README | Routing logic, 1+ workflow defined |
+| Workflow | WORKFLOW.md + README | Step dependencies, inputs/outputs |
+| Design System | tokens/ (1+ token file) + README | Brand identity, platform targets |
+| Prompt | PROMPT.md + README | Variables documented |
 | CLAUDE.md | CLAUDE.md + README | Boot sequence (2+ steps), 3+ conventions |
-| Application | README + working src/ + package.json/pyproject.toml | App actually runs |
-| System | SYSTEM.md + manifest.yaml + 2+ component types + README | Component references resolve |
+| Application | src/ (1+ source file) + README + package manifest | App actually runs |
+| System | SYSTEM.md + 1+ subdirectory (skills/, agents/, or workflows/) + README | Component references resolve |
 
 ---
 

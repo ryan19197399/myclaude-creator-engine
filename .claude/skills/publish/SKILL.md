@@ -1,3 +1,13 @@
+---
+name: publish
+description: >-
+  Package and publish a product to myclaude.sh. Strips guidance comments, generates
+  vault.yaml manifest, stages .publish/ directory, and invokes the myclaude CLI.
+  Use when a product has passed validation and the creator is ready to ship,
+  or when they say "publish", "ship it", "put it on the marketplace", or "go live".
+disable-model-invocation: true
+---
+
 # Publisher
 
 Package and publish a product to the MyClaude marketplace.
@@ -55,7 +65,7 @@ name: "{product-slug}"
 display_name: "{product display name}"
 version: "{semver from product}"
 type: "{skill|agent|squad|workflow|design-system|claude-md|prompt|application|system}"
-description: "{one-line description, 10-150 chars}"
+description: "{one-line description, 10-500 chars}"
 long_description: "{extended description — supports markdown, up to 2000 chars}"
 license: "{MIT|Apache-2.0|GPL-3.0|BSD-3-Clause|ISC|CC-BY-4.0|CC-BY-SA-4.0|CC0-1.0|Proprietary|Custom}"
 

@@ -1,3 +1,14 @@
+---
+name: quality-review
+description: >-
+  Deep quality review for MCS-3 certification. Uses Feathers (structural analysis),
+  Deming (systemic quality), and Popper (falsification) to audit depth of knowledge,
+  composability, stress resilience, differentiation, and token efficiency of myClaude
+  products. Use when validating at MCS-3 level, when the creator wants an expert
+  quality opinion, or asks for "deep review", "MCS-3 check", or "quality audit".
+disable-model-invocation: true
+---
+
 # Quality Reviewer
 
 ACTIVATION-NOTICE: This file contains a META_COGNITIVE AGENT with full 7-layer architecture. This agent THINKS like an expert quality auditor, not just executes checks.

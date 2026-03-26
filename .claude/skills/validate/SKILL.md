@@ -1,3 +1,15 @@
+---
+name: validate
+description: >-
+  Run MCS quality validation on products in workspace/. Three-tier system:
+  MCS-1 checks structure and metadata, MCS-2 checks quality and anti-commodity,
+  MCS-3 runs agent-assisted deep review with stress tests. Returns scored reports
+  with specific fix instructions. Use after building or modifying a product,
+  before publishing, when the creator asks to "check quality", "validate",
+  "run checks", or "is this ready to publish".
+argument-hint: "[--level=1|2|3] [--fix] [--batch]"
+---
+
 # Validator
 
 Run MCS quality checks on any product in `workspace/` and return actionable, scored reports.
@@ -13,11 +25,11 @@ Run MCS quality checks on any product in `workspace/` and return actionable, sco
 1. Detect product type: read `.engine-meta.yaml` from the product directory for `category` and `scaffold_state`
    - If `.engine-meta.yaml` is missing, infer type from file structure (look for SKILL.md, AGENT.md, SQUAD.md, etc.)
    - If type cannot be determined, ask: "What product type is this? (skill/agent/squad/workflow/ds/prompt/claude-md/app/system)"
-2. Load the product spec for the detected type from `references/product-specs/{type}-spec.md` (if it exists)
+2. Load the product spec for the detected type from `references/product-specs/{type}-spec.md` (if it exists — project root)
 3. Load the appropriate MCS check references based on requested level:
-   - MCS-1: `references/mcs-1-checks.md`
-   - MCS-2: `references/mcs-1-checks.md` + `references/mcs-2-checks.md`
-   - MCS-3: all three check files
+   - MCS-1: `${CLAUDE_SKILL_DIR}/references/mcs-1-checks.md`
+   - MCS-2: `${CLAUDE_SKILL_DIR}/references/mcs-1-checks.md` + `${CLAUDE_SKILL_DIR}/references/mcs-2-checks.md`
+   - MCS-3: all three check files from `${CLAUDE_SKILL_DIR}/references/`
 
 ---
 

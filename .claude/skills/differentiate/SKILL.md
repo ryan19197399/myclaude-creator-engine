@@ -1,3 +1,15 @@
+---
+name: differentiate
+description: >-
+  Anti-commodity coaching session for myClaude products. Uses Porter's Five Forces,
+  Godin's Purple Cow, and Ries's positioning theory to analyze product uniqueness,
+  generate positioning strategy, and create a concrete differentiation action plan.
+  Use when a product fails the Anti-Commodity Gate, when the creator wants to strengthen
+  market positioning, or when they ask "how do I stand out", "make it unique",
+  "differentiation", or "anti-commodity".
+disable-model-invocation: true
+---
+
 # Differentiation Coach
 
 ACTIVATION-NOTICE: This file contains a COGNITIVE AGENT with full 6-layer architecture. This agent THINKS like a strategic positioning expert, not just suggests improvements.

@@ -33,66 +33,66 @@ Execute on every session start:
 
 ## SKILL ROUTING TABLE
 
-### P0 — Available Now
+All commands are Claude Code skills in `.claude/skills/{name}/SKILL.md` with official
+Anthropic frontmatter. They appear automatically in the `/` autocomplete menu.
 
-| Command | Routes To | Description |
-|---------|-----------|-------------|
-| `/onboard` | `skills/onboarder/SKILL.md` | Set up creator profile (creator.yaml) |
-| `/create` | `skills/scaffolder/SKILL.md` | Start new product — routes to category |
-| `/create skill` | `skills/scaffolder/SKILL.md` | Scaffold a new skill |
-| `/create agent` | `skills/scaffolder/SKILL.md` | Scaffold a new agent |
-| `/create squad` | `skills/scaffolder/SKILL.md` | Scaffold a new squad |
-| `/create workflow` | `skills/scaffolder/SKILL.md` | Scaffold a new workflow |
-| `/create ds` | `skills/scaffolder/SKILL.md` | Scaffold a new design system |
-| `/create prompt` | `skills/scaffolder/SKILL.md` | Scaffold a new prompt |
-| `/create claude-md` | `skills/scaffolder/SKILL.md` | Scaffold a new CLAUDE.md config |
-| `/create app` | `skills/scaffolder/SKILL.md` | Scaffold a new application |
-| `/create system` | `skills/scaffolder/SKILL.md` | Scaffold a new system |
-| `/validate` | `skills/validator/SKILL.md` | Run MCS validation |
-| `/validate --level=N` | `skills/validator/SKILL.md` | Validate at specific MCS level (1/2/3) |
-| `/validate --fix` | `skills/validator/SKILL.md` | Auto-fix what can be fixed (non-destructive) |
-| `/validate --batch` | `skills/validator/SKILL.md` | Validate all products in workspace |
-| `/package` | `skills/publisher/SKILL.md` | Strip guidance, generate vault.yaml, stage .publish/ directory |
-| `/publish` | `skills/publisher/SKILL.md` | Run /package if needed, invoke myclaude publish from .publish/ |
-| `/test` | `skills/validator/SKILL.md` | Sandbox test product before publish (CE-D35) |
-| `/differentiate` | `agents/differentiation-coach.md` | Anti-commodity coaching session |
+### P0 — Core Creation
 
-### P0 — Utility Commands
+| Command | Skill | Description |
+|---------|-------|-------------|
+| `/onboard` | `.claude/skills/onboard/` | Set up creator profile (creator.yaml) |
+| `/create [type]` | `.claude/skills/create/` | Scaffold new product — routes to category |
+| `/validate [flags]` | `.claude/skills/validate/` | Run MCS validation (--level=1\|2\|3, --fix, --batch) |
+| `/package` | `.claude/skills/package/` | Strip guidance, generate vault.yaml, stage .publish/ |
+| `/publish` | `.claude/skills/publish/` | Full publish workflow to myclaude.sh |
+| `/test` | `.claude/skills/test/` | Sandbox test product against sample inputs |
 
-| Command | Behavior |
-|---------|----------|
-| `/engine-status` | Show Engine version, loaded profile, workspace state, stale builds |
-| `/engine-help` | List all available commands with descriptions |
-| `/engine-update` | Check for Engine updates via MyClaude CLI |
+### P0 — Quality & Coaching
+
+| Command | Skill | Description |
+|---------|-------|-------------|
+| `/differentiate` | `.claude/skills/differentiate/` | Anti-commodity coaching (Porter + Godin + Ries) |
+| `/quality-review` | `.claude/skills/quality-review/` | Deep MCS-3 quality audit (Feathers + Deming + Popper) |
+
+### P0 — Utility
+
+| Command | Skill | Description |
+|---------|-------|-------------|
+| `/engine-status` | `.claude/skills/engine-status/` | Show profile, workspace state, stale builds |
+| `/engine-help` | `.claude/skills/engine-help/` | List all available commands |
 
 ### P0 — Workflow Shortcuts
 
-| Shortcut | Expands To |
-|----------|-----------|
-| `/quick-skill` | `/create skill` → `/validate` → `/package` → `/publish` |
-| `/quick-publish` | `/validate` → `/package` → `/publish` |
-| `/market-create` | `/scan-market` → `/create` (based on top opportunity) |
+| Shortcut | Skill | Pipeline |
+|----------|-------|----------|
+| `/quick-skill` | `.claude/skills/quick-skill/` | `/create skill` → `/validate` → `/package` → `/publish` |
+| `/quick-publish` | `.claude/skills/quick-publish/` | `/validate` → `/package` → `/publish` |
 
-### P1 — FUTURE (Creation Phase)
+### Internal Agents (not user-invocable, Claude uses when needed)
 
-| Command | Routes To | Status |
-|---------|-----------|--------|
-| `/create-content` | `skills/creator/SKILL.md` | FUTURE — P1 |
-| `/generate-docs` | `skills/docs-generator/SKILL.md` | FUTURE — P1 |
-| `/upgrade` | `skills/upgrader/SKILL.md` | FUTURE — P1 |
-| `/upgrade --migrate` | `skills/upgrader/SKILL.md` | FUTURE — P1 |
+| Skill | Purpose |
+|-------|---------|
+| `.claude/skills/market-scan/` | Market opportunity analysis (available for future `/scan-market`) |
+| `.claude/skills/packaging-review/` | README/tag/metadata optimization during packaging |
+| `.claude/skills/domain-consult/` | Category-specific guidance during scaffolding |
 
-### P2 — FUTURE (Intelligence Phase)
+### FUTURE — P1 (Creation Phase)
 
-| Command | Routes To | Status |
-|---------|-----------|--------|
-| `/scan-market` | `skills/market-scanner/SKILL.md` | FUTURE — P2 |
-| `/price` | `skills/pricing-advisor/SKILL.md` | FUTURE — P2 |
-| `/analytics` | `skills/analytics/SKILL.md` | FUTURE — P2 |
-| `/remix` | `skills/remixer/SKILL.md` | FUTURE — P2 |
-| `/inventory` | `skills/inventory/SKILL.md` | FUTURE — P2 |
+| Command | Status |
+|---------|--------|
+| `/create-content` | FUTURE — P1 |
+| `/generate-docs` | FUTURE — P1 |
+| `/upgrade` | FUTURE — P1 |
 
-When a FUTURE command is invoked: "This command is on the roadmap (Phase {N}). Currently available: [list P0 commands]."
+### FUTURE — P2 (Intelligence Phase)
+
+| Command | Status |
+|---------|--------|
+| `/scan-market` | FUTURE — P2 (agent ready at `.claude/skills/market-scan/`) |
+| `/price` | FUTURE — P2 |
+| `/analytics` | FUTURE — P2 |
+
+When a FUTURE command is invoked: "This command is on the roadmap (Phase {N}). Currently available: run `/engine-help` for the full list."
 
 ---
 
@@ -112,7 +112,7 @@ MCS-3 (Gold):   Agent quality review + exemplar comparison.
    a passing validation: run MCS-1 checks first, block if failures exist.
 
 2. **Anti-Commodity Gate required for MCS-2+** (CE-D9). Before approving MCS-2,
-   invoke `agents/differentiation-coach.md` if differentiation score is LOW.
+   invoke `/differentiate` skill if differentiation score is LOW.
    This coaches, never blocks — creator can override with explicit intent.
 
 3. **Validation is non-destructive** (CE-D13). Never modify product files without

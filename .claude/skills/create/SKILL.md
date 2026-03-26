@@ -1,3 +1,14 @@
+---
+name: create
+description: >-
+  Scaffold a new product for the myClaude marketplace with MCS-1 valid structure
+  and guidance comments. Supports all 9 product categories: skills, agents, squads,
+  workflows, design systems, prompts, CLAUDE.md configs, applications, and systems.
+  Use when the creator wants to start a new product, build something, or says
+  "new skill", "new agent", "create", "scaffold", or "start building".
+argument-hint: "[product-type]"
+---
+
 # Scaffolder
 
 Generate complete, MCS-1-valid project structure for any product type with guidance comments baked in.
@@ -12,9 +23,10 @@ Generate complete, MCS-1-valid project structure for any product type with guida
 
 1. Read `creator.yaml` from project root — load defaults (`default_category`, `default_license`, `quality_target`)
 2. Identify which category was requested (from sub-command or by asking)
-3. Load discovery questions from `references/discovery-questions.md` for that category
-4. Load the product spec for that category from `references/product-specs/{category}-spec.md` (if it exists)
-5. Generate scaffold in `workspace/{product-slug}/`
+3. Load discovery questions from `${CLAUDE_SKILL_DIR}/references/discovery-questions.md` for that category
+4. Load the product spec for that category from `references/product-specs/{category}-spec.md` (if it exists — project root)
+5. Load the scaffold template from `templates/{category}/` (project root) — this is the structural source of truth for the generated files
+6. Generate scaffold in `workspace/{product-slug}/` using the loaded template as base structure
 
 ---
 
@@ -66,7 +78,7 @@ Derive `{product-slug}` from name: lowercase, hyphens, no spaces.
 
 **Step 2 — Discovery Questions**
 
-Load and ask all category-specific questions from `references/discovery-questions.md`.
+Load and ask all category-specific questions from `${CLAUDE_SKILL_DIR}/references/discovery-questions.md`.
 
 Ask them conversationally, not as a form dump. Wait for answers before generating.
 
