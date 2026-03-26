@@ -1,3 +1,11 @@
+---
+name: {{PRODUCT_SLUG}}
+description: >-
+  {{SYSTEM_DESCRIPTION}}
+  Use when: {{TRIGGER_DESCRIPTION}}
+---
+<!-- GUIDANCE: Frontmatter makes your system invocable after installation. -->
+
 # {{SYSTEM_NAME}}
 
 <!-- GUIDANCE: System name describes the unified capability, not the components. -->

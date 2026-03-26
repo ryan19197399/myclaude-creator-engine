@@ -1,3 +1,11 @@
+---
+name: {{PRODUCT_SLUG}}
+description: >-
+  {{SQUAD_MISSION_DESCRIPTION}}
+  Use when: {{TRIGGER_DESCRIPTION}}
+---
+<!-- GUIDANCE: Frontmatter makes your squad discoverable after installation. -->
+
 # {{SQUAD_NAME}}
 
 <!-- GUIDANCE: Squad name describes the team's collective mission, not just listing agent types. -->

@@ -48,6 +48,7 @@ Display all available Creator Engine commands, organized by function.
 |---------|-------------|
 | `/engine-status` | Show profile, workspace, and engine state |
 | `/engine-help` | This help listing |
+| `/my-products` | Show your published products and marketplace status |
 
 ### Marketplace (via myClaude CLI)
 | Command | Description |

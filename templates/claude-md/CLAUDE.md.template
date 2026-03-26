@@ -1,3 +1,7 @@
+<!-- GUIDANCE: CLAUDE.md configs install to .claude/rules/, not .claude/skills/. -->
+<!-- GUIDANCE: No frontmatter needed — Claude Code auto-loads rules on every session. -->
+<!-- GUIDANCE: The header should identify the PROJECT TYPE (e.g., "Next.js Enterprise"). -->
+
 # {{PROJECT_TYPE}} — Claude Code Configuration
 
 <!-- GUIDANCE: Header identifies the project type, not the project name. -->

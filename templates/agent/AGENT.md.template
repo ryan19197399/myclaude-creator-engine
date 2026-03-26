@@ -1,3 +1,12 @@
+---
+name: {{PRODUCT_SLUG}}
+description: >-
+  {{AGENT_ROLE_DESCRIPTION}}
+  Use when: {{TRIGGER_DESCRIPTION}}
+---
+<!-- GUIDANCE: Frontmatter is required for marketplace installation. Buyers' Claude Code -->
+<!-- GUIDANCE: uses the `description` to decide when to invoke your agent. Be specific. -->
+
 # {{AGENT_NAME}}
 
 <!-- GUIDANCE: Agent name should be role-descriptive. "Security Auditor" not "Helper Agent". -->

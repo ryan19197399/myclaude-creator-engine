@@ -1,3 +1,6 @@
+<!-- GUIDANCE: Application README doesn't use frontmatter (apps install to myclaude-products/, not .claude/skills/). -->
+<!-- GUIDANCE: But make the first line count — it becomes the marketplace listing headline. -->
+
 # {{APP_NAME}}
 
 <!-- GUIDANCE: Lead with the clearest possible one-liner. -->

@@ -2,27 +2,57 @@
 
 Category-specific questions asked during the `/create` flow (Stage 2: Discovery).
 
-Ask these conversationally. Do not dump all questions at once — wait for answers before proceeding to the next question when the creator needs to think.
+Ask these conversationally. Do not dump all questions at once — wait for answers
+before proceeding to the next question when the creator needs to think.
+
+**When asking each question, show the good/weak contrast to calibrate the creator's
+specificity.** Generic answers produce generic products.
 
 ---
 
 ## Skills
 
 1. What problem does this skill solve?
+   - Strong: "Detects reentrancy vulnerabilities in Solidity smart contracts before deployment"
+   - Weak: "Helps with security" — too vague, no domain, no specificity
+
 2. Who is the target user? (developer, marketer, analyst, etc.)
+   - Strong: "Solidity developers auditing DeFi protocols before mainnet launch"
+   - Weak: "Developers" — which developers? doing what? in what context?
+
 3. What triggers should activate this skill?
+   - Strong: "When someone says 'review my contract', 'check for reentrancy', 'audit this Solidity'"
+   - Weak: "When someone needs help" — Claude can't match this to anything specific
+
 4. What output format should the skill produce?
+   - Strong: "A ranked list of vulnerabilities with severity, location (file:line), and fix suggestion"
+   - Weak: "A report" — what kind? how structured? what does the user do with it?
+
 5. What domain knowledge is needed?
+   - Strong: "Solidity patterns, common DeFi attack vectors, OpenZeppelin best practices"
+   - Weak: "Security knowledge" — that's the whole field, not actionable expertise
+
 6. What tools/integrations does it need?
+   - Strong: "Needs Read for .sol files, Bash for running slither, Grep for pattern matching"
+   - Weak: "Standard tools" — specify which ones and why
 
 ---
 
 ## Agents
 
 1. What role does this agent play?
+   - Strong: "Senior security auditor who reviews code with a red-team mindset"
+   - Weak: "A helpful assistant for security"
+
 2. What personality/voice should it have?
+   - Strong: "Direct, evidence-based, always cites the specific line of code. Never says 'looks fine' without proof."
+   - Weak: "Friendly and helpful"
+
 3. What tools does it need access to?
 4. What decisions can it make autonomously vs. escalate?
+   - Strong: "Can flag warnings autonomously. Must escalate to human for: deleting files, modifying production configs, approving deploys."
+   - Weak: "It should be smart about what to do"
+
 5. How does it interact with other agents (if part of a squad)?
 
 ---

@@ -61,6 +61,7 @@ Anthropic frontmatter. They appear automatically in the `/` autocomplete menu.
 |---------|-------|-------------|
 | `/engine-status` | `.claude/skills/engine-status/` | Show profile, workspace state, stale builds |
 | `/engine-help` | `.claude/skills/engine-help/` | List all available commands |
+| `/my-products` | `.claude/skills/my-products/` | Show published products and marketplace status |
 
 ### P0 — Workflow Shortcuts
 

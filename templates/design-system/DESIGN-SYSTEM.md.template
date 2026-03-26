@@ -1,3 +1,10 @@
+---
+name: {{PRODUCT_SLUG}}
+description: >-
+  {{DESIGN_SYSTEM_DESCRIPTION}}
+---
+<!-- GUIDANCE: Frontmatter provides metadata for the marketplace listing. -->
+
 # {{DESIGN_SYSTEM_NAME}}
 
 <!-- GUIDANCE: Name should be memorable and reflect the design personality. -->

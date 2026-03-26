@@ -1,3 +1,11 @@
+---
+name: {{PRODUCT_SLUG}}
+description: >-
+  {{PROMPT_DESCRIPTION}}
+  Use when: {{TRIGGER_DESCRIPTION}}
+---
+<!-- GUIDANCE: Frontmatter makes your prompt invocable after installation. -->
+
 # {{PROMPT_NAME}}
 
 <!-- GUIDANCE: Name the prompt by its task, not its output. "Technical Writing Prompt" (task) -->

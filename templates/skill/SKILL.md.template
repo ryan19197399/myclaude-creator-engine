@@ -1,3 +1,15 @@
+---
+name: {{PRODUCT_SLUG}}
+description: >-
+  {{SKILL_ONE_LINER}}
+  Use when: {{TRIGGER_DESCRIPTION}}
+---
+<!-- GUIDANCE: The frontmatter above is CRITICAL. When a buyer installs your skill via -->
+<!-- GUIDANCE: `myclaude install`, it lands in their .claude/skills/ directory. The `name` -->
+<!-- GUIDANCE: and `description` fields make it appear in their / autocomplete menu. -->
+<!-- GUIDANCE: Without this frontmatter, the buyer's Claude Code won't know your skill exists. -->
+<!-- GUIDANCE: Make the description "pushy" — describe both WHAT it does and WHEN to use it. -->
+
 # {{SKILL_NAME}}
 
 <!-- GUIDANCE: The title should match the file slug exactly. Use Title Case. -->

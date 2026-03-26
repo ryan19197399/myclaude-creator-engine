@@ -1,3 +1,11 @@
+---
+name: {{PRODUCT_SLUG}}
+description: >-
+  {{WORKFLOW_DESCRIPTION}}
+  Use when: {{TRIGGER_DESCRIPTION}}
+---
+<!-- GUIDANCE: Frontmatter makes your workflow invocable after installation. -->
+
 # {{WORKFLOW_NAME}}
 
 <!-- GUIDANCE: Name should describe the process, not the output. -->
