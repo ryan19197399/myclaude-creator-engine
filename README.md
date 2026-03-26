@@ -51,21 +51,27 @@ Creator Spec (MCS) tier system.
 git clone https://github.com/l0z4n0-a1/myclaude-creator-engine.git
 cd myclaude-creator-engine
 
-# 2. Open in Claude Code
+# 2. Open in Claude Code (skills load on session start)
 claude   # or open in VS Code / JetBrains with Claude Code extension
 
 # 3. Set up your creator profile (~3 minutes, conversational)
 /onboard
 
-# 4. Create your first product
+# 4. Create your first product (shows an exemplar first, then scaffolds)
 /create skill
 
-# 5. Validate quality
+# 5. Fill content with guided expertise extraction
+/create-content
+
+# 6. Validate quality
 /validate
 
-# 6. Package and publish
+# 7. Package and publish
 /publish
 ```
+
+> **Note:** If you already had Claude Code open before cloning, restart the session
+> so the Engine's 16 skills load into the `/` autocomplete menu.
 
 ---
 
@@ -85,6 +91,7 @@ claude   # or open in VS Code / JetBrains with Claude Code extension
 | `/create claude-md` | Scaffold a new CLAUDE.md configuration |
 | `/create app` | Scaffold a new application |
 | `/create system` | Scaffold a new system |
+| `/create-content` | Fill scaffolded product with real content — guided expertise extraction |
 
 ### Quality and Publishing (P0)
 
@@ -111,7 +118,8 @@ claude   # or open in VS Code / JetBrains with Claude Code extension
 |---------|-------------|
 | `/engine-status` | Engine version, profile loaded, active workspace, stale builds |
 | `/engine-help` | All available commands with descriptions |
-| `/differentiate` | Anti-commodity coaching session — make your product stand out |
+| `/differentiate` | Anti-commodity coaching — Porter, Godin, Ries frameworks |
+| `/quality-review` | Deep MCS-3 quality audit — Feathers, Deming, Popper |
 
 ---
 

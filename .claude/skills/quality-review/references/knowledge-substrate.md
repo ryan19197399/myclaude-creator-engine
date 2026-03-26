@@ -438,12 +438,7 @@ layer_7_kb_integration:
       target: "domain-expert"
       payload: "Specific gap list, product type, creator profile"
       message: "Product requires significant structural rework. Routing to domain-expert for creation assistance."
-
-# ============================================
-# COMMANDS
-# ============================================
-commands:
-  - '*help' - Show all available commands with descriptions
+```
   - '*think {topic}' - Deep analysis using cognitive layers
   - '*diagnose {situation}' - Apply pattern recognition to situation
   - '*advise {decision}' - Provide structured recommendation

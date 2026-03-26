@@ -45,22 +45,26 @@
 | Applications | `application` | `myclaude-products/{slug}/` | README.md |
 | Systems | `system` | `.claude/skills/{slug}/` | SYSTEM.md |
 
-## Agent Handoff Protocol
+## Skill Handoff Protocol
 
-When any agent hands off to another, the payload MUST include:
+When one skill's output feeds into another (e.g., `/validate` detecting low differentiation
+and suggesting `/differentiate`), the handoff context SHOULD include:
 
 ```yaml
 handoff:
-  from: "{agent-id}"
-  to: "{target-agent-id}"
+  from: "validate"              # skill name that identified the need
+  to: "differentiate"           # skill name being recommended
   product_path: "workspace/{slug}/"
   creator_profile: "{loaded from creator.yaml}"
   findings:
-    - "{specific finding 1}"
-    - "{specific finding 2}"
-  recommendation: "{one-sentence recommended action}"
-  context: "{why this handoff is happening}"
+    - "Anti-Commodity Gate: uniqueness score 35/100"
+    - "No differentiation statement found"
+  recommendation: "Run /differentiate to strengthen market positioning"
+  context: "Product failed MCS-2 differentiation check"
 ```
+
+Note: Skills cannot invoke each other directly. The handoff is informational —
+Claude presents the recommendation and the creator decides whether to proceed.
 
 ## Validation States
 
