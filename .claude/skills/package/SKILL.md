@@ -157,7 +157,9 @@ Create `workspace/{slug}/.publish/` with:
 **EXCLUDE from .publish/** (internal Engine files — never distribute):
 - `.meta.yaml` (Engine product state tracking)
 - `domain-map.md` (creator's working notes)
-- Any file starting with `.` (hidden files)
+- Any file starting with `.` (hidden files, including `.env`)
+- Files matching secret patterns: `*.pem`, `*.key`, `*.p12`, `credentials*.json`, `*.env`
+- If any excluded-for-secrets file is found, WARN: "Sensitive file `{file}` excluded from package. If this is intentional, rename it."
 
 **Step 7 — Re-validate**
 

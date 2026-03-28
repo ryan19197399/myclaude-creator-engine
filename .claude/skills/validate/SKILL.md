@@ -62,6 +62,7 @@ Grep: no placeholder content (`config.yaml` → `placeholder_patterns`: TODO, PL
 Ref check: every file path referenced in .md files actually exists on disk.
 Circular reference check: build a directed graph of file references (file A references file B). If any cycle is detected (e.g., A→B→A), report as integrity failure: "Circular reference detected: {cycle path}. Break the cycle by removing one reference."
 YAML/JSON parse: no syntax errors in metadata files.
+Secrets scan: check for sensitive file patterns (`.env`, `*.pem`, `*.key`, `credentials*.json`, `*.p12`) and content patterns (`sk-`, `AKIA`, `ghp_`, `glpat-`, `xox[bps]-`, `-----BEGIN.*PRIVATE KEY`, API_KEY=, SECRET=, PASSWORD=). If any match found, report as blocking integrity failure: "Potential secret detected in {file}. Remove before publishing."
 Score: `valid_refs / total_refs`
 
 **Stage 3 — DNA TIER 1** (blocking, gates MCS-1)

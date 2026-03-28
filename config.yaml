@@ -50,6 +50,30 @@ placeholder_patterns:
   - "YOUR_"
   - "[INSERT"
 
+# Secret/sensitive file patterns — blocked from .publish/ and flagged by /validate
+secret_file_patterns:
+  - "*.env"
+  - "*.pem"
+  - "*.key"
+  - "*.p12"
+  - "*.pfx"
+  - "credentials*.json"
+  - "service-account*.json"
+  - ".npmrc"
+  - ".pypirc"
+
+# Secret content patterns (grep) — flagged as integrity failures
+secret_content_patterns:
+  - "sk-[a-zA-Z0-9]{20,}"
+  - "AKIA[A-Z0-9]{16}"
+  - "ghp_[a-zA-Z0-9]{36}"
+  - "glpat-[a-zA-Z0-9]{20}"
+  - "xox[bps]-[a-zA-Z0-9-]+"
+  - "-----BEGIN.*PRIVATE KEY"
+  - "API_KEY\\s*=\\s*['\"]?[a-zA-Z0-9]"
+  - "SECRET\\s*=\\s*['\"]?[a-zA-Z0-9]"
+  - "PASSWORD\\s*=\\s*['\"]?[a-zA-Z0-9]"
+
 # ---------------------------------------------------------------------------
 # PRODUCT TYPE ROUTING
 # Maps product type → template path + primary file + required files
