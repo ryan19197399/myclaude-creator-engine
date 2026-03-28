@@ -1,0 +1,137 @@
+---
+name: {{PRODUCT_SLUG}}
+description: >-
+  {{APP_ONE_LINER}}
+  Updates and docs at myclaude.sh/p/{{PRODUCT_SLUG}}
+---
+<!-- WHY: D13 (Self-Documentation) — The frontmatter identifies this application -->
+<!-- WHY: in the myclaude ecosystem. The description drives marketplace discovery. -->
+
+# {{APP_NAME}}
+
+<!-- WHY: The title + one-liner is the first thing buyers see on myclaude.sh. -->
+<!-- WHY: Be specific: "Generates API documentation from TypeScript code" > "API tool" -->
+
+> {{APP_ONE_LINER}}
+
+**Version:** {{VERSION}}
+**Category:** Applications
+**Author:** {{AUTHOR_USERNAME}}
+
+---
+
+## What It Does
+
+<!-- WHY: D13 (Self-Documentation) — Explain the end result, not the implementation. -->
+<!-- WHY: A buyer needs to know what they GET, not how it WORKS internally. -->
+
+{{APP_DESCRIPTION}}
+
+## Prerequisites
+
+<!-- WHY: D7 (Pre-Execution Gate) — Every dependency and requirement listed here. -->
+<!-- WHY: If the creator doesn't list prereqs, the buyer discovers them via errors. -->
+<!-- WHY: Be exhaustive: language runtime, packages, API keys, config files. -->
+
+- {{PREREQUISITE_1}} (e.g., Node.js >= 18, Python >= 3.10)
+- {{PREREQUISITE_2}} (e.g., API key for service X)
+- {{PREREQUISITE_3}}
+
+## Quick Start
+
+<!-- WHY: D13 — Copy-paste setup. The fastest path from install to working. -->
+
+```bash
+myclaude install {{PRODUCT_SLUG}}
+cd myclaude-products/{{PRODUCT_SLUG}}
+# {{SETUP_STEPS}}
+```
+
+---
+
+## Configuration
+
+<!-- WHY: D7 (Pre-Execution Gate) — What the buyer must configure before first run. -->
+<!-- WHY: Separate required config from optional config. -->
+
+### Required
+
+{{REQUIRED_CONFIG}}
+
+### Optional
+
+{{OPTIONAL_CONFIG}}
+
+---
+
+## Usage
+
+<!-- WHY: D4 (Quality Gate) — Show concrete examples of input → output. -->
+<!-- WHY: At least 3 examples that cover common use cases. -->
+
+### Example 1: {{USE_CASE_1}}
+
+```
+{{EXAMPLE_INPUT_1}}
+```
+
+Expected output:
+```
+{{EXAMPLE_OUTPUT_1}}
+```
+
+---
+
+## Architecture
+
+<!-- WHY: Explain the file structure and how components connect. -->
+<!-- WHY: A buyer maintaining this app needs to know where to look. -->
+
+```
+{{PRODUCT_SLUG}}/
+├── src/                  # {{SRC_DESCRIPTION}}
+├── CLAUDE.md             # AI pair-programming config
+├── package.json          # Dependencies
+└── README.md             # User-facing docs
+```
+
+---
+
+## Error Handling
+
+<!-- WHY: D14 (Graceful Degradation) — What happens when things go wrong? -->
+<!-- WHY: Each error case must have a clear message and recovery path. -->
+<!-- WHY: "The app crashes" is never acceptable. -->
+
+| Error Condition | Behavior | Recovery |
+|----------------|----------|----------|
+| {{ERROR_CASE_1}} | {{BEHAVIOR_1}} | {{RECOVERY_1}} |
+| {{ERROR_CASE_2}} | {{BEHAVIOR_2}} | {{RECOVERY_2}} |
+| Missing config | Prints required fields and exits | Fill config, re-run |
+
+---
+
+## Anti-Patterns
+
+<!-- WHY: D2 (Anti-Pattern Guard) — Protect buyers from common mistakes. -->
+<!-- WHY: 5+ items. Each should be a real mistake someone would make. -->
+
+1. **{{ANTI_PATTERN_1}}** — {{EXPLANATION_1}}
+2. **{{ANTI_PATTERN_2}}** — {{EXPLANATION_2}}
+3. **{{ANTI_PATTERN_3}}** — {{EXPLANATION_3}}
+4. **Hardcoded paths** — Use relative paths and config; never assume directory structure
+5. **Missing error handling** — Every external call (API, file, network) must have a fallback
+
+---
+
+## Quality Gate
+
+<!-- WHY: D4 (Quality Gate) — Verifiable criteria that the app works correctly. -->
+<!-- WHY: A buyer should be able to run these checks after install. -->
+
+The application passes quality checks when:
+- [ ] `{{SETUP_COMMAND}}` completes without errors
+- [ ] {{QUALITY_CHECK_1}}
+- [ ] {{QUALITY_CHECK_2}}
+- [ ] All error cases produce user-friendly messages (no stack traces)
+- [ ] No hardcoded absolute paths in source code

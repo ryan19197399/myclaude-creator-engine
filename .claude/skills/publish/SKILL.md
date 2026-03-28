@@ -23,7 +23,8 @@ Publish a packaged product to the MyClaude marketplace via CLI delegation.
 2. Read `.meta.yaml` → verify state is "packaged"
 3. Verify `.publish/` exists with vault.yaml
 4. Check CLI: `which myclaude` — if not found, show install instructions
-5. Read `creator.yaml` → verify auth status. If missing → "Creator profile not found. Run `/onboard` first." and stop.
+5. Check CLI auth: run `myclaude whoami` — if "not logged in", show: "Not authenticated. Run `myclaude login` first." and stop.
+6. Read `creator.yaml` → load author metadata. If missing �� "Creator profile not found. Run `/onboard` first." and stop.
 
 ---
 
