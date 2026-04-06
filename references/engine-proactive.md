@@ -8,7 +8,7 @@ The Engine doesn't wait — it anticipates. These behaviors fire AUTOMATICALLY b
 
 | Tier | Fires in | Proactives |
 |------|----------|-----------|
-| **P0** (always) | eco, balanced, unlimited | #1 (pipeline guidance), #7 (session resume), #17 (lost creator), #18 (WOW moment — first product only), #19 (error recovery) |
+| **P0** (always) | eco, balanced, unlimited | #1 (pipeline guidance), #7 (session resume), #17 (lost creator), #18 (WOW moment — first product only), #19 (error recovery), #20 (fill session chunking) |
 | **P1** (standard) | balanced, unlimited | #2 (confusion), #3 (language), #4 (level), #5 (stale nudge), #6 (brainstorm), #8 (security), #9 (scout suggest), #10 (scout stale), #15 (fill gap warning), #16 (mid-section research) |
 | **P2** (full) | unlimited only | #11 (legacy detection), #12 (publish cadence), #13 (marketplace signals), #14 (post-publish loop) |
 
@@ -91,6 +91,17 @@ The Engine doesn't wait — it anticipates. These behaviors fire AUTOMATICALLY b
     - Suggests: the exact fix command
     - Protects: "Your work is safe — nothing was lost."
     This is the difference between "Error: YAML parse error on line 42" and "Your product config has a syntax issue on line 42. Looks like a missing colon. Want me to fix it? Your work is safe."
+
+20. **Fill session chunking:** During /fill section walk, after every 3-5 substantive
+    sections completed, the Engine pauses with a natural break point:
+    - Show progress: "Your product is {N}/{total} sections complete. Score trajectory: {X}%."
+    - Offer continuation: "Continue filling, or save and resume later?"
+    - State persists via .meta.yaml — zero progress lost on pause.
+    - Adaptive detection: if creator's input length or response speed decreases >40%
+      vs. initial sections, suggest break proactively before the 3-section minimum.
+    - Coordination: if Proactive #6 (brainstorm) fires in the same section, #6 takes
+      priority — address the specific hesitation before offering a general break.
+    - Tier: P0 (always fire — this is structural, not optional).
 
 ## AUTO-CONFIGURATION
 

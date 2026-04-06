@@ -115,6 +115,18 @@ routing:
       - "references/"
     install_target: ".claude/skills/{slug}/"
     dna_required: [1, 2, 3, 4, 5, 7, 13, 14, 16]   # Tier 1+2 required
+    context_contract:
+      needs_in_window:
+        - "domain knowledge (from references/)"
+        - "anti-patterns (from product's anti-pattern section)"
+        - "user intent (from input parsing)"
+      provides_to_window:
+        - "structured output per quality gate"
+        - "confidence signals on claims"
+      strips_from_window:
+        - "internal processing steps"
+        - "reference material after synthesis"
+      ambient_cost: "low"  # <2K chars primary file recommended
 
   agent:
     template: "templates/agent/"
@@ -125,6 +137,19 @@ routing:
       - "references/"
     install_target: ".claude/skills/{slug}/"
     dna_required: [1, 2, 3, 4, 5, 6, 7, 8, 11, 13, 14, 15, 16]
+    context_contract:
+      needs_in_window:
+        - "domain knowledge (from references/)"
+        - "agent persona and constraints"
+        - "user intent (from input parsing)"
+      provides_to_window:
+        - "structured output per quality gate"
+        - "confidence signals on claims"
+        - "state updates (session persistence)"
+      strips_from_window:
+        - "internal reasoning chains"
+        - "reference material after synthesis"
+      ambient_cost: "low"
 
   squad:
     template: "templates/squad/"
@@ -136,6 +161,18 @@ routing:
       - "agents/"
     install_target: ".claude/skills/{slug}/"
     dna_required: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 18]
+    context_contract:
+      needs_in_window:
+        - "routing table and agent registry"
+        - "orchestration logic"
+        - "handoff specifications"
+      provides_to_window:
+        - "coordinated multi-agent output"
+        - "handoff context per agent"
+      strips_from_window:
+        - "individual agent reasoning"
+        - "inter-agent handoff payloads after synthesis"
+      ambient_cost: "medium"  # orchestration logic always loaded
 
   workflow:
     template: "templates/workflow/"
@@ -145,6 +182,18 @@ routing:
       - "README.md"
     install_target: ".claude/skills/{slug}/"
     dna_required: [1, 2, 4, 7, 13, 14, 16]
+    context_contract:
+      needs_in_window:
+        - "step definitions and sequencing"
+        - "preconditions per step"
+        - "user intent (from input parsing)"
+      provides_to_window:
+        - "sequential step output"
+        - "state transitions"
+      strips_from_window:
+        - "completed step details"
+        - "intermediate artifacts"
+      ambient_cost: "low"
 
   design-system:
     template: "templates/design-system/"
@@ -155,6 +204,16 @@ routing:
       - "tokens/"
     install_target: "myclaude-products/{slug}/"
     dna_required: [2, 4, 13, 16]
+    context_contract:
+      needs_in_window:
+        - "design tokens and constraints"
+        - "component specifications"
+      provides_to_window:
+        - "token values and usage rules"
+        - "component API definitions"
+      strips_from_window:
+        - "token generation internals"
+      ambient_cost: "low"
 
   claude-md:
     template: "templates/claude-md/"
@@ -164,6 +223,16 @@ routing:
       - "README.md"
     install_target: ".claude/rules/{slug}.md"
     dna_required: [1, 2, 3, 13, 16, 19, 20]
+    context_contract:
+      needs_in_window:
+        - "rules and behavioral constraints"
+        - "activation scope (paths: frontmatter)"
+      provides_to_window:
+        - "behavioral rules active every turn"
+        - "contextual constraints"
+      strips_from_window:
+        - "nothing (always in context)"
+      ambient_cost: "critical"  # always in context every turn
 
   application:
     template: "templates/application/"
@@ -173,6 +242,18 @@ routing:
       - "README.md"
     install_target: "myclaude-products/{slug}/"
     dna_required: [2, 4, 7, 13, 14, 16]
+    context_contract:
+      needs_in_window:
+        - "application logic and routes"
+        - "dependency specifications"
+        - "user intent (from input parsing)"
+      provides_to_window:
+        - "application output"
+        - "state changes"
+      strips_from_window:
+        - "build artifacts"
+        - "dependency resolution details"
+      ambient_cost: "low"
 
   system:
     template: "templates/system/"
@@ -184,6 +265,18 @@ routing:
       - "config/routing.yaml"
     install_target: ".claude/commands/{slug}/"
     dna_required: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 18]
+    context_contract:
+      needs_in_window:
+        - "routing table and agent registry"
+        - "state machine definitions"
+        - "orchestration logic"
+      provides_to_window:
+        - "coordinated system output"
+        - "state transitions"
+      strips_from_window:
+        - "individual agent reasoning"
+        - "inter-component handoffs after synthesis"
+      ambient_cost: "medium"  # orchestration logic always loaded
 
   bundle:
     template: "templates/bundle/"
@@ -193,6 +286,16 @@ routing:
       - "README.md"
     install_target: "N/A"
     dna_required: [2, 4, 13, 14]
+    context_contract:
+      needs_in_window:
+        - "component product references"
+        - "composition rules"
+      provides_to_window:
+        - "vault.yaml manifest"
+        - "composition integrity report"
+      strips_from_window:
+        - "individual product details after composition"
+      ambient_cost: "zero"  # vault.yaml is the product, no runtime cost
 
   statusline:
     template: "templates/statusline/"
@@ -203,6 +306,15 @@ routing:
       - "README.md"
     install_target: "~/.claude/statusline-scripts/{slug}.sh"
     dna_required: [1, 2, 4, 7, 13, 14, 16]
+    context_contract:
+      needs_in_window:
+        - "shell environment variables"
+        - "status data sources"
+      provides_to_window:
+        - "formatted status line output"
+      strips_from_window:
+        - "shell execution internals"
+      ambient_cost: "low"
 
   hooks:
     template: "templates/hooks/"
@@ -214,6 +326,16 @@ routing:
     install_target: ".claude/settings.local.json"          # JSON config merged here
     scripts_install_target: "~/.claude/hooks/{slug}/scripts/"  # handler scripts copied here
     dna_required: [1, 2, 4, 7, 13, 14, 15, 16]
+    context_contract:
+      needs_in_window:
+        - "hook event definitions"
+        - "script handler logic"
+      provides_to_window:
+        - "lifecycle automation"
+        - "event-driven side effects"
+      strips_from_window:
+        - "hook execution logs"
+      ambient_cost: "low"
 
   minds:
     template: "templates/minds/"
@@ -224,6 +346,18 @@ routing:
       - "references/"
     install_target: ".claude/agents/{slug}.md"
     dna_required: [1, 2, 3, 4, 5, 6, 13, 14]
+    context_contract:
+      needs_in_window:
+        - "persona and cognitive architecture"
+        - "domain knowledge (from references/)"
+        - "user query context"
+      provides_to_window:
+        - "advisory output with confidence signals"
+        - "domain-specific reasoning"
+      strips_from_window:
+        - "internal cognitive processing"
+        - "reference material after synthesis"
+      ambient_cost: "low"
     # Minds depth routing (advisory is default, cognitive is 5-layer premium)
     depth:
       advisory:
@@ -251,6 +385,15 @@ routing:
       - "README.md"
     install_target: ".claude/output-styles/{slug}.md"
     dna_required: [2, 4, 13, 16]
+    context_contract:
+      needs_in_window:
+        - "style rules and formatting constraints"
+        - "output examples"
+      provides_to_window:
+        - "formatted output per style definition"
+      strips_from_window:
+        - "style processing internals"
+      ambient_cost: "low"
     package_rename:
       from: "OUTPUT-STYLE.md"
       to: "{slug}.md"

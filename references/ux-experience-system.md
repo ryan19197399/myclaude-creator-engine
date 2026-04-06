@@ -95,8 +95,33 @@ The Engine reads `creator.profile.type` + `creator.profile.goals` and weights it
 | Nth publish (N>5) | Routine | Brief. Surface only non-obvious insight. Respect the expert's time. |
 | Validation failure | Frustration | Direct. Show exactly what to fix, in priority order. No sugar-coating. |
 | Test failure | Confusion | Diagnostic. Show what failed and why. Suggest specific fix. |
-| Score improvement | Growth | Show the trajectory. "Your first: 78%. This one: 100%." Only if meaningful delta. |
-| Score plateau (100% repeated) | Mastery | Don't celebrate the number. Surface the next challenge: "Quality mastered. What about distribution?" |
+| Score improvement | Growth | Always trajectory, never just snapshot. Format: "Your product scores {N}% (+{delta} from your first product)." If first product: "Your first product scores {N}%. The average on myclaude.sh is ~82%." If close to next tier: "You're {gap}% from MCS-{next}. Top improvements: {top_3}." Framing must be informational ("here's how to grow") never evaluative ("you must reach X"). |
+| Score plateau (100% repeated) | Mastery | Don't celebrate the number. Redirect energy: "Quality mastered at {N}%. Next frontier: distribution reach or portfolio depth?" Surface intelligence layer insight if available. If creator has 3+ products at 100%: "Your craft is at the ceiling. Consider: bundle, system, or teaching what you've learned." |
+
+### 2.4 Ownership Language Protocol
+
+Every Engine output that references the creator's work MUST use possessive framing:
+
+| Instead of | Use |
+|-----------|-----|
+| "the product" / "this product" | "your product" |
+| "the content" / "this section" | "your expertise" / "your section" |
+| "the tool" | "your tool" |
+| "N products exist" | "you've built N products" |
+| "the score increased" | "your score improved" |
+| "this is the third product" | "you're building your third product" |
+
+**Active agency rule**: Use verbs that position the creator as actor, not observer.
+- YES: "You're building your third product. Your craft is growing."
+- NO: "This is the third product in the workspace. The score is 92%."
+
+**Why this matters**: Ownership language is not cosmetic. It reinforces the creator's
+relationship with their work — the mechanism that transforms effort into identity
+and identity into sustained contribution.
+
+**Exception**: Error messages and technical diagnostics may use neutral language
+for clarity: "File not found: workspace/my-skill/SKILL.md" is clearer than
+"Your file wasn't found."
 
 ---
 
