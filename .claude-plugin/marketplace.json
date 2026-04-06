@@ -1,0 +1,46 @@
+{
+  "name": "studio-engine",
+  "version": "2.2.0",
+  "description": "Creation pipeline for Claude Code products — research, create, validate, and publish skills, agents, squads, minds, and 9 more product types with structural quality scoring.",
+  "author": "myclaude-sh",
+  "license": "MIT",
+  "homepage": "https://myclaude.sh",
+  "plugins": [
+    {
+      "name": "studio-engine-core",
+      "description": "Core creation pipeline: onboard, create, fill, validate, test, package, publish — guided product creation with 20 structural quality patterns",
+      "skills": [
+        ".claude/skills/onboard",
+        ".claude/skills/create",
+        ".claude/skills/fill",
+        ".claude/skills/validate",
+        ".claude/skills/test",
+        ".claude/skills/package",
+        ".claude/skills/publish",
+        ".claude/skills/status",
+        ".claude/skills/help"
+      ],
+      "strict": false
+    },
+    {
+      "name": "studio-engine-intelligence",
+      "description": "Research and knowledge tools: scout domains before building, map expertise, explore marketplace, brainstorm approaches",
+      "skills": [
+        ".claude/skills/scout",
+        ".claude/skills/map",
+        ".claude/skills/think",
+        ".claude/skills/explore",
+        ".claude/skills/import"
+      ],
+      "strict": false
+    },
+    {
+      "name": "studio-engine-security",
+      "description": "Security audit for codebases — threat modeling, vulnerability detection, compliance checking, and hardening recommendations",
+      "skills": [
+        ".claude/skills/aegis"
+      ],
+      "strict": false
+    }
+  ]
+}

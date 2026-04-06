@@ -1,0 +1,48 @@
+# MyClaude Studio Engine — self-publishable product manifest
+# This makes the Engine installable via: myclaude install @myclaude/creator-engine
+# Type: bundle — meta-package containing 11 skills + engine reference files
+name: studio-engine
+slug: "creator-studio-engine"
+version: "2.2.0"
+type: bundle
+author: "@lznnn"
+description: "Create, validate, package, and publish Claude Code products. 15 skills, 20 DNA patterns, 10-stage validation (7+3 sub-stages), MCS quality scoring, baseline delta, cognitive minds with genius library."
+entry: CLAUDE.md
+license: MIT
+price: 0
+tags:
+  - studio
+  - engine
+  - creator
+  - publishing
+  - quality
+display_name: "MyClaude Studio Engine"
+readme: "README.md"
+compatibility:
+  claudeCode: ">=1.0.0"
+
+components:
+  - onboard
+  - scout
+  - create
+  - fill
+  - validate
+  - test
+  - package
+  - publish
+  - import
+  - explore
+  - think
+  - status
+  - help
+  - map
+  - aegis
+
+install_actions:
+  - copy: "templates/ → myclaude-engine/templates/"
+  - copy: "product-dna/ → myclaude-engine/product-dna/"
+  - copy: "structural-dna.md → myclaude-engine/structural-dna.md"
+  - copy: "config.yaml → myclaude-engine/config.yaml"
+  - copy: "quality-gates.yaml → myclaude-engine/quality-gates.yaml"
+  - create: "workspace/"
+  - create: "creator.yaml (from template if not exists)"

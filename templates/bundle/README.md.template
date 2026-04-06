@@ -1,0 +1,61 @@
+# {{PRODUCT_DISPLAY_NAME}}
+
+<!-- WHY: D13 (Self-Documentation) — Bundles need clear README explaining
+     what's included, why it's curated, and how to install everything at once. -->
+
+> {{BUNDLE_TAGLINE}}
+
+## What's Included
+
+<!-- WHY: List every product in the bundle with a one-liner.
+     Buyers need to understand what they're getting before installing. -->
+
+| Product | Type | What It Does |
+|---------|------|-------------|
+| [{{PRODUCT_1_NAME}}](https://myclaude.sh/p/{{PRODUCT_1_SLUG}}) | {{TYPE_1}} | {{PRODUCT_1_ONE_LINER}} |
+| [{{PRODUCT_2_NAME}}](https://myclaude.sh/p/{{PRODUCT_2_SLUG}}) | {{TYPE_2}} | {{PRODUCT_2_ONE_LINER}} |
+| [{{PRODUCT_3_NAME}}](https://myclaude.sh/p/{{PRODUCT_3_SLUG}}) | {{TYPE_3}} | {{PRODUCT_3_ONE_LINER}} |
+
+## Why This Bundle
+
+<!-- WHY: The curation rationale is the bundle's value proposition.
+     What does this combination achieve that individual products don't? -->
+
+{{CURATION_RATIONALE}}
+
+## Installation
+
+```bash
+myclaude install {{PRODUCT_SLUG}}
+```
+
+This installs all included products in one command.
+
+**Also compatible with:** Any [Agent Skills](https://agentskills.io)-compliant platform.
+
+## Usage
+
+After installation, each product is available individually:
+
+{{USAGE_PER_PRODUCT}}
+
+## Requirements
+
+- Claude Code >= 1.0.0
+- {{ADDITIONAL_REQUIREMENTS}}
+
+## Anti-Patterns
+
+<!-- WHY: D2 — Document what buyers should NOT do with this bundle. -->
+
+- **Installing partial bundles:** Install the full bundle for the intended experience
+- **Using products in wrong order:** {{ORDER_GUIDANCE}}
+- **Ignoring version compatibility:** {{VERSION_GUIDANCE}}
+
+---
+
+**Version:** {{VERSION}} | **License:** {{LICENSE}} | **Author:** {{AUTHOR}}
+
+[![MCS {{MCS_LEVEL}}](https://myclaude.sh/badge/mcs/{{MCS_LEVEL_NUMBER}}.svg)](https://myclaude.sh/quality) [![Available on MyClaude](https://myclaude.sh/badge/available.svg)](https://myclaude.sh/p/{{PRODUCT_SLUG}})
+
+<sub>Quality-validated by [MyClaude Studio Engine](https://myclaude.sh/studio) | [Browse marketplace](https://myclaude.sh/explore)</sub>

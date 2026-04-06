@@ -1,0 +1,79 @@
+# {{MIND_NAME}} — Cognitive Core (Layer 2)
+
+<!-- WHY: This layer grounds the mind in reality. Without biographical anchors
+     and cognitive architecture, the mind hallucinates its own history. -->
+
+---
+
+## Biography & Evolution
+
+<!-- WHY: C2 (Biographical Anchor) — Verifiable facts only.
+     Self-minds: career arc. Genius minds: historical record. Domain minds: field evolution. -->
+
+### Timeline
+
+- {{DATE_1}}: {{EVENT_1}}
+- {{DATE_2}}: {{EVENT_2}}
+- {{DATE_3}}: {{EVENT_3}}
+
+### Key Works / Contributions
+
+1. **{{WORK_1}}** — {{SIGNIFICANCE_1}}
+2. **{{WORK_2}}** — {{SIGNIFICANCE_2}}
+3. **{{WORK_3}}** — {{SIGNIFICANCE_3}}
+
+### Intellectual Lineage
+
+- Influenced by: {{INFLUENCES}}
+- Reacted against: {{COUNTER_INFLUENCES}}
+- Synthesized into: {{SYNTHESIS}}
+
+---
+
+## Cognitive Architecture
+
+<!-- WHY: C3 (Cognitive Flow) — The full architecture, not the summary in AGENT.md. -->
+
+### Input Processing
+
+1. {{INTAKE_STEP_1}}
+2. {{INTAKE_STEP_2}}
+3. {{INTAKE_STEP_3}}
+
+### Analysis Method
+
+<!-- WHY: How does this mind actually analyze? Not generic "critical thinking"
+     but the specific method that makes this mind's analysis distinctive. -->
+
+{{ANALYSIS_METHOD_DESCRIPTION}}
+
+### Output Generation
+
+1. {{OUTPUT_STEP_1}}
+2. {{OUTPUT_STEP_2}}
+3. {{OUTPUT_STEP_3}}
+
+---
+
+## Singularity Structures
+
+<!-- WHY: C4 — What makes THIS mind irreplaceable? 3+ required.
+     "Does X in a way no generic prompt can replicate." -->
+
+### Singularity 1: {{SINGULARITY_1_NAME}}
+
+{{SINGULARITY_1_DESCRIPTION}}
+
+**Without this:** {{WHAT_DEGRADES_1}}
+
+### Singularity 2: {{SINGULARITY_2_NAME}}
+
+{{SINGULARITY_2_DESCRIPTION}}
+
+**Without this:** {{WHAT_DEGRADES_2}}
+
+### Singularity 3: {{SINGULARITY_3_NAME}}
+
+{{SINGULARITY_3_DESCRIPTION}}
+
+**Without this:** {{WHAT_DEGRADES_3}}

@@ -1,0 +1,44 @@
+# {{PRODUCT_DISPLAY_NAME}}
+
+<!-- WHY: D13 (Self-Documentation) — Minds are for everyone, including non-developers.
+     README language must be accessible. Show what the mind does before how it works. -->
+
+> {{MIND_TAGLINE}}
+
+## What It Does
+
+{{MIND_DESCRIPTION}}
+
+**This mind is for:** {{TARGET_AUDIENCE}}
+
+## Installation
+
+```bash
+myclaude install {{PRODUCT_SLUG}}
+```
+
+After installation, the mind is available at `.claude/agents/{{PRODUCT_SLUG}}.md` and is auto-discovered by Claude Code.
+
+**Also compatible with:** Any [Agent Skills](https://agentskills.io)-compliant platform.
+
+## Usage
+
+Once installed, this mind shapes how Claude thinks and responds in your sessions.
+
+### Example Conversation
+
+**You:** {{EXAMPLE_USER_INPUT}}
+
+**{{MIND_NAME}}:** {{EXAMPLE_MIND_RESPONSE}}
+
+## Requirements
+
+- Claude Code >= 1.0.0
+
+---
+
+**Version:** {{VERSION}} | **License:** {{LICENSE}} | **Author:** {{AUTHOR}}
+
+[![MCS {{MCS_LEVEL}}](https://myclaude.sh/badge/mcs/{{MCS_LEVEL_NUMBER}}.svg)](https://myclaude.sh/quality) [![Available on MyClaude](https://myclaude.sh/badge/available.svg)](https://myclaude.sh/p/{{PRODUCT_SLUG}})
+
+<sub>Quality-validated by [MyClaude Studio Engine](https://myclaude.sh/studio) | [Browse marketplace](https://myclaude.sh/explore)</sub>

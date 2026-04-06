@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+# {{PRODUCT_SLUG}} — Hook Handler Script
+# WHY: This script runs when {{EVENT_TYPE}} fires with matcher "{{MATCHER_PATTERN}}"
+# WHY: Exit code 0 = allow, 2 = block (stderr becomes feedback), other = non-blocking error
+# WHY: SECURITY: This script runs with user permissions. Review all commands carefully.
+
+set -uo pipefail
+# WHY: NOT using set -e. Hook handlers should be non-blocking by default.
+# WHY: With -e, any command failure kills the script before reaching exit 0,
+# WHY: turning a non-blocking hook into an accidental blocker.
+# WHY: Instead, handle errors per-command with || true or explicit checks.
+
+# Input: Hook context is available via environment variables and stdin
+# - stdin: JSON payload with event details
+# - Environment: CLAUDE_SESSION_ID, CLAUDE_CWD, etc.
+
+# Read event payload from stdin (Claude Code sends JSON context)
+# WHY: 2>/dev/null prevents hang if stdin is unexpectedly empty
+EVENT_PAYLOAD=$(cat 2>/dev/null)
+
+# {{HANDLER_LOGIC}}
+# WHY: Use "command || true" for operations that should not block on failure.
+# WHY: Use "command || exit 2" to intentionally block the operation (stderr → feedback).
+
+# Exit 0 to allow the operation to proceed
+exit 0

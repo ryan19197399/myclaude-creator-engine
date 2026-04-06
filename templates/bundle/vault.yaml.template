@@ -1,0 +1,34 @@
+# vault.yaml — Bundle manifest
+# WHY: For bundles, vault.yaml IS the product. There is no primary .md file.
+# WHY: The bundle.includes[] array defines which products are curated together.
+# WHY: Buyers install a bundle to get a coherent set of products in one command.
+
+name: "{{PRODUCT_SLUG}}"
+version: "{{VERSION}}"
+description: "{{BUNDLE_ONE_LINER}}"
+author: "{{AUTHOR_USERNAME}}"
+category: "bundles"
+license: "{{LICENSE}}"
+price: {{PRICE}}
+
+# WHY: The includes array is the heart of a bundle. Each slug must be a valid
+# WHY: product on the marketplace. The order matters — it's the install order.
+bundle:
+  includes:
+    - "{{INCLUDED_PRODUCT_1_SLUG}}"
+    - "{{INCLUDED_PRODUCT_2_SLUG}}"
+    - "{{INCLUDED_PRODUCT_3_SLUG}}"
+
+# WHY: Explain why these products belong together. This is your value proposition.
+# WHY: Buyers need to understand what this combination achieves that buying
+# WHY: individual products doesn't.
+  rationale: "{{CURATION_RATIONALE}}"
+
+# WHY: Pricing strategy relative to individual products.
+# WHY: Common patterns: 20-30% discount vs buying separately.
+  pricing_note: "{{PRICING_STRATEGY}}"
+
+compatibility:
+  claude_code: ">=1.0.0"
+
+engine: "myclaude-studio-engine"

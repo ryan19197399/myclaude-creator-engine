@@ -1,0 +1,206 @@
+<!-- WHY: CLAUDE.md configs install to .claude/rules/{slug}.md -->
+<!-- WHY: Claude Code auto-loads rules on every session — every char costs tokens every turn. -->
+<!-- WHY: Optional: add paths frontmatter to scope this rule to specific file types. -->
+<!-- WHY: [SOURCE: claudemd.ts:254-268] — paths uses picomatch globs. -->
+<!-- WHY: ATTENTION POSITION — Claude pays more attention to content at the END of files. -->
+<!-- WHY: Structure: background/context sections FIRST, critical rules/constraints LAST. -->
+<!-- WHY: [SOURCE: claudemd.ts:9-10] — "latest files are highest priority" applies within files too. -->
+<!-- WHY: OVERRIDE SEMANTICS — Claude Code wraps this file with "OVERRIDE any default behavior". -->
+<!-- WHY: Write directives ("always do X"), not suggestions ("consider doing X"). -->
+<!-- WHY: [SOURCE: claudemd.ts:89-90] -->
+
+<!-- OPTIONAL: Uncomment to scope this rule to specific file types -->
+<!-- ---                                                          -->
+<!-- paths:                                                       -->
+<!--   - src/api/**                                               -->
+<!--   - src/routes/**                                            -->
+<!-- ---                                                          -->
+<!-- When paths is set, this rule ONLY loads when user works on matching files. -->
+<!-- This saves tokens — the rule has zero cost when user is in unrelated files. -->
+
+# {{PROJECT_TYPE}} — Claude Code Configuration
+
+<!-- WHY: Header identifies the project type, not the project name. -->
+<!-- WHY: This config is generic enough to reuse across projects of this type. -->
+<!-- WHY: Do not include project-specific names, paths, or credentials. -->
+
+> Claude Code configuration for {{PROJECT_TYPE_DESCRIPTION}} projects.
+> Enforces {{KEY_CONVENTIONS}} conventions and {{ARCHITECTURE_APPROACH}} architecture.
+
+**Version:** {{VERSION}}
+**Target Stack:** {{TECH_STACK}}
+**Team Size:** {{TEAM_SIZE}}
+<!-- WHY: Options: Solo | Small Team (2-5) | Enterprise (5+) -->
+**Author:** {{AUTHOR_USERNAME}}
+
+---
+
+## First Action (Boot Sequence)
+
+<!-- WHY: D1 (Activation Protocol) — defines what to load at session start. -->
+<!-- WHY: A boot sequence prevents Claude Code from operating without context. -->
+<!-- WHY: Order: architecture docs first, then current state (git, TODOs). -->
+
+At the start of every session, before responding to any request:
+
+1. **Read project architecture:** Read `docs/architecture.md` if it exists
+   — Understand current system design, key decisions, and off-limits changes
+2. **Check git state:** Run `git status` and `git log --oneline -10`
+   — Know what's in progress and recent history
+3. **Check for open work:** Read `TODO.md` or open GitHub Issues if mentioned
+4. **Read the current file:** If the user references specific files, read them before responding
+5. **Apply rules:** All rules in this file are active immediately after boot
+
+---
+
+## Architecture Overview
+
+<!-- WHY: Summarize the key architectural decisions Claude Code must know. -->
+<!-- WHY: Include directory structure with what lives where. -->
+<!-- WHY: Explain why (not just what) for the most important decisions. -->
+
+### Project Structure
+
+```
+{{PROJECT_ROOT}}/
+├── {{DIR_1}}/          # {{DIR_1_PURPOSE}}
+├── {{DIR_2}}/          # {{DIR_2_PURPOSE}}
+├── {{DIR_3}}/          # {{DIR_3_PURPOSE}}
+└── {{CONFIG_FILES}}
+```
+
+### Key Decisions
+
+| Decision | Rationale | Implication |
+|----------|-----------|-------------|
+| {{DECISION_1}} | {{RATIONALE_1}} | {{IMPLICATION_1}} |
+| {{DECISION_2}} | {{RATIONALE_2}} | {{IMPLICATION_2}} |
+| {{DECISION_3}} | {{RATIONALE_3}} | {{IMPLICATION_3}} |
+
+### Do Not Change Without Discussion
+
+- {{DO_NOT_CHANGE_1}} — reason: {{REASON_1}}
+- {{DO_NOT_CHANGE_2}} — reason: {{REASON_2}}
+
+---
+
+## Conventions & Standards
+
+<!-- WHY: Specific, enforceable rules. Not vague guidelines. -->
+<!-- WHY: Each rule should be testable — you can observe whether it's followed. -->
+<!-- WHY: These apply to any project type: code, content, operations, strategy. -->
+
+### Naming
+
+- Files: {{FILE_NAMING_CONVENTION}} (e.g., `kebab-case.ts`, `PascalCase.tsx`)
+- Functions/methods: {{FUNCTION_NAMING_CONVENTION}}
+- Variables: {{VARIABLE_NAMING_CONVENTION}}
+- Constants: {{CONSTANT_NAMING_CONVENTION}}
+- Types/Interfaces: {{TYPE_NAMING_CONVENTION}}
+
+### Code Structure
+
+- {{STRUCTURE_RULE_1}}
+- {{STRUCTURE_RULE_2}}
+- {{STRUCTURE_RULE_3}}
+- Maximum function length: {{MAX_FUNCTION_LENGTH}} lines (split into helpers beyond this)
+- Import order: {{IMPORT_ORDER_RULE}}
+
+### TypeScript (if applicable)
+
+- `strict: true` is non-negotiable
+- No `any` — use `unknown` for truly unknown types
+- {{TYPESCRIPT_RULE_1}}
+- {{TYPESCRIPT_RULE_2}}
+
+### Testing
+
+- {{TESTING_CONVENTION_1}}
+- {{TESTING_CONVENTION_2}}
+- Test files: co-located with source files in `{{TEST_FILE_PATTERN}}`
+
+---
+
+## Security Rules
+
+<!-- WHY: Non-negotiable rules Claude Code must always follow. -->
+<!-- WHY: These prevent the most common and dangerous mistakes. -->
+
+Claude Code MUST NEVER:
+
+1. Hardcode secrets, API keys, credentials, or tokens in any file
+   — Use environment variables: `process.env.{{VARIABLE_NAME}}`
+2. Write `eval()`, `new Function()`, or equivalent dynamic code execution
+3. Make network calls to URLs not listed in the allowed domains below
+4. Write files outside the project directory
+5. {{SECURITY_RULE_5}}
+
+**Allowed external domains:**
+- {{ALLOWED_DOMAIN_1}}
+- {{ALLOWED_DOMAIN_2}}
+
+**Credentials pattern:**
+All secrets use `{{CREDENTIALS_PATTERN}}` (e.g., `.env` file, vault reference, etc.)
+
+---
+
+## Workflow Rules
+
+<!-- WHY: How work should be done in this project. -->
+<!-- WHY: Rules that apply to the development process, not just the code. -->
+
+### Branching
+
+- Branch naming: `{{BRANCH_NAMING_PATTERN}}`
+  (e.g., `feat/add-auth`, `fix/login-redirect`, `chore/update-deps`)
+- Branch from: `{{BASE_BRANCH}}`
+
+### Commits
+
+Format: `{{COMMIT_MESSAGE_FORMAT}}`
+(e.g., `type(scope): description` — conventional commits)
+
+Types: `feat`, `fix`, `chore`, `docs`, `refactor`, `test`
+
+### Before Modifying Existing Code
+
+1. Read the file being modified
+2. Understand why the code is written as it is
+3. Justify why the change is necessary
+4. Verify the change doesn't revert a previous intentional decision
+
+### Breaking Changes
+
+{{BREAKING_CHANGE_PROTOCOL}}
+
+---
+
+## Error Handling
+
+<!-- WHY: How Claude Code should handle and report errors. -->
+
+- All async functions must have try/catch or equivalent error boundaries
+- Error messages must be: human-readable, actionable, and include context
+- {{ERROR_HANDLING_RULE_1}}
+- {{ERROR_HANDLING_RULE_2}}
+
+---
+
+## Compact Instructions
+
+<!-- WHY: claude-md products are ALWAYS in context (auto-loaded every turn). -->
+<!-- WHY: This means compact instructions here protect the BUYER'S session, not just creation. -->
+<!-- WHY: When a buyer's conversation compacts, these instructions preserve YOUR rules. -->
+<!-- WHY: [SOURCE: compact/prompt.ts:133-143] — Claude Code reads this section by name. -->
+<!-- WHY: CRITICAL: Since claude-md is always loaded, keep this section SHORT. -->
+
+When summarizing, always preserve:
+- All rules defined in this file (they are the product's core value)
+- Any path-scoped activation conditions
+- Error handling rules and their associated actions
+- The purpose statement of these instructions
+
+---
+<!-- WHY: Above covers MCS-1 (CLAUDE.md + README). -->
+<!-- WHY: For MCS-2: break into rules/ directory, add architecture.md -->
+<!-- WHY: For MCS-3: add hook configurations, MCP integration patterns -->

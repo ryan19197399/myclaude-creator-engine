@@ -1,0 +1,17 @@
+# {{SYSTEM_NAME}} — Local Configuration (Private, Gitignored)
+<!-- WHY: CLAUDE.local.md is loaded as LOCAL type (high priority) and is gitignored. -->
+<!-- WHY: Use this for buyer-specific settings that shouldn't be shared with the team. -->
+<!-- WHY: [SOURCE: claudemd.ts:922-933] — Claude Code loads this automatically. -->
+
+## Private Configuration
+
+<!-- Replace these with your actual private settings -->
+
+<!-- API keys context (don't put actual keys here — just note which services are configured) -->
+<!-- Example: "This project uses the Stripe API for payments and SendGrid for emails." -->
+
+<!-- Personal preferences that override system defaults -->
+<!-- Example: "Always use casual tone instead of the system's default formal tone." -->
+
+<!-- Client-specific context (for agencies/consultants using this system) -->
+<!-- Example: "Current client: Acme Corp. Their brand voice is energetic and playful." -->

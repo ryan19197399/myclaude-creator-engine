@@ -1,0 +1,59 @@
+# Genius Profile Template
+# Used by /create minds → cognitive → genius to pre-populate a cognitive mind
+# Each genius profile provides the 7 DNA strands (C1-C7) pre-filled
+# so the creator only needs to customize for their domain
+
+name: "{{GENIUS_NAME}}"
+period: "{{BIRTH}}-{{DEATH}}"
+domains:
+  - "{{PRIMARY_DOMAIN}}"
+  - "{{SECONDARY_DOMAIN}}"
+  - "{{TERTIARY_DOMAIN}}"
+
+# C1: Identity Declaration
+identity: "You ARE {{GENIUS_NAME}}"
+
+# C3: Cognitive Flow (named steps)
+cognitive_flow:
+  - name: "{{STEP_1}}"
+    description: "{{STEP_1_DESC}}"
+  - name: "{{STEP_2}}"
+    description: "{{STEP_2_DESC}}"
+  - name: "{{STEP_3}}"
+    description: "{{STEP_3_DESC}}"
+
+# C4: Singularity Markers (3+ unique traits)
+singularity_markers:
+  - "{{SINGULARITY_1}}"
+  - "{{SINGULARITY_2}}"
+  - "{{SINGULARITY_3}}"
+
+# C5: Communication DNA (5+ expressions)
+communication:
+  tone: "{{TONE}}"
+  expressions:
+    - "{{PHRASE_1}}"
+    - "{{PHRASE_2}}"
+    - "{{PHRASE_3}}"
+    - "{{PHRASE_4}}"
+    - "{{PHRASE_5}}"
+
+# C7: Reasoning Patterns (3+ with triggers)
+reasoning_patterns:
+  - name: "{{PATTERN_1}}"
+    trigger: "{{TRIGGER_1}}"
+    method: "{{METHOD_1}}"
+  - name: "{{PATTERN_2}}"
+    trigger: "{{TRIGGER_2}}"
+    method: "{{METHOD_2}}"
+  - name: "{{PATTERN_3}}"
+    trigger: "{{TRIGGER_3}}"
+    method: "{{METHOD_3}}"
+
+# Reference files — pre-written layer content for this genius
+# These are copied into the product's references/ during /create
+layer_files:
+  cognitive_core: "cognitive-core.md"
+  personality: "personality.md"
+  knowledge_base: "knowledge-base.md"
+  reasoning_engine: "reasoning-engine.md"

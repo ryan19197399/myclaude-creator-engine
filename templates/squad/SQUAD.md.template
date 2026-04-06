@@ -1,0 +1,210 @@
+---
+name: {{PRODUCT_SLUG}}
+description: >-
+  {{SQUAD_MISSION_DESCRIPTION}}
+  Use when: {{TRIGGER_DESCRIPTION}}.
+  Updates and docs at myclaude.sh/p/{{PRODUCT_SLUG}}
+# model: claude-sonnet-4-6               # force model for squad coordinator
+# effort: high                           # reasoning effort (high, medium, low)
+# context: fork                          # isolation mode
+# paths: ['src/**/*.ts']                 # conditional activation
+# allowed-tools: Read, Grep, Glob, Agent # restrict tools (Agent essential for squads)
+# argument-hint: "[options]"             # autocomplete hint
+---
+<!-- WHY: Frontmatter makes your squad discoverable after installation. -->
+<!-- WHY: The myclaude.sh link travels with the product across all platforms. -->
+
+# {{SQUAD_NAME}}
+
+<!-- WHY: Squad name describes the team's collective mission, not just listing agent types. -->
+<!-- WHY: "Content Production Squad" > "Writer + Editor Squad" -->
+
+**Purpose:** {{SQUAD_PURPOSE}}
+**Composition:** {{AGENT_COUNT}} agents — {{AGENT_NAMES_AND_ROLES}}
+**Entry Point:** {{HOW_USER_INVOKES_SQUAD}}
+**Version:** {{VERSION}}
+**Author:** {{AUTHOR_USERNAME}}
+
+---
+
+## Agent Roster
+
+<!-- WHY: Every agent must have a distinct, non-overlapping role. -->
+<!-- WHY: If two agents have similar roles, merge them or make the boundary explicit. -->
+
+| Agent | File | Role | Handles |
+|-------|------|------|---------|
+| {{AGENT_1_NAME}} | `agents/{{AGENT_1_FILE}}` | {{AGENT_1_ROLE}} | {{AGENT_1_HANDLES}} |
+| {{AGENT_2_NAME}} | `agents/{{AGENT_2_FILE}}` | {{AGENT_2_ROLE}} | {{AGENT_2_HANDLES}} |
+| {{AGENT_3_NAME}} | `agents/{{AGENT_3_FILE}}` | {{AGENT_3_ROLE}} | {{AGENT_3_HANDLES}} |
+
+<!-- WHY: Add rows for each agent. Minimum 2 agents for MCS-1. -->
+
+---
+
+## Routing Logic
+
+<!-- WHY: This is the cognitive core of the squad. -->
+<!-- WHY: Every input type must map to exactly one agent or routing path. -->
+<!-- WHY: Start with intent detection, then route to the responsible agent. -->
+
+### Intent Detection
+
+First, identify the user's intent from their input:
+
+| Input Pattern | Detected Intent | Routes To |
+|---------------|----------------|----------|
+| {{INPUT_PATTERN_1}} | `{{INTENT_1}}` | {{AGENT_1_NAME}} |
+| {{INPUT_PATTERN_2}} | `{{INTENT_2}}` | {{AGENT_2_NAME}} |
+| {{INPUT_PATTERN_3}} | `{{INTENT_3}}` | {{AGENT_3_NAME}} |
+| Ambiguous or multi-intent | `compound` | {{DEFAULT_ROUTING_LOGIC}} |
+
+### Routing Decision Tree
+
+```
+IF intent is {{INTENT_1}} → {{AGENT_1_NAME}}
+IF intent is {{INTENT_2}} → {{AGENT_2_NAME}}
+IF intent is {{INTENT_3}} → {{AGENT_3_NAME}}
+IF intent is compound (multiple intents detected):
+  → {{COMPOUND_ROUTING_STRATEGY}}
+IF intent cannot be determined:
+  → {{FALLBACK_AGENT}} with explicit note that routing was uncertain
+```
+
+---
+
+## Handoff Protocols
+
+<!-- WHY: Defines the exact format agents use to pass work to each other. -->
+<!-- WHY: Without this, each handoff is ad-hoc and quality is unpredictable. -->
+
+### Standard Handoff Format
+
+When any agent hands off to another, it must include:
+
+```markdown
+## Handoff: [Source Agent] → [Target Agent]
+**Task:** [What the target agent needs to do]
+**Work Completed:** [What has been done already]
+**Current State:** [File/data that exists now]
+**Constraints:** [Time, format, requirements from user]
+**Priority:** [High | Medium | Low]
+```
+
+### Agent-Specific Handoffs
+
+<!-- WHY: Define the specific handoffs between agents in this squad. -->
+
+**{{AGENT_1_NAME}} → {{AGENT_2_NAME}}:**
+- Triggers when: {{TRIGGER_FOR_THIS_HANDOFF}}
+- Required context: {{REQUIRED_CONTEXT_IN_HANDOFF}}
+- Format: {{HANDOFF_OUTPUT_FORMAT}}
+
+**{{AGENT_2_NAME}} → {{AGENT_3_NAME}}:**
+- Triggers when: {{TRIGGER_FOR_THIS_HANDOFF}}
+- Required context: {{REQUIRED_CONTEXT_IN_HANDOFF}}
+- Format: {{HANDOFF_OUTPUT_FORMAT}}
+
+---
+
+## Workflows
+
+<!-- WHY: Define the multi-agent sequences this squad executes. -->
+<!-- WHY: Each workflow shows how agents collaborate, not just what each agent does. -->
+
+### Workflow 1: {{WORKFLOW_1_NAME}}
+
+**Trigger:** {{WORKFLOW_1_TRIGGER}}
+**Duration:** {{WORKFLOW_1_ESTIMATED_DURATION}}
+
+```
+Step 1: {{AGENT_X}} — {{STEP_1_ACTION}}
+         Output: {{STEP_1_OUTPUT}}
+         ↓
+Step 2: {{AGENT_Y}} — {{STEP_2_ACTION}}
+         Input: Step 1 output
+         Output: {{STEP_2_OUTPUT}}
+         ↓
+Step 3: {{AGENT_Z}} — {{STEP_3_ACTION}}
+         Input: Steps 1+2 output
+         Output: {{FINAL_OUTPUT}}
+```
+
+**Quality gate:** {{WORKFLOW_1_QUALITY_GATE}}
+**Completion criteria:** {{WORKFLOW_1_COMPLETION}}
+
+### Workflow 2: {{WORKFLOW_2_NAME}}
+
+<!-- WHY: Add additional workflows as needed. Minimum 1 for MCS-1, 3+ for MCS-2. -->
+
+**Trigger:** {{WORKFLOW_2_TRIGGER}}
+
+```
+[Define steps]
+```
+
+---
+
+## Quality Gates
+
+<!-- WHY: Each workflow needs a quality gate. -->
+<!-- WHY: Gates should be specific — "output is complete" is not a gate. -->
+
+| Workflow | Gate | Check | Pass Condition |
+|----------|------|-------|---------------|
+| {{WORKFLOW_1_NAME}} | G1 | {{GATE_1_CHECK}} | {{GATE_1_PASS}} |
+| {{WORKFLOW_2_NAME}} | G2 | {{GATE_2_CHECK}} | {{GATE_2_PASS}} |
+
+---
+
+## Escalation Rules
+
+<!-- WHY: Define exactly when the squad cannot handle the task. -->
+<!-- WHY: Explicit escalation rules prevent silent failure. -->
+
+The squad escalates to a human when:
+
+1. **{{ESCALATION_CONDITION_1}}** — Include: {{WHAT_TO_SURFACE_TO_HUMAN}}
+2. **{{ESCALATION_CONDITION_2}}** — Include: {{WHAT_TO_SURFACE_TO_HUMAN}}
+3. **Any irreversible action** — Always confirm before permanent changes
+
+When escalating, preserve state by: {{STATE_PRESERVATION_STRATEGY}}
+
+---
+
+## Capability Index
+
+<!-- WHY: Maps what the squad can do to which agent owns it. -->
+<!-- WHY: Allows users to query "can this squad do X?" programmatically. -->
+
+See `config/capability-index.yaml` for machine-readable capability mapping.
+
+**Quick reference:**
+
+| Capability | Owner Agent | Notes |
+|-----------|-------------|-------|
+| {{CAPABILITY_1}} | {{AGENT_X}} | {{CAPABILITY_1_NOTES}} |
+| {{CAPABILITY_2}} | {{AGENT_Y}} | {{CAPABILITY_2_NOTES}} |
+| {{CAPABILITY_3}} | {{AGENT_Z}} | {{CAPABILITY_3_NOTES}} |
+
+---
+
+## Compact Instructions
+
+<!-- WHY: Squads have the most complex state — multiple agents, workflows, coordination. -->
+<!-- WHY: Compaction without guidance loses the orchestration map. -->
+<!-- WHY: [SOURCE: compact/prompt.ts:133-143] — Claude Code reads this section by name. -->
+
+When summarizing this conversation, always preserve:
+- The squad name (`{{PRODUCT_SLUG}}`) and full agent roster with roles
+- Current workflow state: which workflow is active, at which step
+- Agent coordination state: who is working on what, pending handoffs
+- Capability index: which agent owns which capability
+- Creator intent and the squad's strategic purpose from /fill
+- Current MCS scores per agent and overall squad score
+- Any inter-agent dependencies or blocking conditions
+
+---
+<!-- WHY: Required sections above cover MCS-1. -->
+<!-- WHY: For MCS-2: add handoff-protocol.md, 3 workflow examples, capability-index.yaml -->
+<!-- WHY: For MCS-3: all agents at MCS-2, stress-test routing, add performance metrics -->

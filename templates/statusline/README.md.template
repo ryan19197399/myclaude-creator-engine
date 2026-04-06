@@ -1,0 +1,50 @@
+# {{PRODUCT_DISPLAY_NAME}}
+
+<!-- WHY: D13 (Self-Documentation) — Status lines are visual products.
+     Show what they look like before explaining how they work. -->
+
+> {{STATUSLINE_TAGLINE}}
+
+## What It Does
+
+{{STATUSLINE_DESCRIPTION}}
+
+**Preview:**
+```
+{{SAMPLE_STATUS_LINE_OUTPUT}}
+```
+
+## Installation
+
+```bash
+myclaude install {{PRODUCT_SLUG}}
+```
+
+After installation, the script is placed at `~/.claude/statusline-scripts/{{PRODUCT_SLUG}}.sh` and activated via `settings.json`.
+
+**Also compatible with:** Any [Agent Skills](https://agentskills.io)-compliant platform.
+
+## Usage
+
+The status line activates automatically in every Claude Code session (renders after each assistant message).
+
+### Configuration
+
+Edit `statusline.sh` to customize:
+
+- **Display format:** What information to show and how
+- **Colors:** ANSI escape codes for styling
+- **Fallbacks:** What to display when data is unavailable
+
+## Requirements
+
+- Claude Code >= 1.0.0
+- {{DATA_SOURCE_REQUIREMENTS}}
+
+---
+
+**Version:** {{VERSION}} | **License:** {{LICENSE}} | **Author:** {{AUTHOR}}
+
+[![MCS {{MCS_LEVEL}}](https://myclaude.sh/badge/mcs/{{MCS_LEVEL_NUMBER}}.svg)](https://myclaude.sh/quality) [![Available on MyClaude](https://myclaude.sh/badge/available.svg)](https://myclaude.sh/p/{{PRODUCT_SLUG}})
+
+<sub>Quality-validated by [MyClaude Studio Engine](https://myclaude.sh/studio) | [Browse marketplace](https://myclaude.sh/explore)</sub>

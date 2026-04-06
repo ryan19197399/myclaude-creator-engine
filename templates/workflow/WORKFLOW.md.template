@@ -1,0 +1,204 @@
+---
+name: {{PRODUCT_SLUG}}
+description: >-
+  {{WORKFLOW_DESCRIPTION}}
+  Use when: {{TRIGGER_DESCRIPTION}}.  Updates and docs at myclaude.sh/p/{{PRODUCT_SLUG}}
+# model: claude-sonnet-4-6               # force model
+# effort: high                           # reasoning effort
+# context: fork                          # isolation mode
+# paths: ['*.yaml', 'workflows/**']      # conditional activation
+# argument-hint: "[options]"             # autocomplete hint
+---
+<!-- WHY: The myclaude.sh link in description means every platform that reads this file surfaces MyClaude. -->
+<!-- WHY: Frontmatter makes your workflow invocable after installation. -->
+
+# {{WORKFLOW_NAME}}
+
+<!-- WHY: Name should describe the process, not the output. -->
+<!-- WHY: "Code Review Workflow" (process) > "Code Quality Checker" (output-oriented) -->
+
+**Purpose:** {{WORKFLOW_PURPOSE}}
+**Trigger:** {{WORKFLOW_TRIGGER}}
+<!-- WHY: Trigger options: Manual | On file change | On schedule | On completion of [other workflow] -->
+**Duration:** {{ESTIMATED_DURATION}}
+**Tools Required:** {{TOOLS_REQUIRED}}
+**Version:** {{VERSION}}
+**Author:** {{AUTHOR_USERNAME}}
+
+---
+
+## Trigger Conditions
+
+<!-- WHY: What must be true before this workflow can run? -->
+<!-- WHY: Include both when to run AND preconditions that must hold. -->
+
+**Run when:**
+- {{WHEN_TO_RUN_1}}
+- {{WHEN_TO_RUN_2}}
+
+**Preconditions (must be true before starting):**
+- [ ] {{PRECONDITION_1}}
+- [ ] {{PRECONDITION_2}}
+
+**Do NOT run when:**
+- {{WHEN_NOT_TO_RUN}}
+
+---
+
+## Input Requirements
+
+<!-- WHY: Every required input must be listed. Missing inputs = failed workflow. -->
+<!-- WHY: Include format specifications — not just "provide a file" but "provide a .ts file". -->
+
+| Input | Required | Format | Description |
+|-------|----------|--------|-------------|
+| `{{INPUT_1_NAME}}` | Yes | {{INPUT_1_FORMAT}} | {{INPUT_1_DESCRIPTION}} |
+| `{{INPUT_2_NAME}}` | Yes | {{INPUT_2_FORMAT}} | {{INPUT_2_DESCRIPTION}} |
+| `{{INPUT_3_NAME}}` | No | {{INPUT_3_FORMAT}} | {{INPUT_3_DESCRIPTION}} (default: {{INPUT_3_DEFAULT}}) |
+
+**Input validation:** Before starting, verify:
+- {{VALIDATION_CHECK_1}}
+- {{VALIDATION_CHECK_2}}
+
+If validation fails: {{VALIDATION_FAILURE_ACTION}}
+
+---
+
+## Step Sequence
+
+<!-- WHY: Use zero-padded numbers: 01, 02, 03... -->
+<!-- WHY: Each step has ONE responsibility. Break compound steps into multiple. -->
+<!-- WHY: Dependencies must be explicit — don't assume sequential unless declared. -->
+
+| Step | Name | Depends On | Input | Output | File |
+|------|------|-----------|-------|--------|------|
+| 01 | {{STEP_1_NAME}} | — | {{STEP_1_INPUT}} | {{STEP_1_OUTPUT}} | `steps/01-{{step-1-slug}}.md` |
+| 02 | {{STEP_2_NAME}} | 01 | {{STEP_2_INPUT}} | {{STEP_2_OUTPUT}} | `steps/02-{{step-2-slug}}.md` |
+| 03 | {{STEP_3_NAME}} | 01 | {{STEP_3_INPUT}} | {{STEP_3_OUTPUT}} | `steps/03-{{step-3-slug}}.md` |
+| 04 | {{STEP_4_NAME}} | 02, 03 | {{STEP_4_INPUT}} | {{STEP_4_OUTPUT}} | `steps/04-{{step-4-slug}}.md` |
+
+<!-- WHY: Add steps as needed. Minimum 3 for MCS-1. -->
+
+### Step 01: {{STEP_1_NAME}}
+
+<!-- WHY: Inline summary of each step. Full details live in steps/0N-*.md -->
+
+**What it does:** {{STEP_1_DESCRIPTION}}
+**Skill/Tool used:** {{STEP_1_SKILL_OR_TOOL}}
+**Success condition:** {{STEP_1_SUCCESS}}
+
+### Step 02: {{STEP_2_NAME}}
+
+**What it does:** {{STEP_2_DESCRIPTION}}
+**Skill/Tool used:** {{STEP_2_SKILL_OR_TOOL}}
+**Success condition:** {{STEP_2_SUCCESS}}
+
+### Step 03: {{STEP_3_NAME}}
+
+**What it does:** {{STEP_3_DESCRIPTION}}
+**Skill/Tool used:** {{STEP_3_SKILL_OR_TOOL}}
+**Success condition:** {{STEP_3_SUCCESS}}
+
+---
+
+## Output / Deliverables
+
+<!-- WHY: List every artifact the workflow produces. -->
+<!-- WHY: Include format, location, and what each artifact is for. -->
+
+| Artifact | Format | Location | Purpose |
+|----------|--------|----------|---------|
+| `{{ARTIFACT_1_NAME}}` | {{ARTIFACT_1_FORMAT}} | {{ARTIFACT_1_LOCATION}} | {{ARTIFACT_1_PURPOSE}} |
+| `{{ARTIFACT_2_NAME}}` | {{ARTIFACT_2_FORMAT}} | {{ARTIFACT_2_LOCATION}} | {{ARTIFACT_2_PURPOSE}} |
+
+---
+
+## Error Handling
+
+<!-- WHY: Every failure mode needs a defined response. -->
+<!-- WHY: Three types: retry (transient), fallback (alternative path), abort (irrecoverable). -->
+
+### Step-Level Errors
+
+| Step | Error Condition | Action |
+|------|----------------|--------|
+| 01 | {{STEP_1_ERROR}} | Retry up to 2 times, then abort with message: "{{ABORT_MESSAGE}}" |
+| 02 | {{STEP_2_ERROR}} | Use fallback: {{STEP_2_FALLBACK}} |
+| 03 | {{STEP_3_ERROR}} | Skip and continue (non-blocking) |
+
+### Abort Conditions
+
+Stop the workflow and alert the user if:
+- {{ABORT_CONDITION_1}} — Error: "{{ABORT_MESSAGE_1}}"
+- {{ABORT_CONDITION_2}} — Error: "{{ABORT_MESSAGE_2}}"
+
+### State on Abort
+
+When aborting: {{HOW_TO_PRESERVE_PARTIAL_STATE}}
+
+To resume after fixing the issue: {{HOW_TO_RESUME}}
+
+---
+
+## Completion Criteria
+
+<!-- WHY: Define what "done" means specifically. -->
+<!-- WHY: Include both functional criteria and quality criteria. -->
+
+The workflow is complete when:
+
+- [ ] {{COMPLETION_CRITERION_1}}
+- [ ] {{COMPLETION_CRITERION_2}}
+- [ ] {{COMPLETION_CRITERION_3}}
+- [ ] All output artifacts are present at expected locations
+- [ ] No error conditions are active
+
+**Final quality check:** {{FINAL_QUALITY_CHECK_PROCEDURE}}
+
+---
+
+## Configuration
+
+<!-- WHY: All configurable parameters must be documented here AND in config/variables.yaml -->
+<!-- WHY: Parameters allow the workflow to be reused across different contexts. -->
+
+See `config/variables.yaml` for all configurable parameters.
+
+**Key parameters:**
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `{{PARAM_1}}` | `{{PARAM_1_DEFAULT}}` | {{PARAM_1_DESCRIPTION}} |
+| `{{PARAM_2}}` | `{{PARAM_2_DEFAULT}}` | {{PARAM_2_DESCRIPTION}} |
+
+---
+
+## Composability
+
+<!-- WHY: How does this workflow combine with other products? -->
+
+- **Can be triggered by:** {{UPSTREAM_TRIGGER_CONDITIONS}}
+- **Output feeds into:** {{DOWNSTREAM_WORKFLOWS_OR_SKILLS}}
+- **Used as step in:** {{LARGER_SYSTEM_CONTEXT}}
+
+---
+
+## Compact Instructions
+
+<!-- WHY: Workflows have sequential state — losing the current step position is catastrophic. -->
+<!-- WHY: Without this, a compacted session restarts the workflow from scratch. -->
+<!-- WHY: [SOURCE: compact/prompt.ts:133-143] — Claude Code reads this section by name. -->
+
+When summarizing this conversation, always preserve:
+- The workflow name (`{{PRODUCT_SLUG}}`) and total step count
+- Current step position and completion status of each prior step
+- Step outputs that feed into downstream steps (the data pipeline)
+- Any branching decisions made and the conditions that triggered them
+- Variable state from variables.yaml that was set during execution
+- Error states: which steps failed and what recovery was attempted
+- Creator intent and acceptance criteria from /fill
+
+---
+<!-- WHY: Required content above covers MCS-1. -->
+<!-- WHY: For MCS-2: complete variables.yaml, add error handling for each step, 2 execution examples -->
+<!-- WHY: For MCS-3: add adaptive modes, composability patterns, performance metrics -->

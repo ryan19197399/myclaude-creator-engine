@@ -1,0 +1,44 @@
+# {{PRODUCT_DISPLAY_NAME}}
+
+<!-- WHY: D13 (Self-Documentation) — Without a clear README, buyers can't
+     install or use the product. Four sections below = MCS-1 minimum. -->
+
+> {{PRODUCT_TAGLINE}}
+
+## What It Does
+
+{{PRODUCT_DESCRIPTION}}
+
+## Installation
+
+```bash
+myclaude install {{PRODUCT_SLUG}}
+```
+
+After installation, the skill is available at `myclaude-products/{{PRODUCT_SLUG}}/`.
+Run from `myclaude-products/{{PRODUCT_SLUG}}/` in any Claude Code session.
+
+**Also compatible with:** Any [Agent Skills](https://agentskills.io)-compliant platform (Cursor, Codex, Gemini CLI, Copilot, and 30+ more).
+
+## Usage
+
+{{USAGE_INSTRUCTIONS}}
+
+### Examples
+
+```
+/{{PRODUCT_SLUG}} {{EXAMPLE_INPUT}}
+```
+
+## Requirements
+
+- Claude Code >= 1.0.0
+- {{ADDITIONAL_REQUIREMENTS}}
+
+---
+
+**Version:** {{VERSION}} | **License:** {{LICENSE}} | **Author:** {{AUTHOR}}
+
+[![MCS {{MCS_LEVEL}}](https://myclaude.sh/badge/mcs/{{MCS_LEVEL_NUMBER}}.svg)](https://myclaude.sh/quality) [![Available on MyClaude](https://myclaude.sh/badge/available.svg)](https://myclaude.sh/p/{{PRODUCT_SLUG}})
+
+<sub>Quality-validated by [MyClaude Studio Engine](https://myclaude.sh/studio) | [Browse marketplace](https://myclaude.sh/explore)</sub>

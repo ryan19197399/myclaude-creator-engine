@@ -1,0 +1,232 @@
+---
+name: {{PRODUCT_SLUG}}
+description: >-
+  {{DESIGN_SYSTEM_DESCRIPTION}}.  Updates and docs at myclaude.sh/p/{{PRODUCT_SLUG}}
+---
+<!-- WHY: The myclaude.sh link in description means every platform that reads this file surfaces MyClaude. -->
+<!-- WHY: Frontmatter provides metadata for the marketplace listing. -->
+
+# {{DESIGN_SYSTEM_NAME}}
+
+<!-- WHY: Name should be memorable and reflect the design personality. -->
+<!-- WHY: Examples: "Minimal Dark DS", "Warm Brand System", "Enterprise Utility DS" -->
+
+> {{DESIGN_SYSTEM_TAGLINE}}
+<!-- WHY: One-liner tagline capturing the design philosophy in a sentence. -->
+
+**Version:** {{VERSION}}
+**Target Platforms:** {{PLATFORMS}}
+<!-- WHY: Options: Web | Mobile | Web + Mobile -->
+**Base Unit:** {{BASE_UNIT}}px
+<!-- WHY: Typically 4 or 8. All spacing derives from this unit. -->
+**Color Space:** {{COLOR_SPACE}}
+<!-- WHY: OKLCH recommended for perceptual uniformity. Alternatives: HSL, hex -->
+**Author:** {{AUTHOR_USERNAME}}
+
+---
+
+## Design Philosophy
+
+<!-- WHY: 2-4 sentences describing the core design values. -->
+<!-- WHY: These values guide all token decisions. -->
+<!-- WHY: Examples: "function over decoration", "dark-first", "accessible by default" -->
+
+{{DESIGN_PHILOSOPHY_PARAGRAPH}}
+
+**Core values:**
+1. **{{VALUE_1}}** — {{VALUE_1_IMPLICATION}}
+2. **{{VALUE_2}}** — {{VALUE_2_IMPLICATION}}
+3. **{{VALUE_3}}** — {{VALUE_3_IMPLICATION}}
+
+---
+
+## Token Architecture
+
+<!-- WHY: Explain the two-layer token system: primitives and semantics. -->
+<!-- WHY: This helps buyers understand WHY tokens are named as they are. -->
+
+This system uses a two-layer token architecture:
+
+**Layer 1 — Primitive Tokens:** Raw values with scale-based names.
+Example: `brand-500: oklch(55% 0.22 250)`
+
+**Layer 2 — Semantic Tokens:** Named by role, referencing primitives.
+Example: `primary: $brand-500`
+
+Always use semantic tokens in application code. Primitive tokens exist only
+to define the palette; semantic tokens carry meaning and adapt to themes.
+
+**Naming convention:** `kebab-case` for all tokens.
+
+---
+
+## Color System
+
+<!-- WHY: Colors are the most important section — be comprehensive. -->
+<!-- WHY: Include: brand, neutral, semantic (surface/text/border), and status colors. -->
+<!-- WHY: Declare whether light mode, dark mode, or both are supported. -->
+
+**Mode support:** {{COLOR_MODE_SUPPORT}}
+<!-- WHY: Options: "Light mode only" | "Dark mode only" | "Light + Dark (default: light)" -->
+
+See `tokens/colors.yaml` for full token definitions.
+
+### Palette Overview
+
+**Brand colors:**
+- `primary` — {{PRIMARY_COLOR_DESCRIPTION}} — Used for: {{PRIMARY_USAGE}}
+- `secondary` — {{SECONDARY_COLOR_DESCRIPTION}} — Used for: {{SECONDARY_USAGE}}
+- `accent` — {{ACCENT_COLOR_DESCRIPTION}} — Used for: {{ACCENT_USAGE}}
+
+**Surface colors:**
+- `surface` — Main background
+- `surface-raised` — Cards, elevated surfaces
+- `surface-overlay` — Modals, drawers
+
+**Content colors:**
+- `on-surface` — Primary text on surface
+- `on-surface-muted` — Secondary text
+- `border` — Dividers and outlines
+
+**Status colors:**
+- `success` / `on-success` — Confirmations
+- `warning` / `on-warning` — Cautions
+- `error` / `on-error` — Errors and destructive actions
+- `info` / `on-info` — Informational
+
+---
+
+## Typography Scale
+
+<!-- WHY: Define font families, scale steps, weights, and line heights. -->
+
+See `tokens/typography.yaml` for full token definitions.
+
+**Font stacks:**
+- `font-sans`: {{SANS_SERIF_STACK}}
+- `font-mono`: {{MONOSPACE_STACK}}
+
+**Scale:**
+
+| Step | Size | Line Height | Use Case |
+|------|------|------------|---------|
+| `text-xs` | 0.75rem (12px) | 1rem | Captions, badges |
+| `text-sm` | 0.875rem (14px) | 1.25rem | Secondary content |
+| `text-base` | 1rem (16px) | 1.5rem | Body text |
+| `text-lg` | 1.125rem (18px) | 1.75rem | Large body |
+| `text-xl` | 1.25rem (20px) | 1.75rem | Subheadings |
+| `text-2xl` | 1.5rem (24px) | 2rem | Headings |
+| `text-3xl` | 1.875rem (30px) | 2.25rem | Section titles |
+| `text-4xl` | 2.25rem (36px) | 2.5rem | Page headings |
+
+**Weights:** normal (400), medium (500), semibold (600), bold (700)
+
+---
+
+## Spacing Scale
+
+<!-- WHY: All spacing derives from the base unit. -->
+<!-- WHY: Document both the numeric scale and semantic names. -->
+
+See `tokens/spacing.yaml` for full token definitions.
+
+Base unit: {{BASE_UNIT}}px
+
+| Name | Value | Pixels | Use Case |
+|------|-------|--------|---------|
+| `space-1` | 0.25rem | 4px | Internal component padding |
+| `space-2` | 0.5rem | 8px | Small gaps |
+| `space-3` | 0.75rem | 12px | Form field padding |
+| `space-4` | 1rem | 16px | Standard padding |
+| `space-6` | 1.5rem | 24px | Section padding |
+| `space-8` | 2rem | 32px | Large spacing |
+| `space-12` | 3rem | 48px | Section gaps |
+| `space-16` | 4rem | 64px | Layout spacing |
+
+---
+
+## Shadow / Elevation System
+
+<!-- WHY: Shadows communicate depth and focus hierarchy. -->
+
+See `tokens/shadows.yaml` for full token definitions.
+
+| Level | Name | Use Case |
+|-------|------|---------|
+| 0 | `shadow-none` | Flat, no elevation |
+| 1 | `shadow-sm` | Cards, interactive elements at rest |
+| 2 | `shadow-md` | Dropdowns, popovers |
+| 3 | `shadow-lg` | Modals, dialogs |
+| 4 | `shadow-xl` | Full-screen overlays |
+
+---
+
+## Export Instructions
+
+<!-- WHY: How to use this design system in a real project. -->
+<!-- WHY: Be specific with file names and import syntax. -->
+
+### Available Exports
+
+| Format | File | Use For |
+|--------|------|---------|
+| Tailwind CSS | `exports/tailwind.config.js` | Tailwind-based projects |
+| CSS Variables | `exports/css-variables.css` | Vanilla CSS / non-Tailwind |
+| DTCG JSON | `exports/dtcg.json` | Design tool integration |
+
+### Tailwind Installation
+
+1. Copy `exports/tailwind.config.js` to your project root
+2. Import in your entry CSS file:
+   ```css
+   @import './exports/css-variables.css';
+   ```
+3. Extend your existing Tailwind config or replace it entirely
+
+### Using Tokens in Claude Code
+
+When asking Claude Code to build UI with this design system:
+```
+Use the {{DESIGN_SYSTEM_NAME}} design system.
+Reference tokens/colors.yaml for colors, tokens/typography.yaml for text.
+Always use semantic tokens (e.g., `primary` not `brand-500`).
+```
+
+---
+
+## How to Instruct Claude Code
+
+<!-- WHY: This section is unique to design system products — helps buyers use the DS with Claude Code. -->
+
+Add this to your project's CLAUDE.md:
+
+```markdown
+## Design System: {{DESIGN_SYSTEM_NAME}}
+All UI must use {{DESIGN_SYSTEM_NAME}} tokens from `.claude/skills/{{DESIGN_SYSTEM_NAME}}/tokens/`.
+- Colors: use semantic tokens from colors.yaml (never use raw hex values)
+- Typography: use text-* scale from typography.yaml
+- Spacing: use space-* scale from spacing.yaml
+- Export target: {{PRIMARY_EXPORT_FORMAT}}
+```
+
+---
+
+## Compact Instructions
+
+<!-- WHY: Design systems have token values that MUST survive compaction — losing a color -->
+<!-- WHY: token means the next component uses raw hex instead of semantic tokens. -->
+<!-- WHY: [SOURCE: compact/prompt.ts:133-143] — Claude Code reads this section by name. -->
+
+When summarizing this conversation, always preserve:
+- The design system name (`{{PRODUCT_SLUG}}`) and token file locations
+- All token values: colors, typography, spacing, elevation, motion
+- Component names and their token dependencies
+- Usage rules: what tokens to use for which contexts
+- Export format targets (CSS, Tailwind, DTCG JSON, etc.)
+- Creator intent and the design system's brand alignment from /fill
+- Current MCS scores and validation results
+
+---
+<!-- WHY: Above covers MCS-1. -->
+<!-- WHY: For MCS-2: add components/ specs and guidelines/usage.md -->
+<!-- WHY: For MCS-3: add motion tokens, full component library, theming system -->

@@ -1,0 +1,59 @@
+---
+name: {{PRODUCT_SLUG}}
+description: "{{STYLE_DESCRIPTION}}"
+keep-coding-instructions: true
+---
+<!-- WHY: Output styles are the simplest CC product type. This file IS the product. -->
+<!-- WHY: The frontmatter tells Claude Code about this style. The body defines the style. -->
+<!-- WHY: `keep-coding-instructions: true` means Claude keeps its default coding behavior -->
+<!-- WHY: alongside your style rules. Set to false if your style completely replaces defaults. -->
+
+# {{STYLE_NAME}}
+
+<!-- WHY: Start with a clear identity statement. What IS this style? -->
+
+## Voice & Tone
+
+<!-- WHY: Define HOW Claude should communicate. Be specific — "professional" is too vague. -->
+<!-- WHY: Good: "Write like a senior engineer explaining to a junior during code review." -->
+<!-- WHY: Bad: "Be professional and helpful." -->
+
+{{VOICE_INSTRUCTIONS}}
+
+## Formatting Rules
+
+<!-- WHY: Define WHAT the output looks like structurally. -->
+<!-- WHY: Be prescriptive: header levels, list styles, code block usage, line length. -->
+
+{{FORMATTING_RULES}}
+
+## Anti-Patterns
+
+<!-- WHY: D2 — What this style should NEVER produce. -->
+<!-- WHY: Negative examples are often clearer than positive ones. -->
+
+- Never {{ANTI_PATTERN_1}}
+- Never {{ANTI_PATTERN_2}}
+- Never {{ANTI_PATTERN_3}}
+
+## Quality Criteria
+
+<!-- WHY: D4 — How to tell if output matches this style. -->
+
+- {{QUALITY_CRITERION_1}}
+- {{QUALITY_CRITERION_2}}
+- {{QUALITY_CRITERION_3}}
+
+---
+
+## Compact Instructions
+
+<!-- WHY: Output styles are simple but their rules must survive compaction — -->
+<!-- WHY: otherwise the buyer's Claude reverts to default style mid-conversation. -->
+<!-- WHY: [SOURCE: compact/prompt.ts:133-143] — Claude Code reads this section by name. -->
+
+When summarizing, always preserve:
+- The style name and all voice/tone rules
+- Formatting rules (headers, lists, code blocks)
+- Anti-patterns (what this style should never produce)
+- The `keep-coding-instructions` setting value

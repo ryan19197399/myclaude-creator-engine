@@ -1,0 +1,281 @@
+# product-dna/minds.yaml — DNA requirements for Minds
+# Read by /create, /validate, /package when type=minds
+#
+# NOTE: Minds are the NON-DEV gateway type. Language in templates and
+# discovery questions must be accessible to strategists, researchers,
+# and consultants with zero coding knowledge.
+
+type: minds
+primary_file: AGENT.md
+install_target: ".claude/agents/{slug}.md"
+template: "templates/minds/"
+# Package rename: AGENT.md → {slug}.md during /package
+# WHY: Claude Code agents use flat {name}.md files in .claude/agents/
+# The workspace uses AGENT.md for clarity, but the installed file is {slug}.md
+package_rename: "{slug}.md"
+
+# DNA pattern requirements
+dna_patterns:
+  tier1:
+    D1:  { required: true,  name: "Activation Protocol",    check: "grep activation/protocol section + references/ ref" }
+    D2:  { required: true,  name: "Anti-Pattern Guard",     check: "grep anti-pattern section with >=5 items" }
+    D3:  { required: true,  name: "Progressive Disclosure",  check: "references/ exists + primary <500 lines" }
+    D4:  { required: true,  name: "Quality Gate",            check: "grep quality gate with >=3 criteria" }
+    D13: { required: true,  name: "Self-Documentation",      check: "README.md with what/install/usage/requirements" }
+    D14: { required: true,  name: "Graceful Degradation",    check: "grep 'when not to use' or error handling" }
+    D19: { required: false, name: "Attention-Aware Authoring", check: "critical rules in last 30% of file" }
+  tier2:
+    D5:  { required: true,  name: "Question System",         check: "grep question/input table — minds MUST ask good questions" }
+    D6:  { required: true,  name: "Confidence Signaling",    check: "grep confidence levels or certainty markers" }
+    D7:  { required: false, name: "Pre-Execution Gate",      applicable: false }
+    D8:  { required: false, name: "State Persistence",       applicable: false }
+    D15: { required: false, name: "Testability",             check: "optional — examples of mind in action" }
+    D16: { required: false, name: "Composability",           check: "optional — minds can be standalone" }
+    D17: { required: false, name: "Hook Integration",        applicable: false }
+  tier3:
+    D9:  { required: false, name: "Orchestrate Don't Execute", applicable: false }
+    D10: { required: false, name: "Handoff Spec",              applicable: false }
+    D11: { required: false, name: "Socratic Pressure",         check: "optional — minds that challenge assumptions are higher quality" }
+    D12: { required: false, name: "Compound Memory",           applicable: false }
+    D18: { required: false, name: "Subagent Isolation",        applicable: false }
+    D20: { applicable: false }
+
+# MCS scoring expectations
+mcs_expectations:
+  mcs1: "All Tier 1 PASS. Score >= 75%."
+  mcs2: "Tier 1+2 required PASS. Score >= 85%."
+  mcs3: "Not typical for minds (only D11 applicable from Tier 3). MCS-2 is ceiling."
+
+# Template file mapping
+template_files:
+  - source: "AGENT.md.template"
+    target: "AGENT.md"
+    dna_injected: [D1, D2, D4, D5, D6, D14]
+  - source: "README.md.template"
+    target: "README.md"
+    dna_injected: [D13]
+  - source: "examples/examples.md.template"
+    target: "examples/examples.md"
+    dna_injected: [D15]
+
+# Voice requirements (non-dev first)
+voice:
+  why_comments: "Plain language only. NOT 'D5 (Question System)' — YES 'Great minds ask before they answer.'"
+  discovery: "Business language, not technical jargon."
+  template: "Assumes ZERO coding knowledge."
+
+# Frontmatter for minds [SOURCE: loadAgentsDir.ts, frontmatterParser.ts]
+# Minds use AGENT.md format with agent frontmatter fields.
+frontmatter:
+  required:
+    - name            # Mind's invocation name [SOURCE: loadAgentsDir.ts]
+    - description     # Catalog display, token counted [SOURCE: loadSkillsDir.ts:100-105]
+  recommended:
+    - model           # Force model (opus for deep reasoning, sonnet for fluent conversation)
+    - "denied-tools"  # Block tools minds shouldn't use (e.g., Write, Edit for advisory-only minds)
+  optional:
+    - "allowed-tools" # Restrict tool access [SOURCE: AgentTool.ts]
+    - "auto-memory"   # Enable auto-memory for this mind
+    - memory          # user|project|local persistence scope [SOURCE: AgentTool internals]
+    - effort          # Reasoning effort [SOURCE: frontmatterParser.ts]
+    - maxTurns        # Limit iterations [SOURCE: AgentTool.ts]
+    - skills          # Preloaded skill knowledge
+    - hooks           # Mind-scoped hooks [SOURCE: schemas/hooks.ts]
+
+# Token economics [SOURCE: loadSkillsDir.ts:100-105]
+token_economics:
+  catalog_cost: "name + description → ~50 tokens when mind is available as agent"
+  invocation_cost: "Full AGENT.md loaded when mind is spawned via Agent()"
+  ambient_cost: "Zero — minds are loaded on demand, not auto-loaded"
+  optimization: "Voice/thinking DNA in primary file, deep knowledge in references/"
+
+# Compact instructions applicability
+compact_instructions:
+  applicable: true
+  location: "AGENT.md → ## Compact Instructions section"
+  preserves: "persona identity, voice DNA markers, thinking DNA frameworks, active conversation state"
+
+# ---------------------------------------------------------------------------
+# MIND DEPTH — advisory (flat) vs cognitive (5-layer architecture)
+# ---------------------------------------------------------------------------
+# Minds have two depths. Advisory is the default: a specialist advisor in a
+# single AGENT.md + references/. Cognitive is the premium tier: a full
+# cognitive architecture with 5 layers, 7 DNA strands, and ~1000 lines.
+# Both install to .claude/agents/{slug}.md — same CC primitive, different depth.
+#
+# Semantic anchor: "mind" activates cognition/thinking/intelligence in the LLM.
+# "cognitive" activates structured reasoning, architecture, neuroscience.
+# Together: a mind that THINKS with architecture, not just responds.
+# ---------------------------------------------------------------------------
+
+depth:
+  advisory:
+    description: "Specialist advisor — focused domain expertise in flat structure"
+    template: "templates/minds/"
+    target_lines: "150-300"
+    structure: "AGENT.md + references/ + examples/"
+    use_when: "Creator wants a domain advisor, consultant, or specialist perspective"
+
+  cognitive:
+    description: "Full cognitive architecture — 5 layers, 7 DNA strands, ~1000 lines"
+    template: "templates/minds/cognitive/"
+    target_lines: "800-1200"
+    structure: "AGENT.md (L1) + references/cognitive-core.md (L2) + references/personality.md (L3) + references/knowledge-base.md (L4) + references/reasoning-engine.md (L5)"
+    use_when: "Creator wants a deep cognitive emulation — self-mind, genius mind, or domain intelligence"
+    required_files:
+      - "AGENT.md"
+      - "references/cognitive-core.md"
+      - "references/personality.md"
+      - "references/knowledge-base.md"
+      - "references/reasoning-engine.md"
+      - "README.md"
+      - "examples/examples.md"
+
+# ---------------------------------------------------------------------------
+# 5-LAYER ARCHITECTURE (cognitive depth only)
+# ---------------------------------------------------------------------------
+layers:
+  L1:
+    name: "Boot"
+    file: "AGENT.md"
+    target_lines: "150-250"
+    contains: "identity declaration, principles, cognitive patterns, communication markers, triggers, validation"
+  L2:
+    name: "Cognitive Core"
+    file: "references/cognitive-core.md"
+    target_lines: "200-300"
+    contains: "biography/evolution, cognitive architecture, singularity structures"
+  L3:
+    name: "Personality Engine"
+    file: "references/personality.md"
+    target_lines: "150-250"
+    contains: "behavioral matrix, philosophical system, methodology, interaction patterns"
+  L4:
+    name: "Knowledge Domains"
+    file: "references/knowledge-base.md"
+    target_lines: "150-300"
+    contains: "3-6 domains with depth levels + explicit boundaries"
+  L5:
+    name: "Reasoning Engine"
+    file: "references/reasoning-engine.md"
+    target_lines: "100-200"
+    contains: "primary reasoning pattern, analogy/model catalog, application triggers"
+
+# ---------------------------------------------------------------------------
+# 7 MIND DNA STRANDS (cognitive depth only)
+# Extracted from Leonardo da Vinci reverse-engineering (S99)
+# ---------------------------------------------------------------------------
+mind_strands:
+  C1:
+    name: "Identity Declaration"
+    check: "Uses 'You ARE' not 'Act as' — ontological, not performative"
+    layer: L1
+    without_it: "Generic role-play"
+  C2:
+    name: "Biographical Anchor"
+    check: "Real dates, names, events, works — grounded in verifiable history"
+    layer: L2
+    without_it: "Hallucinations, fabricated attribution"
+  C3:
+    name: "Cognitive Flow"
+    check: "Defined input→process→output sequence with named steps"
+    layer: L2
+    without_it: "Knowledge without method"
+  C4:
+    name: "Singularity Markers"
+    check: "3+ unique characteristics that make THIS mind irreplaceable"
+    layer: L2
+    without_it: "Generic advisor dressed up"
+  C5:
+    name: "Communication DNA"
+    check: "5+ characteristic expressions, tone rules, style markers"
+    layer: L3
+    without_it: "Robotic responses"
+  C6:
+    name: "Knowledge Domains"
+    check: "3-6 domains with depth levels AND explicit boundaries"
+    layer: L4
+    without_it: "Superficial or overconfident"
+  C7:
+    name: "Reasoning Engine"
+    check: "3+ concrete reasoning patterns with application triggers"
+    layer: L5
+    without_it: "Decorative persona without method"
+
+# ---------------------------------------------------------------------------
+# COGNITIVE MIND SUB-TYPES
+# ---------------------------------------------------------------------------
+cognitive_sub_types:
+  self:
+    description: "Package the creator's own expertise as a cognitive mind"
+    source: "Environment scan (creator.yaml, skills, products, CLAUDE.md files)"
+    requires_elicitation: true
+    elicitation_questions: 10-15
+  genius:
+    description: "Build from a genius profile in the library"
+    source: "Genius library (templates/genius-library/{name}/)"
+    requires_elicitation: false
+    requires_customization: true
+  domain:
+    description: "Create a domain intelligence from research"
+    source: "/scout report + domain research"
+    requires_elicitation: true
+    elicitation_questions: 8-12
+
+# ---------------------------------------------------------------------------
+# FIDELITY SCORING (cognitive depth only, used by /validate)
+# ---------------------------------------------------------------------------
+fidelity_scoring:
+  layer_completeness:
+    weight: 0.30
+    checks:
+      - "All 5 layer files exist"
+      - "Each layer within target line range"
+      - "Total lines 800-1200"
+  identity_integrity:
+    weight: 0.25
+    checks:
+      - "C1: 'You ARE' identity (not 'Act as')"
+      - "C2: 3+ verifiable biographical facts"
+      - "C4: 3+ singularity markers"
+      - "C5: 5+ characteristic expressions"
+  cognitive_depth:
+    weight: 0.25
+    checks:
+      - "C3: cognitive flow defined with named steps"
+      - "C6: 3-6 domains with explicit depth AND boundaries"
+      - "C7: 3+ reasoning patterns with triggers"
+  substance:
+    weight: 0.20
+    checks:
+      - "Real examples (not hypothetical)"
+      - "Reasoning engine has concrete models (not abstract advice)"
+      - "Boundaries are specific ('I do not X because Y')"
+      - "Baseline delta: mind output differs from vanilla Claude"
+
+# ---------------------------------------------------------------------------
+# DISCOVERY QUESTIONS (per depth)
+# ---------------------------------------------------------------------------
+discovery_questions:
+  advisory:
+    - "What domain expertise does this mind embody?"
+    - "How does this mind think? What mental models does it use?"
+    - "What questions does this mind always ask before answering?"
+    - "What does this mind refuse to do or claim knowledge about?"
+    - "How does this mind communicate? (formal, casual, Socratic, direct)"
+    - "Who is this mind for? What problem does the user have?"
+  cognitive_self:
+    - "What domains are you deepest in? (not just familiar — where you have REAL expertise)"
+    - "How do you think through hard problems? Walk me through a recent one."
+    - "What do most people in your field get wrong?"
+    - "What's your communication style? Direct? Socratic? Analytical?"
+    - "What do you refuse to do or advise on? Where are your boundaries?"
+  cognitive_genius:
+    - "Which genius profile do you want to build from?"
+    - "What domain are you applying this mind's thinking to?"
+    - "What aspects of their methodology matter most for your use case?"
+  cognitive_domain:
+    - "What domain should this mind specialize in?"
+    - "Who is the target user for this mind?"
+    - "What decisions or analysis should this mind support?"
+    - "What should this mind explicitly NOT claim expertise in?"

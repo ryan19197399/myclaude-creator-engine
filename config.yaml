@@ -1,0 +1,478 @@
+---
+# config.yaml — MyClaude Studio Engine quality configuration
+# Read by /validate, /create, /package skills
+# Schema version: 2.2.0
+
+# ---------------------------------------------------------------------------
+# MCS SCORING WEIGHTS
+# Overall = (dna × 0.50) + (structural × 0.30) + (integrity × 0.20)
+# ---------------------------------------------------------------------------
+scoring:
+  weights:
+    dna: 0.50
+    structural: 0.30
+    integrity: 0.20
+  pattern_scores:
+    pass: 1.0
+    partial: 0.5
+    fail: 0.0
+
+# ---------------------------------------------------------------------------
+# MCS QUALITY THRESHOLDS
+# ---------------------------------------------------------------------------
+thresholds:
+  mcs1:
+    overall_minimum: 75       # percent
+    dna_tiers_required: [1]   # Tier 1 patterns must all PASS
+    blocks_publish: true      # failing MCS-1 blocks /publish
+  mcs2:
+    overall_minimum: 85
+    dna_tiers_required: [1, 2]
+    anti_commodity_required: true   # coaching gate, not blocking
+    blocks_publish: false           # creator can override
+  mcs3:
+    overall_minimum: 92
+    dna_tiers_required: [1, 2, 3]
+    exemplar_comparison: true       # requires PRO (Quality Sentinel)
+    blocks_publish: false
+
+# Stale threshold: days since last validation before warning
+stale_days: 30
+
+# ---------------------------------------------------------------------------
+# SCOUT CONFIGURATION
+# Read by /scout skill — controls research budget and quality gates
+# ---------------------------------------------------------------------------
+scout:
+  baseline:
+    min_words: 300               # shorter → domain may be too narrow
+    max_words: 600               # longer → domain may need decomposition
+  gaps:
+    minimum: 5                   # quality gate — fewer than 5 → domain may be too narrow
+    diagnostic_minimum: 3        # diagnostic — fewer than 3 → baseline was too generous
+    maximum: 15                  # more than 15 → ask creator to narrow scope
+    required_lenses: ["missing", "shallow", "wrong", "generic"]
+  research:
+    max_searches: 12             # total WebSearch calls ceiling
+    max_fetches: 5               # total WebFetch calls ceiling
+    min_sourced_findings: 3      # minimum findings with source URLs (non-explore)
+    explore_max_searches: 6      # reduced budget for explore intent
+    explore_max_fetches: 2
+  recommendation:
+    max_products: 7              # force decomposition above this
+    bundle_threshold: 3          # recommend bundle when products > this
+    system_threshold: 5          # recommend system when products > this
+  output:
+    report_path: "workspace/scout-{slug}.md"
+    state_field: "last_scout"    # STATE.yaml field to update
+
+# Placeholder content patterns that fail integrity check
+placeholder_patterns:
+  - "TODO"
+  - "PLACEHOLDER"
+  - "lorem ipsum"
+  - "coming soon"
+  - "GUIDANCE:"
+  - "FILL THIS"
+  - "YOUR_"
+  - "[INSERT"
+
+# Secret/sensitive file patterns — blocked from .publish/ and flagged by /validate
+secret_file_patterns:
+  - "*.env"
+  - "*.pem"
+  - "*.key"
+  - "*.p12"
+  - "*.pfx"
+  - "credentials*.json"
+  - "service-account*.json"
+  - ".npmrc"
+  - ".pypirc"
+
+# Secret content patterns (grep) — flagged as integrity failures
+secret_content_patterns:
+  - "sk-[a-zA-Z0-9]{20,}"
+  - "AKIA[A-Z0-9]{16}"
+  - "ghp_[a-zA-Z0-9]{36}"
+  - "glpat-[a-zA-Z0-9]{20}"
+  - "xox[bps]-[a-zA-Z0-9-]+"
+  - "-----BEGIN.*PRIVATE KEY"
+  - "API_KEY\\s*=\\s*['\"]?[a-zA-Z0-9]"
+  - "SECRET\\s*=\\s*['\"]?[a-zA-Z0-9]"
+  - "PASSWORD\\s*=\\s*['\"]?[a-zA-Z0-9]"
+
+# ---------------------------------------------------------------------------
+# PRODUCT TYPE ROUTING
+# Maps product type → template path + primary file + required files
+# ---------------------------------------------------------------------------
+routing:
+  skill:
+    template: "templates/skill/"
+    primary_file: "SKILL.md"
+    required_files:
+      - "SKILL.md"
+      - "README.md"
+      - "references/"
+    install_target: ".claude/skills/{slug}/"
+    dna_required: [1, 2, 3, 4, 5, 7, 13, 14, 16]   # Tier 1+2 required
+
+  agent:
+    template: "templates/agent/"
+    primary_file: "AGENT.md"
+    required_files:
+      - "AGENT.md"
+      - "README.md"
+      - "references/"
+    install_target: ".claude/skills/{slug}/"
+    dna_required: [1, 2, 3, 4, 5, 6, 7, 8, 11, 13, 14, 15, 16]
+
+  squad:
+    template: "templates/squad/"
+    primary_file: "SQUAD.md"
+    required_files:
+      - "SQUAD.md"
+      - "README.md"
+      - "references/"
+      - "agents/"
+    install_target: ".claude/skills/{slug}/"
+    dna_required: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 18]
+
+  workflow:
+    template: "templates/workflow/"
+    primary_file: "WORKFLOW.md"
+    required_files:
+      - "WORKFLOW.md"
+      - "README.md"
+    install_target: ".claude/skills/{slug}/"
+    dna_required: [1, 2, 4, 7, 13, 14, 16]
+
+  design-system:
+    template: "templates/design-system/"
+    primary_file: "DESIGN-SYSTEM.md"
+    required_files:
+      - "DESIGN-SYSTEM.md"
+      - "README.md"
+      - "tokens/"
+    install_target: "myclaude-products/{slug}/"
+    dna_required: [2, 4, 13, 16]
+
+  claude-md:
+    template: "templates/claude-md/"
+    primary_file: "CLAUDE.md"
+    required_files:
+      - "CLAUDE.md"
+      - "README.md"
+    install_target: ".claude/rules/{slug}.md"
+    dna_required: [1, 2, 3, 13, 16, 19, 20]
+
+  application:
+    template: "templates/application/"
+    primary_file: "APPLICATION.md"
+    required_files:
+      - "APPLICATION.md"
+      - "README.md"
+    install_target: "myclaude-products/{slug}/"
+    dna_required: [2, 4, 7, 13, 14, 16]
+
+  system:
+    template: "templates/system/"
+    primary_file: "CLAUDE.md"
+    required_files:
+      - "CLAUDE.md"
+      - "STATE.yaml"
+      - "README.md"
+      - "config/routing.yaml"
+    install_target: ".claude/commands/{slug}/"
+    dna_required: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 18]
+
+  bundle:
+    template: "templates/bundle/"
+    primary_file: null  # EXCEPTION: vault.yaml IS the product
+    required_files:
+      - "vault.yaml"
+      - "README.md"
+    install_target: "N/A"
+    dna_required: [2, 4, 13, 14]
+
+  statusline:
+    template: "templates/statusline/"
+    primary_file: "statusline.sh"
+    required_files:
+      - "statusline.sh"
+      - "settings-fragment.json"
+      - "README.md"
+    install_target: "~/.claude/statusline-scripts/{slug}.sh"
+    dna_required: [1, 2, 4, 7, 13, 14, 16]
+
+  hooks:
+    template: "templates/hooks/"
+    primary_file: "hooks.json"
+    required_files:
+      - "hooks.json"
+      - "scripts/"
+      - "README.md"
+    install_target: ".claude/settings.local.json"          # JSON config merged here
+    scripts_install_target: "~/.claude/hooks/{slug}/scripts/"  # handler scripts copied here
+    dna_required: [1, 2, 4, 7, 13, 14, 15, 16]
+
+  minds:
+    template: "templates/minds/"
+    primary_file: "AGENT.md"
+    required_files:
+      - "AGENT.md"
+      - "README.md"
+      - "references/"
+    install_target: ".claude/agents/{slug}.md"
+    dna_required: [1, 2, 3, 4, 5, 6, 13, 14]
+    # Minds depth routing (advisory is default, cognitive is 5-layer premium)
+    depth:
+      advisory:
+        template: "templates/minds/"
+        required_files: ["AGENT.md", "README.md", "references/"]
+      cognitive:
+        template: "templates/minds/cognitive/"
+        required_files:
+          - "AGENT.md"
+          - "references/cognitive-core.md"
+          - "references/personality.md"
+          - "references/knowledge-base.md"
+          - "references/reasoning-engine.md"
+          - "README.md"
+        dna_required: [1, 2, 3, 4, 5, 6, 11, 13, 14, 15]
+        strands_required: [C1, C2, C3, C4, C5, C6, C7]
+        target_lines: "800-1200"
+    genius_library: "templates/genius-library/"
+
+  output-style:
+    template: "templates/output-style/"
+    primary_file: "OUTPUT-STYLE.md"
+    required_files:
+      - "OUTPUT-STYLE.md"
+      - "README.md"
+    install_target: ".claude/output-styles/{slug}.md"
+    dna_required: [2, 4, 13, 16]
+    package_rename:
+      from: "OUTPUT-STYLE.md"
+      to: "{slug}.md"
+
+# ---------------------------------------------------------------------------
+# FEATURE FLAGS
+# Edition-based feature gating
+# ---------------------------------------------------------------------------
+features:
+  lite:
+    validation_tiers: [1, 2]     # Tier 3 requires PRO
+    cli_preflight: true          # Stage 6 myclaude validate
+    anti_commodity_coaching: true
+    exemplar_comparison: false   # PRO only
+    agent_routing: false         # PRO only
+    market_intelligence: false   # PRO only
+    decisions_log: false         # PRO only
+
+  pro:
+    validation_tiers: [1, 2, 3]
+    cli_preflight: true
+    anti_commodity_coaching: true
+    exemplar_comparison: true    # Quality Sentinel compares against references/exemplars/
+    agent_routing: true          # Forge Master + 4 specialist agents
+    market_intelligence: true    # Market Scout
+    decisions_log: true          # .decisions.log append-only
+
+# ---------------------------------------------------------------------------
+# VAULT.YAML GENERATION DEFAULTS
+# Applied by /package when fields are missing from .meta.yaml
+# ---------------------------------------------------------------------------
+vault_defaults:
+  version: "1.0.0"
+  license: "MIT"
+  language: "en"
+  mcs_level: 1
+  price: 0
+  compatibility:
+    claude_code: ">=1.0.0"
+  engine: "myclaude-studio-engine"  # Viral: identifies product origin
+  marketplace_base: "https://myclaude.sh"
+  badges:
+    mcs: "https://myclaude.sh/badge/mcs/{level}.svg"
+    available: "https://myclaude.sh/badge/available.svg"
+
+# ---------------------------------------------------------------------------
+# DISTRIBUTION CHANNELS
+# Products created with Studio Engine target multiple platforms
+# ---------------------------------------------------------------------------
+distribution:
+  primary: "myclaude.sh"                    # MyClaude Marketplace
+  secondary: "anthropic-plugin"             # Anthropic Plugin Marketplace
+  universal: "agentskills"                  # Agent Skills spec (33+ platforms)
+  attribution_comment: true                 # Inject <!-- Published on MyClaude --> in primary file
+  readme_badges: true                       # Add MCS + Available badges to README footer
+  multi_channel_prompt: true                # Suggest GitHub, Reddit, awesome lists after publish
+
+# ---------------------------------------------------------------------------
+# VALIDATION PIPELINE STAGES
+# Order is fixed: each stage must pass before the next runs
+# (except Stage 7 anti-commodity which is always advisory)
+# ---------------------------------------------------------------------------
+validation_pipeline:
+  - stage: 1
+    name: "structural"
+    method: "glob"
+    description: "Required files exist for product type"
+    blocking: true
+
+  - stage: 2
+    name: "integrity"
+    method: "grep + read"
+    description: "No broken refs, no placeholders, YAML/JSON valid"
+    blocking: true
+
+  - stage: 3
+    name: "dna_tier1"
+    method: "grep + glob"
+    description: "D1 D2 D3 D4 D13 D14 D19 — universal patterns"
+    blocking: true
+    mcs_gate: 1
+
+  - stage: 4
+    name: "dna_tier2"
+    method: "grep + parse"
+    description: "D5 D6 D7 D8 D15 D16 D17 D20 — advanced patterns"
+    blocking: false
+    mcs_gate: 2
+    editions: ["lite", "pro"]
+
+  - stage: 5
+    name: "dna_tier3"
+    method: "agent_assisted"
+    description: "D9 D10 D11 D12 D18 — expert patterns"
+    blocking: false
+    mcs_gate: 3
+    editions: ["pro"]
+
+  - stage: 6
+    name: "cli_preflight"
+    method: "bash"
+    description: "myclaude validate — manifest, secrets, file sizes"
+    blocking: true
+    command: "myclaude validate"
+
+  - stage: 7
+    name: "anti_commodity"
+    method: "coaching"
+    description: "Domain expertise check — coaching only, never blocks"
+    blocking: false
+    mcs_gate: 2
+
+  - stage: "7b"
+    name: "cognitive_fidelity"
+    method: "read + grep"
+    description: "5-layer fidelity scoring for cognitive minds (7 DNA strands C1-C7)"
+    blocking: false
+    prerequisite: "product type is minds AND minds_depth is cognitive"
+
+  - stage: "7c"
+    name: "baseline_delta"
+    method: "read + parse"
+    description: "Quantify product value vs Claude vanilla baseline (requires scout report)"
+    blocking: false
+    prerequisite: ".meta.yaml scout_source exists"
+    severity_weights:
+      critical: 3
+      significant: 2
+      minor: 1
+
+  - stage: "7d"
+    name: "composition_check"
+    method: "read + glob"
+    description: "Bundle composition integrity — product existence, type diversity, gap coverage"
+    blocking: false
+    prerequisite: "product type is bundle"
+
+  - stage: 8
+    name: "value_intelligence"
+    method: "read + compute"
+    description: "Value score (4 factors), pricing suggestion, market position, portfolio role"
+    blocking: false
+    mcs_gate: 2
+    depends_on: ["anti_commodity", "baseline_delta"]
+    output_fields: ["intelligence.value_score", "intelligence.suggested_price_range", "intelligence.market_position", "intelligence.pricing_strategy"]
+
+# ---------------------------------------------------------------------------
+# CONFIRMATION GATES
+# Individually toggleable confirmation points in the workflow
+# Creators can disable gates for autonomous operation without losing validation
+# ---------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
+# INTELLIGENCE LAYER
+# Autonomous awareness: value signals, market position, portfolio vision,
+# distribution strategy. Surfaces one insight per pipeline moment.
+# Reference: references/intelligence-layer.md
+# ---------------------------------------------------------------------------
+intelligence:
+  # Value Score computation (4 factors, 0-12 composite)
+  # VALUE_SCORE = (depth × depth_weight) + (uniqueness × uniqueness_weight)
+  #             + (coverage × coverage_weight) + (market × market_weight)
+  pricing:
+    depth_weight: 0.35           # MCS level maps to depth (1-3, +1 for cognitive minds)
+    uniqueness_weight: 0.30      # Substance score from /validate Stage 7
+    coverage_weight: 0.20        # Gaps addressed from baseline delta
+    market_weight: 0.15          # Competition level from scout or marketplace scan
+    # Price mapping (value_score → suggested USD range)
+    price_map:
+      - { min: 0,  max: 2,  range: [0, 0],    strategy: "free",    guidance: "Share to build presence. Value is community, not revenue." }
+      - { min: 3,  max: 4,  range: [1, 5],    strategy: "signal",  guidance: "Light expertise. Price signals value without being a barrier." }
+      - { min: 5,  max: 7,  range: [5, 12],   strategy: "solid",   guidance: "Solid expertise. Users who need this will pay." }
+      - { min: 8,  max: 10, range: [12, 25],  strategy: "premium",  guidance: "Premium. Deep domain expertise + unique coverage." }
+      - { min: 11, max: 99, range: [25, 50],  strategy: "rare",     guidance: "Rare. Consider if this should be a system or bundle." }
+
+  # Distribution channel ranking (per product type)
+  distribution:
+    default_channels: ["myclaude"]
+    suggest_after_publish: true
+    nudge_after_days: 7          # Remind about distribution N days after publish
+    channels_by_type:
+      skill:      ["myclaude", "awesome-claude-code", "reddit", "twitter"]
+      workflow:   ["myclaude", "awesome-claude-code", "reddit", "twitter"]
+      agent:      ["myclaude", "awesome-claude-code", "reddit", "twitter"]
+      squad:      ["myclaude", "blog-post", "discord", "youtube"]
+      system:     ["myclaude", "blog-post", "discord", "youtube"]
+      minds:      ["myclaude", "domain-community", "linkedin", "newsletter"]
+      bundle:     ["myclaude", "landing-page", "product-hunt"]
+
+  # Portfolio analysis thresholds
+  portfolio:
+    coverage_threshold: 0.60     # Below this = "gap detected"
+    bundle_suggestion_threshold: 3  # Products in same domain → suggest bundle
+    composition_alert: true      # Alert when skill+minds in same domain compose well
+
+  # Free vs Paid decision tree factors
+  free_vs_paid:
+    first_in_domain: "free"      # First product in a domain → free to build authority
+    no_audience_yet: "free"      # No installs/followers → free to build audience
+    mcs2_substance_70: "paid"    # MCS-2+ with substance >70 → paid justified
+    fallback: "free_or_signal"   # Default: free or $1-3
+
+  # UX principles (enforced by all consuming skills)
+  ux:
+    mode: "suggestion"           # Never "command" — intelligence suggests, user decides
+    show_reasoning: true         # Always show WHY, not just WHAT
+    one_insight_per_moment: true # Don't dump all intelligence at once
+    epistemic_caveat: true       # Always show confidence caveat on value estimates
+
+# ---------------------------------------------------------------------------
+# CONFIRMATION GATES
+# Individually toggleable confirmation points in the workflow
+# Creators can disable gates for autonomous operation without losing validation
+# ---------------------------------------------------------------------------
+gates:
+  confirm_create: true          # Ask before scaffolding
+  confirm_fill_discovery: true  # Ask 3 discovery questions before section walk
+  confirm_publish: true         # ALWAYS true — safety critical, cannot be disabled
+  confirm_package: true         # Ask before staging .publish/
+  confirm_destructive: true     # Ask before overwriting existing files
+
+  # Profiles (set via /onboard)
+  profiles:
+    guided: { confirm_create: true, confirm_fill_discovery: true, confirm_package: true }
+    autonomous: { confirm_create: false, confirm_fill_discovery: false, confirm_package: false }
+    # confirm_publish is ALWAYS true regardless of profile

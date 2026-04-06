@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+# {{PRODUCT_SLUG}} — Claude Code Status Line
+# WHY: Status lines display real-time info in the Claude Code terminal bar.
+# WHY: This script reads JSON from stdin and outputs formatted text to stdout.
+# WHY: Refresh: after each assistant message, debounced 300ms.
+# WHY: ANSI colors and OSC 8 hyperlinks supported. Multi-line supported.
+
+# ── Input (JSON on stdin) ─────────────────────────────────────────
+# Fields available:
+#   model          — current model name (e.g., "claude-opus-4-6")
+#   cwd            — current working directory
+#   workspace      — workspace root
+#   cost           — session cost in dollars
+#   context_window — context window usage info
+#   rate_limits    — rate limit status
+#   session        — session metadata (id, duration, etc.)
+#   vim_mode       — current vim mode if enabled
+
+# Read JSON from stdin
+# WHY: 2>/dev/null prevents hang if stdin is unexpectedly empty
+INPUT=$(cat 2>/dev/null)
+
+# Parse fields with jq (fallback if jq unavailable)
+if command -v jq &>/dev/null; then
+  MODEL=$(echo "$INPUT" | jq -r '.model // "unknown"')
+  CWD=$(echo "$INPUT" | jq -r '.cwd // "."')
+  COST=$(echo "$INPUT" | jq -r '.cost // "0.00"')
+else
+  # Fallback: basic grep parsing
+  MODEL="unknown"
+  CWD="."
+  COST="0.00"
+fi
+
+# ── ANSI Color Helpers ────────────────────────────────────────────
+# WHY: Use ANSI escape codes for color. Reset after each colored segment.
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+BLUE='\033[0;34m'
+CYAN='\033[0;36m'
+DIM='\033[2m'
+BOLD='\033[1m'
+RESET='\033[0m'
+
+# ── Display Format ────────────────────────────────────────────────
+# WHY: D14 (Graceful Degradation) — Always output something, even with missing data.
+# WHY: Customize the format below for your status line.
+
+# {{DISPLAY_FORMAT}}
+
+# Example output:
+printf "${CYAN}${MODEL}${RESET} ${DIM}|${RESET} ${GREEN}\$${COST}${RESET} ${DIM}|${RESET} ${BLUE}${CWD}${RESET}"

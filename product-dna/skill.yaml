@@ -1,0 +1,117 @@
+# product-dna/skill.yaml — DNA requirements for Skills
+# Read by /create, /validate, /package when type=skill
+
+type: skill
+primary_file: SKILL.md
+install_target: ".claude/skills/{slug}/"
+template: "templates/skill/"
+
+# DNA pattern requirements (from PRD §3 Applicability Matrix)
+dna_patterns:
+  tier1:
+    D1:  { required: true,  name: "Activation Protocol",    check: "grep activation/protocol section + references/ ref" }
+    D2:  { required: true,  name: "Anti-Pattern Guard",     check: "grep anti-pattern section with >=5 items" }
+    D3:  { required: true,  name: "Progressive Disclosure",  check: "references/ exists + primary <500 lines" }
+    D4:  { required: true,  name: "Quality Gate",            check: "grep quality gate with >=3 criteria" }
+    D13: { required: true,  name: "Self-Documentation",      check: "README.md with what/install/usage/requirements" }
+    D14: { required: true,  name: "Graceful Degradation",    check: "grep 'when not to use' or error handling" }
+    D19: { required: false, name: "Attention-Aware Authoring", check: "critical rules in last 30% of file" }
+  tier2:
+    D5:  { required: true,  name: "Question System",         check: "grep question/input table or 'if missing, ask'" }
+    D6:  { required: false, name: "Confidence Signaling",    check: "grep confidence levels or certainty markers" }
+    D7:  { required: true,  name: "Pre-Execution Gate",      check: "grep precondition checks" }
+    D8:  { required: false, name: "State Persistence",       check: "state file or persistence section" }
+    D15: { required: false, name: "Testability",             check: "test scenarios or expected outputs" }
+    D16: { required: true,  name: "Composability",           check: "no hardcoded paths, no common command names" }
+    D17: { required: false, name: "Hook Integration",        check: "hooks section in frontmatter or docs" }
+  tier3:
+    D9:  { required: false, name: "Orchestrate Don't Execute", applicable: false }
+    D10: { required: false, name: "Handoff Spec",              applicable: false }
+    D11: { required: false, name: "Socratic Pressure",         check: "self-challenge pattern" }
+    D12: { required: false, name: "Compound Memory",           applicable: false }
+    D18: { required: false, name: "Subagent Isolation",        applicable: false }
+    D20: { applicable: false }
+
+# MCS scoring expectations
+mcs_expectations:
+  mcs1: "All Tier 1 PASS. Score >= 75%."
+  mcs2: "Tier 1+2 required PASS. Score >= 85%."
+  mcs3: "Not typical for skills (no D9/D10/D12/D18). Score >= 92% if applicable patterns covered."
+
+# Template file mapping
+# NOTE: If a .template file doesn't exist yet, /create generates the target
+# from defaults (README skeleton, empty references/). S3 sprint adds rich templates.
+template_files:
+  - source: "SKILL.md.template"
+    target: "SKILL.md"
+    dna_injected: [D1, D2, D4, D5, D7, D14]
+  - source: "README.md.template"
+    target: "README.md"
+    dna_injected: [D13]
+  - source: "references/domain-knowledge.md.template"
+    target: "references/domain-knowledge.md"
+    dna_injected: [D3]
+
+# Frontmatter fields for SKILL.md (Anthropic Agent Skills spec)
+frontmatter:
+  required:
+    - name          # skill slug
+    - description   # when Claude should use this skill
+  optional:
+    - "allowed-tools"    # restrict tool access
+    - "argument-hint"    # help text for arguments
+    - arguments          # named arguments (string or string[])
+    - paths              # conditional activation paths (gitignore-style globs)
+    - hooks              # skill-scoped hooks (run only when this skill is active)
+    - model              # force specific model (claude-opus-4-6, claude-sonnet-4-6, claude-haiku-4-5)
+    - effort             # force reasoning effort (high, medium, low, or number)
+    - context            # fork for full isolation
+    - shell              # shell configuration object
+    - version            # semver version string
+    - "when_to_use"      # contextual activation hint (alternative to description)
+    - "user-invocable"   # false for background skills (default: true)
+    - "disable-model-invocation"  # true = only explicit /slug triggers (default: false)
+
+# Token economics [SOURCE: loadSkillsDir.ts:100-105]
+token_economics:
+  catalog_cost: "name + description + whenToUse → roughTokenCountEstimation (chars ÷ 4). ~50 tokens per skill."
+  invocation_cost: "Full SKILL.md loaded only when user invokes /skill-name"
+  ambient_cost: "Zero — skills are loaded on demand, not auto-loaded"
+  optimization: "Short focused description = lower catalog cost. Long reference content in references/ = zero cost until invoked."
+  budget_example: "12 skills × 50 tokens each = ~600 tokens always in catalog"
+
+# Compact instructions applicability
+compact_instructions:
+  applicable: true
+  location: "SKILL.md → ## Compact Instructions section [SOURCE: compact/prompt.ts:133-143]"
+  preserves: "creator intent, MCS scores, acceptance criteria, question system state, error states"
+
+# Paths scoping — context efficiency feature
+# When a skill has `paths:` in frontmatter, CC only loads its description when
+# the user is working with files matching those patterns. This saves context window.
+paths_scoping:
+  description: "Optional glob patterns to scope skill activation to specific file types"
+  example: "paths: ['src/**/*.ts', 'tests/**/*.test.ts']"
+  default: "**/* (activates everywhere — no paths key in frontmatter)"
+  benefit: "Saves context window — skill description only loaded when working on matching files"
+  when_to_use: "Domain-specific skills (e.g., a SQL review skill should only activate on *.sql files)"
+
+# Goal-backward acceptance criteria (filled during /fill, verified during /validate)
+acceptance_criteria:
+  description: "Machine-verifiable criteria that prove the product achieves its stated goal"
+  schema:
+    truths: "Observable behaviors from user perspective (e.g., 'Running /my-skill produces a report')"
+    artifacts: "Files that must exist with substantive content (e.g., 'references/patterns.md >50 lines')"
+    key_links: "Critical connections between files (e.g., 'SKILL.md references references/ >=2 times')"
+  filled_by: "/fill ACCEPTANCE CRITERIA CAPTURE step"
+  verified_by: "/validate Stage 2 (Integrity)"
+
+# Discovery questions for /create skill
+discovery_questions:
+  - "What specific problem does this skill solve?"
+  - "Who is the target user (developer type, experience level)?"
+  - "What domain knowledge does the skill need to work well?"
+  - "What inputs does the skill expect (files, arguments, context)?"
+  - "What output does it produce (files, analysis, recommendations)?"
+  - "What are the top 3 things this skill should NEVER do?"
+  - "What existing tools/approaches does this compete with?"

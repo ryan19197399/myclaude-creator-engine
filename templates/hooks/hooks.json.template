@@ -1,0 +1,52 @@
+{
+  "_comment": "{{PRODUCT_SLUG}} — Claude Code Hooks",
+  "_why": "Hooks are event-driven automations that fire on Claude Code lifecycle events.",
+  "_why_format": "This is a settings.json fragment. Install merges into .claude/settings.local.json.",
+  "_why_not_yaml": "Claude Code hooks are native JSON in settings.json — not a separate YAML format.",
+
+  "_events_reference": {
+    "_comment": "15 Claude Code hook events (CC source-verified April 2026)",
+    "tool": ["PreToolUse", "PostToolUse", "PostToolUseFailure"],
+    "prompt": ["UserPromptSubmit"],
+    "session": ["SessionStart", "Setup"],
+    "permission": ["PermissionRequest", "PermissionDenied"],
+    "subagent": ["SubagentStart"],
+    "lifecycle": ["Notification"],
+    "filesystem": ["CwdChanged", "FileChanged"],
+    "worktree": ["WorktreeCreate"],
+    "elicitation": ["Elicitation", "ElicitationResult"],
+    "_blocking": "PreToolUse (deny), UserPromptSubmit (continue=false), PermissionRequest (allow/deny), Elicitation (accept/decline/cancel)",
+    "_response_fields": "continue, suppressOutput, stopReason, decision, reason, systemMessage, additionalContext"
+  },
+
+  "_hook_types_reference": {
+    "_comment": "4 hook types supported by Claude Code",
+    "command": "Execute a shell command. Most common. Exit 0=allow, 2=block (stderr→feedback), other=non-blocking error.",
+    "prompt": "Single LLM call — inject a prompt into the conversation context.",
+    "agent": "Multi-turn subagent — launch an autonomous subagent to handle the event.",
+    "http": "POST event payload to a URL — for external integrations and webhooks."
+  },
+
+  "_exit_codes_reference": {
+    "0": "Allow — operation proceeds normally",
+    "2": "Block — operation blocked; stderr content becomes feedback to Claude",
+    "other": "Non-blocking error — logged but operation proceeds"
+  },
+
+  "_portability_note": "Use ${CLAUDE_PLUGIN_ROOT} in command paths for portability. This variable resolves to the directory where the hook product is installed, making scripts work regardless of the buyer's installation path. Fallback: ~/.claude/hooks/{{PRODUCT_SLUG}}/ for global installs.",
+
+  "hooks": {
+    "{{EVENT_TYPE}}": [
+      {
+        "matcher": "{{MATCHER_PATTERN}}",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/scripts/{{HANDLER_SCRIPT}}",
+            "timeout": {{TIMEOUT_SECONDS}}
+          }
+        ]
+      }
+    ]
+  }
+}

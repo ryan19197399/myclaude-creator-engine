@@ -1,0 +1,36 @@
+# Examples
+
+<!-- WHY: Hook examples must show the event, the handler, and the expected result.
+     Include a security-relevant example showing safe handling. -->
+
+## Example 1: {{HAPPY_PATH_TITLE}}
+
+**Event:** {{EVENT_TYPE}}
+**Matcher:** {{MATCHER}}
+
+**Handler runs:**
+```bash
+{{HANDLER_COMMAND}}
+```
+
+**Expected result:**
+```
+{{EXPECTED_OUTPUT}}
+```
+
+## Example 2: {{EDGE_CASE_TITLE}}
+
+**Event:** {{EVENT_TYPE}}
+**Matcher:** {{MATCHER}} (no match)
+
+**Expected behavior:** Hook does not fire. No side effects.
+
+## Example 3: {{ERROR_CASE_TITLE}}
+
+**Event:** {{EVENT_TYPE}}
+**Handler fails with:** {{ERROR_CONDITION}}
+
+**Expected behavior:**
+```
+{{GRACEFUL_ERROR_HANDLING}}
+```

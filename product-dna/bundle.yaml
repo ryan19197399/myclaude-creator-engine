@@ -1,0 +1,84 @@
+# product-dna/bundle.yaml — DNA requirements for Bundles
+# Read by /create, /validate, /package when type=bundle
+
+type: bundle
+primary_file: null  # EXCEPTION: bundle has no primary .md file — vault.yaml IS the product
+install_target: "N/A"
+template: "templates/bundle/"
+
+# DNA pattern requirements
+dna_patterns:
+  tier1:
+    D1:  { required: false, name: "Activation Protocol",    applicable: false }
+    D2:  { required: true,  name: "Anti-Pattern Guard",     check: "grep anti-pattern section in README.md with >=3 items" }
+    D3:  { required: false, name: "Progressive Disclosure",  applicable: false }
+    D4:  { required: true,  name: "Quality Gate",            check: "grep quality gate in README.md with >=3 criteria" }
+    D13: { required: true,  name: "Self-Documentation",      check: "README.md with what/install/usage/requirements" }
+    D14: { required: true,  name: "Graceful Degradation",    check: "README.md documents behavior when included products unavailable" }
+    D19: { applicable: false }
+  tier2:
+    D5:  { required: false, name: "Question System",         applicable: false }
+    D6:  { required: false, name: "Confidence Signaling",    applicable: false }
+    D7:  { required: false, name: "Pre-Execution Gate",      applicable: false }
+    D8:  { required: false, name: "State Persistence",       applicable: false }
+    D15: { required: false, name: "Testability",             applicable: false }
+    D16: { required: false, name: "Composability",           check: "no hardcoded paths, bundle.includes[] uses slugs not paths" }
+    D17: { required: false, name: "Hook Integration",        applicable: false }
+  tier3:
+    D9:  { required: false, name: "Orchestrate Don't Execute", applicable: false }
+    D10: { required: false, name: "Handoff Spec",              applicable: false }
+    D11: { required: false, name: "Socratic Pressure",         applicable: false }
+    D12: { required: false, name: "Compound Memory",           applicable: false }
+    D18: { required: false, name: "Subagent Isolation",        applicable: false }
+    D20: { applicable: false }
+
+# MCS scoring expectations
+mcs_expectations:
+  mcs1: "All applicable Tier 1 PASS. Score >= 75%."
+  mcs2: "Tier 1+2 applicable PASS. Score >= 85%."
+  mcs3: "Not typical for bundles (no Tier 3 applicable). MCS-2 is ceiling."
+
+# Template file mapping
+template_files:
+  - source: "vault.yaml.template"
+    target: "vault.yaml"
+    dna_injected: [D13, D16]
+  - source: "README.md.template"
+    target: "README.md"
+    dna_injected: [D2, D4, D13, D14]
+
+# Bundle-specific validation
+special_validation:
+  stage_1: "Check vault.yaml exists with bundle.includes[] array AND length >= 2"
+  stage_2: "Check all slugs in bundle.includes[] are valid strings"
+  skip: "Primary file existence check (bundle has none)"
+
+# Frontmatter: N/A — bundles use vault.yaml manifest, not markdown frontmatter
+# The vault.yaml fields (name, version, description, author, category, license, price)
+# serve the same purpose as frontmatter for discovery and marketplace listing.
+frontmatter:
+  applicable: false
+  reason: "Bundles use vault.yaml manifest format, not SKILL.md frontmatter"
+  manifest_fields:
+    required: [name, version, description, author, category]
+    optional: [license, price, "bundle.includes", "bundle.rationale", "bundle.pricing_note"]
+
+# Token economics [SOURCE: loadSkillsDir.ts:100-105]
+token_economics:
+  catalog_cost: "Zero — bundles are metadata-only, not loaded into context"
+  invocation_cost: "Zero — bundle install triggers individual product installs"
+  ambient_cost: "Sum of included products' individual costs"
+  optimization: "Each included product follows its own type's token rules"
+
+# Compact instructions applicability
+compact_instructions:
+  applicable: false
+  reason: "Bundles are never in the LLM context window — they are install manifests"
+
+# Discovery questions for /create bundle
+discovery_questions:
+  - "What products does this bundle curate? Why these together?"
+  - "What problem does this combination solve that individual products don't?"
+  - "Who is the target buyer for this specific combination?"
+  - "What is the pricing strategy vs buying products individually?"
+  - "How will you maintain this bundle as included products evolve?"

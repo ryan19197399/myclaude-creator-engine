@@ -1,0 +1,124 @@
+---
+name: {{PRODUCT_SLUG}}
+description: >-
+  {{SYSTEM_DESCRIPTION}}
+  Use when: {{TRIGGER_DESCRIPTION}}.  Updates at myclaude.sh/p/{{PRODUCT_SLUG}}
+# model: claude-sonnet-4-6
+# effort: high
+# context: fork
+# argument-hint: "[options]"
+---
+<!-- WHY: Frontmatter makes this system invocable as a CC command after installation. -->
+<!-- WHY: Keep this file lean. Recommended: <4K chars for optimal performance. /doctor warns at 40K. -->
+<!-- WHY: Complex content belongs in references/. CLAUDE.md routes, it doesn't explain. -->
+
+# {{SYSTEM_NAME}} — Boot + Routing
+
+<!-- WHY: CLAUDE.md is the entry point CC reads first. Boot + route only — no domain logic. -->
+
+**Version:** {{VERSION}} | **Complexity:** {{SYSTEM_COMPLEXITY}} | **Author:** {{AUTHOR_USERNAME}}
+
+---
+
+## BOOT
+
+<!-- WHY: Boot sequence orients the system before acting. Read state, detect mode, await intent. -->
+
+1. Read `STATE.yaml` — load session, active component, last context
+2. Detect mode: {{MODE_1}} | {{MODE_2}} | {{MODE_3}}
+3. Route via ROUTING table below
+4. If ambiguous → ask one clarifying question (PRE-EXECUTION GATE)
+5. On session end → update `STATE.yaml → session`
+
+---
+
+## ROUTING
+
+<!-- WHY: The routing table IS the system. Every intent maps to one component or path. -->
+<!-- WHY: Orchestrate, don't execute — this file routes; components execute. -->
+
+| Intent | Routes To | Notes |
+|--------|-----------|-------|
+| `{{INTENT_1}}` | `{{COMPONENT_A}}` | {{ROUTING_NOTE_1}} |
+| `{{INTENT_2}}` | `{{COMPONENT_B}}` | {{ROUTING_NOTE_2}} |
+| `{{INTENT_3}}` | `{{COMPONENT_A}}` → `{{COMPONENT_B}}` | Sequential pipeline |
+| Ambiguous | Clarify | Ask: "{{CLARIFICATION_QUESTION}}" |
+
+Full routing rules: `config/routing.yaml`
+
+---
+
+## COMPONENTS
+
+| Name | Type | Path | Purpose |
+|------|------|------|---------|
+| `{{COMPONENT_1_NAME}}` | Skill | `skills/{{COMPONENT_1_SLUG}}/` | {{COMPONENT_1_PURPOSE}} |
+| `{{COMPONENT_2_NAME}}` | Agent | `agents/{{COMPONENT_2_FILE}}` | {{COMPONENT_2_PURPOSE}} |
+| `{{COMPONENT_3_NAME}}` | Workflow | `workflows/{{COMPONENT_3_SLUG}}/` | {{COMPONENT_3_PURPOSE}} |
+
+<!-- WHY: Add rows per component. Minimum 2 different types for MCS-1. -->
+
+---
+
+## PRE-EXECUTION GATE
+
+<!-- WHY: Verify preconditions before routing. Fail fast with a clear ask. -->
+
+- [ ] Intent unambiguous (if not → ask one targeted question)
+- [ ] Required inputs present: {{REQUIRED_INPUTS}}
+- [ ] STATE.yaml readable (if not → warn, proceed with defaults)
+
+---
+
+## RULES
+
+<!-- WHY: Short, non-negotiable guardrails. Complex rules go in references/. -->
+
+- NEVER execute domain work here — route to the appropriate component
+- ALWAYS update STATE.yaml after routing decisions
+- Component failure → log to STATE.yaml, apply fallback: `{{FALLBACK_BEHAVIOR}}`
+- {{SYSTEM_RULE_1}}
+- {{SYSTEM_RULE_2}}
+
+---
+
+## LOAD ON DEMAND
+
+<!-- WHY: Load references/ only when the routed component needs them. -->
+
+| Trigger | Load |
+|---------|------|
+| Any component invoked | `references/domain-knowledge.md` |
+| {{LOAD_TRIGGER_1}} | `references/{{LOAD_FILE_1}}` |
+
+---
+
+## FILE MAP
+
+```
+{{PRODUCT_SLUG}}/
+├── CLAUDE.md              # This file — boot + routing
+├── STATE.yaml             # Runtime state
+├── README.md              # Setup and usage
+├── config/routing.yaml    # Machine-readable routing (REQUIRED)
+├── agents/                # System agents
+├── skills/                # Included skills
+├── workflows/             # System workflows
+└── references/            # Shared knowledge — load on demand
+```
+
+---
+
+## Compact Instructions
+
+<!-- WHY: This is the system's entry point — THE most critical file to preserve on compaction. -->
+<!-- WHY: Without this, compacted sessions lose the routing table and boot state entirely. -->
+<!-- WHY: [SOURCE: compact/prompt.ts:133-143] — Claude Code reads this section by name. -->
+
+When summarizing this conversation, always preserve:
+- The system name (`{{PRODUCT_SLUG}}`), version, and boot sequence state
+- The full routing table (trigger → component mapping)
+- Component registry with current status of each component
+- Active component state and any in-progress operations
+- STATE.yaml values that drive routing decisions
+- Any error states or degraded components

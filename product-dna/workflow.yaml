@@ -1,0 +1,88 @@
+# product-dna/workflow.yaml — DNA requirements for Workflows
+# Read by /create, /validate, /package when type=workflow
+
+type: workflow
+primary_file: WORKFLOW.md
+install_target: ".claude/skills/{slug}/"
+template: "templates/workflow/"
+
+dna_patterns:
+  tier1:
+    D1:  { required: true,  name: "Activation Protocol",    check: "grep activation/protocol section" }
+    D2:  { required: true,  name: "Anti-Pattern Guard",     check: "grep anti-pattern >=5 items" }
+    D3:  { required: false, name: "Progressive Disclosure",  check: "references/ dir if complex" }
+    D4:  { required: true,  name: "Quality Gate",            check: "grep quality gate >=3 criteria per step" }
+    D13: { required: true,  name: "Self-Documentation",      check: "README.md complete" }
+    D14: { required: true,  name: "Graceful Degradation",    check: "error recovery per step" }
+    D19: { required: false, name: "Attention-Aware Authoring", check: "critical rules in last 30% of file" }
+  tier2:
+    D5:  { required: false, name: "Question System",         applicable: false }
+    D6:  { required: false, name: "Confidence Signaling",    check: "confidence per step output" }
+    D7:  { required: true,  name: "Pre-Execution Gate",      check: "precondition per workflow step" }
+    D8:  { required: false, name: "State Persistence",       check: "checkpoint state between steps" }
+    D15: { required: false, name: "Testability",             check: "test scenarios" }
+    D16: { required: true,  name: "Composability",           check: "no hardcoded paths" }
+    D17: { required: false, name: "Hook Integration",        check: "hooks for step transitions" }
+  tier3:
+    D9:  { required: false, applicable: false }
+    D10: { required: false, name: "Handoff Spec", check: "step-to-step context passing" }
+    D11: { required: false, applicable: false }
+    D12: { required: false, applicable: false }
+    D18: { required: false, applicable: false }
+    D20: { applicable: false }
+
+mcs_expectations:
+  mcs1: "Tier 1 required PASS. Score >= 75%."
+  mcs2: "D7+D16 required. Score >= 85%."
+  mcs3: "Rare for workflows. D10 optional bonus."
+
+template_files:
+  - source: "WORKFLOW.md.template"
+    target: "WORKFLOW.md"
+    dna_injected: [D1, D2, D4, D7, D14]
+  - source: "README.md.template"
+    target: "README.md"
+    dna_injected: [D13]
+
+frontmatter:
+  required:
+    - name            # Workflow invocation name [SOURCE: loadSkillsDir.ts]
+    - description     # Catalog display, token counted [SOURCE: loadSkillsDir.ts:100-105]
+  recommended:
+    - "allowed-tools" # Restrict tools per workflow scope [SOURCE: loadSkillsDir.ts]
+    - "argument-hint" # Usage hint, e.g. "[--step N] [--resume]"
+  optional:
+    - "denied-tools"  # Block specific tools [SOURCE: loadSkillsDir.ts]
+    - "disable-model-invocation"  # true = only explicit /slug triggers [SOURCE: frontmatterParser.ts]
+    - model           # Force model [SOURCE: frontmatterParser.ts]
+    - paths           # Scope to specific files [SOURCE: claudemd.ts:254-268]
+    - effort          # Reasoning effort [SOURCE: frontmatterParser.ts]
+    - maxTurns        # Limit iterations [SOURCE: AgentTool.ts]
+    - hooks           # Workflow-scoped hooks [SOURCE: schemas/hooks.ts]
+    - whenToUse       # Auto-trigger conditions, token counted [SOURCE: loadSkillsDir.ts]
+
+# Token economics [SOURCE: loadSkillsDir.ts:100-105]
+token_economics:
+  catalog_cost: "name + description + whenToUse → ~50 tokens in catalog"
+  invocation_cost: "Full WORKFLOW.md + variables loaded on invoke"
+  ambient_cost: "Zero — workflows are skill-type, loaded on demand"
+  optimization: "Step definitions in primary file, detailed knowledge in references/"
+
+# Compact instructions applicability
+compact_instructions:
+  applicable: true
+  location: "WORKFLOW.md → ## Compact Instructions section"
+  preserves: "step position, step outputs, branching decisions, variable state, error states"
+
+canonical_refs:
+  description: "Mandatory section listing full paths to every external reference downstream consumers must read"
+  required: true
+  validation: "grep canonical_refs|canonical references in primary file"
+
+discovery_questions:
+  - "What multi-step process does this workflow automate?"
+  - "What is the input at step 1 and the output at the final step?"
+  - "What can go wrong at each step — how should it recover?"
+  - "Does order matter — can any steps run in parallel?"
+  - "What checkpoints should exist between steps?"
+  - "What is the difference between this workflow and doing the steps manually?"

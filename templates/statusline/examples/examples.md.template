@@ -1,0 +1,31 @@
+# Examples
+
+<!-- WHY: Status line examples should show what the output LOOKS LIKE in the terminal.
+     Buyers decide based on appearance. Show real output, not abstract descriptions. -->
+
+## Example 1: {{NORMAL_STATE_TITLE}}
+
+**Scenario:** {{NORMAL_STATE_DESCRIPTION}}
+
+**Display:**
+```
+{{NORMAL_OUTPUT}}
+```
+
+## Example 2: {{ALTERNATE_STATE_TITLE}}
+
+**Scenario:** {{ALTERNATE_STATE_DESCRIPTION}}
+
+**Display:**
+```
+{{ALTERNATE_OUTPUT}}
+```
+
+## Example 3: {{DEGRADED_STATE_TITLE}}
+
+**Scenario:** Data source unavailable
+
+**Display:**
+```
+{{FALLBACK_OUTPUT}}
+```

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="80" viewBox="0 0 480 80">
+  <style>
+    .title { font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', 'Courier New', monospace; font-size: 28px; font-weight: 700; fill: #e8e0d4; }
+    .subtitle { font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', 'Courier New', monospace; font-size: 13px; fill: #6b6359; }
+  </style>
+  <text x="52" y="38" font-family="monospace" font-size="32" fill="#c97632">&#9670;</text>
+  <text x="80" y="40" class="title">MyClaude Studio</text>
+  <text x="80" y="62" class="subtitle">creator engine</text>
+  <rect x="0" y="72" width="480" height="1" fill="#c97632" opacity="0.3"/>
+</svg>

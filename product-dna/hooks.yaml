@@ -1,0 +1,108 @@
+# product-dna/hooks.yaml — DNA requirements for Hooks
+# Read by /create, /validate, /package when type=hooks
+
+type: hooks
+primary_file: hooks.json
+install_target: ".claude/settings.local.json"
+template: "templates/hooks/"
+# DUAL-ARTIFACT INSTALL:
+# 1. hooks.json → deep-merge "hooks" key into .claude/settings.local.json
+# 2. scripts/ → copy to ~/.claude/hooks/{slug}/scripts/ + chmod +x
+# install_target above is the PRIMARY artifact. Scripts are secondary.
+scripts_install_target: "~/.claude/hooks/{slug}/scripts/"
+
+# DNA pattern requirements
+dna_patterns:
+  tier1:
+    D1:  { required: true,  name: "Activation Protocol",    check: "grep activation/protocol section in README.md" }
+    D2:  { required: true,  name: "Anti-Pattern Guard",     check: "grep anti-pattern section with >=5 items (CRITICAL — hooks can break things)" }
+    D3:  { required: false, name: "Progressive Disclosure",  check: "optional — hooks are config" }
+    D4:  { required: true,  name: "Quality Gate",            check: "grep quality gate with >=3 criteria" }
+    D13: { required: true,  name: "Self-Documentation",      check: "README.md with what/install/usage/requirements" }
+    D14: { required: true,  name: "Graceful Degradation",    check: "hooks.json documents error handling behavior (exit codes, timeout)" }
+    D19: { applicable: false }
+  tier2:
+    D5:  { required: false, name: "Question System",         applicable: false }
+    D6:  { required: false, name: "Confidence Signaling",    applicable: false }
+    D7:  { required: true,  name: "Pre-Execution Gate",      check: "hooks.json uses valid event types from the 15-event CC spec (PreToolUse, PostToolUse, PostToolUseFailure, UserPromptSubmit, SessionStart, Setup, SubagentStart, Notification, PermissionDenied, PermissionRequest, Elicitation, ElicitationResult, CwdChanged, FileChanged, WorktreeCreate)" }
+    D8:  { required: false, name: "State Persistence",       applicable: false }
+    D15: { required: true,  name: "Testability",             check: "examples/ with test scenarios for each hook event" }
+    D16: { required: true,  name: "Composability",           check: "no hardcoded paths, no common command names, idempotent handlers" }
+    D17: { required: false, name: "Hook Integration",        check: "meta: hooks about hooks — optional" }
+  tier3:
+    D9:  { required: false, name: "Orchestrate Don't Execute", applicable: false }
+    D10: { required: false, name: "Handoff Spec",              applicable: false }
+    D11: { required: false, name: "Socratic Pressure",         applicable: false }
+    D12: { required: false, name: "Compound Memory",           applicable: false }
+    D18: { required: false, name: "Subagent Isolation",        applicable: false }
+    D20: { applicable: false }
+
+# MCS scoring expectations
+mcs_expectations:
+  mcs1: "All Tier 1 PASS. Score >= 75%."
+  mcs2: "Tier 1+2 required PASS. Score >= 85%."
+  mcs3: "Not typical for hooks (no Tier 3 applicable). MCS-2 is ceiling."
+
+# Template file mapping
+template_files:
+  - source: "hooks.json.template"
+    target: "hooks.json"
+    dna_injected: [D1, D2, D7, D14, D15]
+  - source: "scripts/handler.sh.template"
+    target: "scripts/handler.sh"
+    dna_injected: [D14]
+  - source: "README.md.template"
+    target: "README.md"
+    dna_injected: [D13]
+  - source: "examples/examples.md.template"
+    target: "examples/examples.md"
+    dna_injected: [D15]
+
+# Security validation (hooks execute shell commands)
+security_checks:
+  stage_2:
+    - "Check for shell injection patterns: ;, &&, ||, backticks, $()"
+    - "Check for eval usage (arbitrary code execution)"
+    - "Check for source or . commands (executes external scripts without review)"
+    - "Check for unquoted pipes: single | without context (potential injection)"
+    - "Check for base64 decode-and-execute patterns"
+    - "Check for curl|sh or wget|sh pipe patterns (remote code execution)"
+    - "Check for python -c or node -e inline execution"
+    - "Check for file system access outside project scope"
+    - "Check for network calls without user consent documentation"
+
+# Frontmatter: N/A — hooks use JSON format, not markdown frontmatter
+# Hooks are defined in settings.json "hooks" key, not as SKILL.md files.
+frontmatter:
+  applicable: false
+  reason: "Hooks use JSON format in settings.json, not SKILL.md frontmatter"
+  json_fields:
+    event_types: ["PreToolUse", "PostToolUse", "PostToolUseFailure", "UserPromptSubmit", "SessionStart", "Setup", "SubagentStart", "Notification", "PermissionRequest", "PermissionDenied", "Elicitation", "ElicitationResult", "CwdChanged", "FileChanged", "WorktreeCreate"]
+    hook_types: ["command", "prompt", "agent", "http"]
+    response_fields: ["continue", "suppressOutput", "stopReason", "decision", "reason", "systemMessage", "additionalContext"]
+
+# Settings security [SOURCE: settings/settings.ts]
+settings_security:
+  install_target_trust: "localSettings (.claude/settings.local.json) is TRUSTED — permissions work"
+  project_settings_warning: ".claude/settings.json is PARTIALLY TRUSTED — permissions SILENTLY IGNORED [SOURCE: settings/constants.ts:7-22]"
+  recommendation: "Always install hooks to .claude/settings.local.json, never .claude/settings.json"
+
+# Token economics [SOURCE: hooks system analysis]
+token_economics:
+  catalog_cost: "Zero — hooks are not in any skill/agent catalog"
+  invocation_cost: "Zero — hooks fire on events, not in LLM context"
+  ambient_cost: "Zero — hooks are event-driven, never in context window"
+  optimization: "Hooks have zero token cost. They run in shell/HTTP, not in the model."
+
+# Compact instructions applicability
+compact_instructions:
+  applicable: false
+  reason: "Hooks are never in the LLM context window — they are event-triggered shell/HTTP/agent actions"
+
+# Discovery questions for /create hooks
+discovery_questions:
+  - "What Claude Code event triggers this hook? (PreToolUse, PostToolUse, etc.)"
+  - "What does the handler do when triggered?"
+  - "Is the handler idempotent? (safe to run multiple times)"
+  - "What happens if the handler fails? Does it block Claude?"
+  - "Are there security implications? (shell commands, file access)"

@@ -1,0 +1,11 @@
+{
+  "_comment": "{{PRODUCT_SLUG}} — Status Line Settings Fragment",
+  "_why": "Merge this into .claude/settings.local.json to activate this status line.",
+  "_why_note": "Only ONE status line can be active at a time. Installing replaces the current one.",
+
+  "statusLine": {
+    "type": "command",
+    "command": "bash ~/.claude/statusline-scripts/{{PRODUCT_SLUG}}.sh",
+    "padding": 2
+  }
+}

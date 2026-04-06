@@ -1,0 +1,118 @@
+---
+name: fill
+description: >-
+  Guide content filling for scaffolded products. Walks sections, asks domain questions,
+  writes expertise into files. Use after /create in 'scaffold' state, or when the creator
+  says 'fill', 'add content', or 'help me complete this'.
+argument-hint: "[product-slug]"
+allowed-tools:
+  - Read
+  - Write
+  - Edit
+  - Glob
+  - Grep
+  - AskUserQuestion
+---
+
+# Content Filler
+
+Extract domain expertise from creator conversation and inject into product files.
+
+**When to use:** After /create has generated a scaffold. Product state should be "scaffold" or "content".
+
+**When NOT to use:** If the product doesn't exist yet (use /create first). If the product is already validated (edits will regress state).
+
+> Full protocol details (section walker, sparring, extraction modes, type-specific coaching, research injection, progress tracking, completion flow) are in:
+> `${CLAUDE_SKILL_DIR}/references/fill-protocol.md` — Read this file before executing the section walk.
+
+---
+
+## Activation Protocol
+
+1. Identify target product:
+   - If `$ARGUMENTS` provided, use as product slug → look in `workspace/{slug}/`
+   - If `workspace/{slug}/` does not exist → "Product `{slug}` not found in workspace/. Run `/create` first or check `workspace/` for available slugs."
+   - If not, glob `workspace/*/` and list products in scaffold/content state
+   - If no products in scaffold/content state found → "No products ready to fill. Run `/create {type}` to scaffold one first."
+   - If multiple products found, ask which one to fill
+2. Read `.meta.yaml` from product directory → get type, state, mcs_target
+3. **Maintain creator persona**: Read `creator.yaml` → adapt language, depth, and examples to `profile.type` and `technical_level` throughout this skill's execution. A developer gets code examples; a domain expert gets plain language.
+4. **Load UX stack (in order)**:
+   - `references/ux-experience-system.md` §1 Context Assembly (build creator context), §2.2 Archetype-Aware Insights (adapt emphasis to creator goals), §2.3 Moment Awareness (mid-fill coaching)
+   - `references/ux-vocabulary.md` — translate terms in any creator-facing output
+   - `references/quality/engine-voice.md` — voice markers, brand DNA, sfumato constraints
+   /fill is where the creator spends the MOST time. The experience must be warm coaching, not interrogation. Adapt: beginners get encouragement + examples. Experts get peer-level sparring. Celebrate section completions with progress visibility ("4/7 sections filled. Core identity locked in."). Hyper-personalize using creator.yaml fields — name, goals, expertise areas.
+5. Load product spec from `references/product-specs/{type}-spec.md`
+6. Load product DNA from `product-dna/{type}.yaml`
+7. Load `domain-map.md` if it exists (from /map) → use as knowledge source
+8. **Load scout report** if `.meta.yaml` has `scout_source` field → read `workspace/{scout_source}` for research context. Extract: baseline (Section 1), gaps (Section 2), research findings (Section 4). This intelligence drives research injection in the section walk.
+8b. **Domain intelligence back-reference:** Read `STATE.yaml → workspace.products[]`. Find products in the same `intelligence.domain` as the current product. If any exist with `intelligence.value_score` populated:
+    - Read the most recent sibling's `.meta.yaml → intelligence` and `state.overall_score`
+    - If sibling substance_score < 50: "Your last product in {domain} scored {substance}% substance. Focus on depth and real examples this time."
+    - If sibling substance_score >= 70: "Your {domain} products have strong substance ({substance}%). Maintain this depth."
+    - This closes the feed-back loop: /validate's output informs /fill's approach.
+9. Scan product files for template placeholders and WHY comments
+10. **Intelligence gap check:** If `.meta.yaml` has NO `scout_source` AND product targets MCS-2+:
+    - Show: "No scout report found. Without baseline intelligence, /fill works in creator-knowledge-only mode — no research proposals, no baseline comparison."
+    - Suggest: "Run `/scout {inferred_domain}` first for research-backed filling. Or continue with your expertise."
+    - Record `fill_config.scout_available: false` in .meta.yaml
+    - If creator continues without scout, skip research injection steps in section walker
+11. **Structured input for choices**: If `creator.yaml → preferences.workflow_style = guided`, use `AskUserQuestion` for all choice points (enhance/replace/skip, deepening method selection, continue/save progress). Use plain text only for open-ended domain knowledge extraction.
+12. **Read fill-protocol.md**: Read `${CLAUDE_SKILL_DIR}/references/fill-protocol.md` now — it contains the full execution protocol for all phases below.
+13. Begin section-by-section guided extraction (see fill-protocol.md → DISCOVERY PHASE)
+
+---
+
+## Core Flow (routing table — details in fill-protocol.md)
+
+| Phase | What happens | Protocol section |
+|-------|-------------|-----------------|
+| Discovery | 3 front-loaded questions (audience, differentiator, use case) | DISCOVERY PHASE |
+| Acceptance Criteria | Define 3 machine-verifiable criteria before section walk | ACCEPTANCE CRITERIA CAPTURE |
+| Extraction Mode | Select mode (Standard/Socratic/Adversarial/Archaeological/Council) for MCS-2+ | EXTRACTION MODE SELECTION |
+| Pitfall Check | Load meta/pitfalls/pitfalls.json, surface type-relevant warnings | PITFALL CHECK |
+| Type Coaching | Platform-specific coaching (claude-md, minds, hooks, skill/agent, system/bundle) | TYPE-SPECIFIC COACHING |
+| Section Walk | Per-section: read WHY, check existing, inject research, ask, write, quality signal | SECTION WALKER |
+| Sparring | 3 challenges per major section (Generic Test, Inversion, Proof) — mandatory MCS-2+ | SPARRING PROTOCOL |
+| Deepening | 5 elicitation methods offered as optional menu after each major section | ELICITATION DEEPENING |
+| Checkpointing | Write fill_progress to .meta.yaml after every section (compact-safe) | MID-FILL STATE PERSISTENCE |
+| Progress | Pulse every 2-3 sections: filled/total + live MCS estimate | PROGRESS TRACKER |
+| Conversational | Narrative extraction mode for non-dev creators | CONVERSATIONAL MODE |
+| Size Check | Auto-split primary file if >4K chars; suggest @include for claude-md | INSTRUCTION SIZE OPTIMIZATION |
+| Completion | Promote to content, auto-validate MCS-1, persona-aware message, clear fill_progress | AFTER ALL SECTIONS FILLED |
+
+---
+
+## Quality Gate
+
+Before promoting to "content" state:
+- [ ] Primary file has at least 3 sections with substantive content
+- [ ] No sections contain ONLY placeholder/template text
+- [ ] README.md has real description (not template boilerplate)
+- [ ] At least one domain-specific insight encoded (not generic)
+
+---
+
+## Anti-Patterns
+
+1. **Robotic Q&A** — Don't be a questionnaire. Be conversational. Reference previous answers. Connect dots between sections.
+2. **Overwriting creator edits** — If creator has already manually edited a section, don't overwrite. Ask: "This section has content. Enhance, replace, or skip?"
+3. **Generic fill** — If a section reads like any AI could write it, push: "What's YOUR specific approach here? What would surprise someone reading this?"
+4. **Section overload** — Don't try to fill everything in one session. After 5-6 sections, offer: "We covered the core. Want to continue or save progress and come back?"
+5. **Ignoring domain-map** — If domain-map.md exists, USE it. Don't re-ask questions already answered there.
+6. **Thin sections without flagging** — Never leave a <50 word section without telling the creator it's thin. Section quality signals are mandatory.
+7. **Skipping acceptance_criteria** — Must-have capture is NOT optional. Without acceptance criteria, /validate has nothing goal-backward to check.
+8. **Forgetting persona mid-fill** — Re-read creator.yaml persona BEFORE each major section. A developer gets different questions than a marketer, even for the same section.
+
+---
+
+## Compact Instructions
+
+When context is compressed, preserve:
+- Target product slug, type, current phase (scaffold/content)
+- `fill_progress.last_completed_section` and `fill_progress.sections_filled`
+- Active extraction mode (`fill_config.extraction_mode`)
+- Sparring state: `sparring.sections_challenged`, `sparring.skipped`
+- Scout availability (`fill_config.scout_available`)
+- Any blocking issues found during mid-fill quality signals
+- Next section to fill (resume from `last_completed_section + 1`)

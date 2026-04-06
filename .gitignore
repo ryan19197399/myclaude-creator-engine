@@ -1,0 +1,75 @@
+# ─────────────────────────────────────────────────
+# MyClaude Studio Engine — Public Repository
+# Everything below is excluded from version control
+# ─────────────────────────────────────────────────
+
+# ── Personal & State ──────────────────────────────
+creator.yaml
+STATE.yaml
+.engine-meta.yaml
+handoff.md
+handoffs/
+myclaude-lock.json
+
+# ── Workspace (creator's products, not engine code)
+workspace/
+!workspace/.gitkeep
+
+# ── Internal development logs ─────────────────────
+meta/sessions/
+meta/frictions/
+meta/pitfalls/pitfalls.json
+meta/vision/
+meta/principles/
+meta/patterns/
+meta/roadmap/
+
+# ── Internal documentation (not public-facing) ────
+docs/briefs/
+docs/checkpoints/
+docs/handoffs/
+docs/sessions/
+docs/history/
+docs/frameworks/
+docs/audits/
+docs/prism/
+docs/research/
+docs/S83-*.md
+docs/S84-*.md
+docs/UEMF-*.md
+docs/prd-*.md
+docs/claude-code-native-verified.md
+
+# ── Build & publish artifacts ─────────────────────
+**/.publish/
+.claude/worktrees/
+
+# ── Published products (separate from engine) ─────
+products/
+
+# ── Market intelligence cache ─────────────────────
+references/market/cache/
+
+# ── Distribution packages ─────────────────────────
+*.zip
+*.tgz
+
+# ── Node / npm ────────────────────────────────────
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ── OS ────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── Editor ────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ── Local Claude Code settings ────────────────────
+.claude/settings.json
+.claude/settings.local.json

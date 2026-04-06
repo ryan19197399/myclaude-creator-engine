@@ -1,0 +1,81 @@
+# product-dna/statusline.yaml — DNA requirements for Status Lines
+# Read by /create, /validate, /package when type=statusline
+
+type: statusline
+primary_file: statusline.sh
+install_target: "~/.claude/statusline-scripts/{slug}.sh"
+template: "templates/statusline/"
+# NOTE: Activation requires merging settings-fragment.json into .claude/settings.local.json.
+# Only ONE status line can be active at a time (settings.json statusLine key).
+# CLI install MUST chmod +x the script after copying to install_target.
+
+# DNA pattern requirements
+dna_patterns:
+  tier1:
+    D1:  { required: true,  name: "Activation Protocol",    check: "grep activation/protocol section in README.md" }
+    D2:  { required: true,  name: "Anti-Pattern Guard",     check: "grep anti-pattern section with >=5 items" }
+    D3:  { required: false, name: "Progressive Disclosure",  check: "optional — statuslines are scripts, not deep knowledge" }
+    D4:  { required: true,  name: "Quality Gate",            check: "grep quality gate with >=3 criteria" }
+    D13: { required: true,  name: "Self-Documentation",      check: "README.md with what/install/usage/requirements" }
+    D14: { required: true,  name: "Graceful Degradation",    check: "statusline.sh outputs fallback when data unavailable" }
+    D19: { applicable: false }
+  tier2:
+    D5:  { required: false, name: "Question System",         applicable: false }
+    D6:  { required: false, name: "Confidence Signaling",    applicable: false }
+    D7:  { required: true,  name: "Pre-Execution Gate",      check: "statusline.sh checks for jq/dependencies before parsing" }
+    D8:  { required: false, name: "State Persistence",       applicable: false }
+    D15: { required: false, name: "Testability",             check: "examples/ with sample stdin JSON and expected stdout" }
+    D16: { required: true,  name: "Composability",           check: "no hardcoded paths, install target uses slug" }
+    D17: { required: false, name: "Hook Integration",        check: "optional — statuslines can use hooks for refresh" }
+  tier3:
+    D9:  { required: false, name: "Orchestrate Don't Execute", applicable: false }
+    D10: { required: false, name: "Handoff Spec",              applicable: false }
+    D11: { required: false, name: "Socratic Pressure",         applicable: false }
+    D12: { required: false, name: "Compound Memory",           applicable: false }
+    D18: { required: false, name: "Subagent Isolation",        applicable: false }
+    D20: { applicable: false }
+
+# MCS scoring expectations
+mcs_expectations:
+  mcs1: "All Tier 1 PASS. Score >= 75%."
+  mcs2: "Tier 1+2 required PASS. Score >= 85%."
+  mcs3: "Not typical for statuslines (no Tier 3 applicable). MCS-2 is ceiling."
+
+# Template file mapping
+template_files:
+  - source: "statusline.sh.template"
+    target: "statusline.sh"
+    dna_injected: [D1, D7, D14]
+  - source: "settings-fragment.json.template"
+    target: "settings-fragment.json"
+    dna_injected: []
+  - source: "README.md.template"
+    target: "README.md"
+    dna_injected: [D13]
+
+# Frontmatter: N/A — statuslines are bash scripts, not markdown with frontmatter
+frontmatter:
+  applicable: false
+  reason: "Statuslines are bash scripts executed in shell, not SKILL.md files"
+  activation: "Requires settings-fragment.json merged into .claude/settings.local.json"
+  constraint: "Only ONE statusline can be active at a time (settings.json statusLine key)"
+
+# Token economics
+token_economics:
+  catalog_cost: "Zero — statuslines are not in any skill/agent catalog"
+  invocation_cost: "Zero — runs in shell, not in LLM context"
+  ambient_cost: "Zero — shell execution, never in context window"
+  optimization: "Statuslines have zero token cost. Optimize for shell performance (fast jq parsing)."
+
+# Compact instructions applicability
+compact_instructions:
+  applicable: false
+  reason: "Statuslines run in shell, never in the LLM context window"
+
+# Discovery questions for /create statusline
+discovery_questions:
+  - "What data does this status line display?"
+  - "What data sources does it read from? (git, system, API, file — via shell commands)"
+  - "What should it show when data is unavailable or jq is not installed?"
+  - "Is there a compact and expanded view?"
+  - "Are there external dependencies (git, jq, curl)?"

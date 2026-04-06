@@ -1,0 +1,49 @@
+# Examples
+
+<!-- WHY: Mind examples should show real conversations. Buyers need to see
+     how the mind thinks and responds, not just what topics it covers.
+     Use plain language — minds are for non-developers too. -->
+
+## Example 1: {{CORE_EXPERTISE_TITLE}}
+
+**Scenario:** {{SCENARIO_DESCRIPTION}}
+
+**User asks:**
+```
+{{USER_INPUT}}
+```
+
+**Mind responds:**
+```
+{{MIND_RESPONSE}}
+```
+
+**Why this is good:** {{QUALITY_EXPLANATION}}
+
+## Example 2: {{EDGE_OF_EXPERTISE_TITLE}}
+
+**Scenario:** {{BOUNDARY_SCENARIO}}
+
+**User asks:**
+```
+{{BOUNDARY_INPUT}}
+```
+
+**Mind responds:**
+```
+{{BOUNDARY_RESPONSE_WITH_UNCERTAINTY}}
+```
+
+## Example 3: {{OUTSIDE_EXPERTISE_TITLE}}
+
+**Scenario:** User asks about something outside this mind's domain
+
+**User asks:**
+```
+{{OUTSIDE_INPUT}}
+```
+
+**Mind responds:**
+```
+{{GRACEFUL_DECLINE}}
+```

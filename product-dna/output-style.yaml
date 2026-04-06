@@ -1,0 +1,77 @@
+# product-dna/output-style.yaml — DNA requirements for Output Styles
+# Read by /create, /validate, /package when type=output-style
+# CC Source-verified: output styles are .md files in .claude/output-styles/
+# with optional frontmatter (name, description, keep-coding-instructions)
+
+type: output-style
+primary_file: "OUTPUT-STYLE.md"
+install_target: ".claude/output-styles/{slug}.md"
+template: "templates/output-style/"
+
+# Output styles are the SIMPLEST product type — a single markdown file
+# with instructions for how Claude should format its responses.
+# The frontmatter is minimal. The body is the style definition.
+
+# DNA pattern requirements (lightweight — output styles are simple artifacts)
+dna_patterns:
+  tier1:
+    D1:  { required: false, name: "Activation Protocol",    applicable: false }
+    D2:  { required: true,  name: "Anti-Pattern Guard",     check: "grep anti-pattern or 'never' section with >=3 items" }
+    D3:  { required: false, name: "Progressive Disclosure",  applicable: false }
+    D4:  { required: true,  name: "Quality Gate",            check: "grep quality criteria or 'good output looks like' section" }
+    D13: { required: true,  name: "Self-Documentation",      check: "README.md with what/install/usage" }
+    D14: { required: false, name: "Graceful Degradation",    applicable: false }
+    D19: { applicable: false }
+  tier2:
+    D5:  { required: false, applicable: false }
+    D6:  { required: false, applicable: false }
+    D7:  { required: false, applicable: false }
+    D8:  { required: false, applicable: false }
+    D15: { required: false, name: "Testability",             check: "examples/ with before/after output comparisons" }
+    D16: { required: true,  name: "Composability",           check: "no hardcoded project paths, works across codebases" }
+    D17: { required: false, applicable: false }
+  tier3:
+    D9:  { required: false, applicable: false }
+    D10: { required: false, applicable: false }
+    D11: { required: false, applicable: false }
+    D12: { required: false, applicable: false }
+    D18: { required: false, applicable: false }
+    D20: { applicable: false }
+
+mcs_expectations:
+  mcs1: "D2, D4, D13 PASS. Score >= 75%."
+  mcs2: "Tier 1 + D15, D16 PASS. Score >= 85%."
+  mcs3: "Not typical for output styles."
+
+# Frontmatter fields for OUTPUT-STYLE.md (CC native spec)
+frontmatter:
+  required:
+    - name                    # display name for the style
+    - description             # when to use this style
+  optional:
+    - "keep-coding-instructions"  # boolean — if true, Claude keeps its default coding instructions alongside this style
+
+# Package behavior
+package_rename:
+  from: "OUTPUT-STYLE.md"
+  to: "{slug}.md"
+
+# Token economics [SOURCE: loadOutputStylesDir.ts:1-80]
+token_economics:
+  catalog_cost: "Zero — output styles are not in skill catalog"
+  invocation_cost: "Low — style prompt loaded when user selects this style"
+  ambient_cost: "Zero when not active. LOW when active (style stays in context)"
+  optimization: "Keep style rules concise. Active styles persist across turns."
+
+# Compact instructions applicability
+compact_instructions:
+  applicable: true
+  location: "OUTPUT-STYLE.md → ## Compact Instructions section"
+  preserves: "voice/tone rules, formatting rules, anti-patterns, keep-coding-instructions setting"
+
+# Discovery questions for /create
+discovery_questions:
+  - "What kind of output should Claude produce with this style? (technical docs, creative writing, concise reports, etc.)"
+  - "What formatting rules should Claude follow? (headers, lists, code blocks, etc.)"
+  - "What should Claude NEVER do when using this style?"
+  - "Should Claude keep its default coding instructions alongside your style rules?"

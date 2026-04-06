@@ -1,0 +1,202 @@
+# Known Threats Registry — MyClaude Creator Studio Engine
+# Updated: 2026-04-04 | Sources: Snyk ToxicSkills, Koi ClawHavoc, JFrog, VirusTotal
+# This file is loaded by /validate Stage 2 for automated supply chain scanning.
+# /aegis references this for deeper security audits.
+#
+# MAINTENANCE: Update when new campaigns are documented.
+# Never remove entries — malicious packages resurface under new names.
+
+schema_version: "1.0.0"
+last_updated: "2026-04-04"
+
+# ─── MALICIOUS AUTHORS (confirmed, multi-source verified) ────���─────────────
+# Block-on-sight. Any product referencing these authors = immediate WARNING.
+malicious_authors:
+  - id: zaycv
+    threat: "40+ typosquats of popular skills (crypto wallets, dev tools)"
+    source: "Koi ClawHavoc Campaign Report, 2026-03"
+  - id: Aslaep123
+    threat: "Crypto exchange typosquats deploying AMOS stealer"
+    source: "Koi ClawHavoc Campaign Report, 2026-03"
+  - id: pepe276
+    threat: "Unicode obfuscation + DAN jailbreak payloads in skills"
+    source: "Snyk ToxicSkills, 2026-02"
+  - id: moonshine-100rze
+    threat: "Prompt injection + data exfiltration via webhook endpoints"
+    source: "Snyk ToxicSkills, 2026-02"
+  - id: hightower6eu
+    threat: "354 confirmed malicious skills (100% malicious rate)"
+    source: "VirusTotal OpenClaw Campaign, 2026-03"
+  - id: sakaen736jih
+    threat: "199 automated bulk submission skills (credential theft)"
+    source: "VirusTotal OpenClaw Campaign, 2026-03"
+
+# ─── MALICIOUS NAME PREFIXES (typosquatting campaigns) ─────────────────────
+# Grep product files for these prefixes. Match = WARNING with campaign context.
+malicious_prefixes:
+  - pattern: "clawhub-*"
+    count: 29
+    campaign: "ClawHavoc"
+    payload: "AMOS stealer"
+  - pattern: "solana-*"
+    count: 33
+    campaign: "ClawHavoc"
+    payload: "Wallet drain + credential theft"
+  - pattern: "phantom-*"
+    count: 29
+    campaign: "ClawHavoc"
+    payload: "Wallet impersonation"
+  - pattern: "wallet-tracker-*"
+    count: 25
+    campaign: "ClawHavoc"
+    payload: "Private key exfiltration"
+  - pattern: "youtube-summarize-*"
+    count: 55
+    campaign: "ClawHavoc"
+    payload: "AMOS stealer disguised as productivity tool"
+  - pattern: "polymarket-*"
+    count: 30
+    campaign: "ClawHavoc"
+    payload: "Prediction market credential theft"
+  - pattern: "auto-updater-*"
+    count: 27
+    campaign: "ClawHavoc"
+    payload: "Persistent updater daemon with stealer payload"
+  - pattern: "mcp-runcmd*"
+    count: 3
+    campaign: "PyPI Supply Chain (JFrog)"
+    payload: "Reverse shell to 45.115.38.27:4433"
+  - pattern: "@openclaw-ai/*"
+    count: 1
+    campaign: "GhostClaw npm"
+    payload: "GhostLoader RAT (clipboard monitor, SSH/Keychain theft)"
+
+# ─── CRITICAL CVEs (platform-level, affect all CC users) ──────────────────
+# /validate checks product's minimum CC version against these.
+# /aegis uses these for deeper threat modeling.
+critical_cves:
+  - id: "CVE-2025-59536"
+    severity: "CRITICAL"
+    component: "Claude Code settings.json"
+    description: "RCE via enableAllProjectMcpServers — auto-starts MCP servers before trust dialog"
+    mitigation: "Never set enableAllProjectMcpServers in product settings"
+    fixed_in: "Claude Code >= 1.0.15"
+
+  - id: "CVE-2026-21852"
+    severity: "CRITICAL"
+    component: "Claude Code ANTHROPIC_BASE_URL"
+    description: "API key theft via env var injection in repo config"
+    mitigation: "Never override ANTHROPIC_BASE_URL in product files"
+    fixed_in: "Claude Code >= 2.0.3"
+
+  - id: "CVE-2026-25253"
+    severity: "HIGH"
+    component: "OpenClaw gateway"
+    description: "WebSocket token exfiltration via malicious link (17,500+ exposed instances)"
+    mitigation: "Products must not expose WebSocket endpoints without auth"
+    fixed_in: "N/A — architectural issue"
+
+  - id: "CVE-2026-0755"
+    severity: "CRITICAL"
+    component: "gemini-mcp-tool"
+    description: "LLM-generated args passed to shell without validation = RCE"
+    mitigation: "Never use gemini-mcp-tool; use validated alternatives"
+    fixed_in: "UNPATCHED"
+
+  - id: "CVE-2025-15061"
+    severity: "CRITICAL"
+    component: "figma-developer-mcp < 0.6.3"
+    description: "Shell metacharacters in fetchWithRetry execute arbitrary code"
+    mitigation: "Pin figma-developer-mcp >= 0.6.3"
+    fixed_in: ">= 0.6.3"
+
+# ─── DANGEROUS PATTERNS (grep-executable in product code) ─────────────────
+# /validate Stage 2 greps for these in ALL product files.
+dangerous_patterns:
+  - pattern: "enableAllProjectMcpServers"
+    severity: "CRITICAL"
+    reason: "CVE-2025-59536 — bypasses MCP trust dialog"
+    action: "BLOCKING"
+
+  - pattern: "ANTHROPIC_BASE_URL"
+    severity: "CRITICAL"
+    reason: "CVE-2026-21852 — enables API key theft"
+    action: "BLOCKING"
+
+  - pattern: "eval\\("
+    severity: "HIGH"
+    reason: "Code injection vector in hook/skill handlers"
+    action: "WARNING"
+
+  - pattern: "child_process.*spawn.*shell.*true"
+    severity: "HIGH"
+    reason: "Shell spawn with shell:true enables injection"
+    action: "WARNING"
+
+  - pattern: "curl.*\\|.*sh"
+    severity: "CRITICAL"
+    reason: "Remote code execution via pipe-to-shell"
+    action: "BLOCKING"
+
+  - pattern: "wget.*\\|.*sh"
+    severity: "CRITICAL"
+    reason: "Remote code execution via pipe-to-shell"
+    action: "BLOCKING"
+
+  - pattern: "base64.*-d.*\\|.*sh"
+    severity: "CRITICAL"
+    reason: "Obfuscated code execution"
+    action: "BLOCKING"
+
+  - pattern: "\\$\\(curl"
+    severity: "HIGH"
+    reason: "Command substitution with remote content"
+    action: "WARNING"
+
+  - pattern: "process\\.env\\.(?!NODE_ENV|HOME|PATH|SHELL)"
+    severity: "MEDIUM"
+    reason: "Accessing non-standard env vars may indicate credential harvesting"
+    action: "COACHING"
+
+# ─── MCP SERVERS WITH KNOWN VULNERABILITIES ────────────────────────────────
+# If product references these MCP servers, warn about minimum safe version.
+vulnerable_mcp_servers:
+  - name: "figma-developer-mcp"
+    min_safe_version: "0.6.3"
+    cve: "CVE-2025-15061"
+  - name: "mcp-atlassian"
+    min_safe_version: "0.17.0"
+    cve: "CVE-2026-27825 + CVE-2026-27826 (MCPwnfluence chain)"
+  - name: "gemini-mcp-tool"
+    min_safe_version: "NONE — do not use"
+    cve: "CVE-2026-0755"
+  - name: "quip-mcp-server"
+    min_safe_version: "NONE — maintainer unresponsive"
+    cve: "CVE-2026-4192"
+  - name: "mcp-memory-service"
+    min_safe_version: "UNKNOWN"
+    cve: "CVE-2026-33010 (CORS wildcard enables cross-origin memory theft)"
+
+# ─── MALICIOUS IOCs (Indicators of Compromise) ────────────────────────────
+# If any product file contains these IPs/domains, immediate BLOCKING.
+iocs:
+  ips:
+    - "91.92.242.30"     # ClawHavoc AMOS dropper C2
+    - "95.92.242.30"     # ClawHavoc secondary C2
+    - "96.92.242.30"     # ClawHavoc tertiary C2
+    - "202.161.50.59"    # ClawHavoc infrastructure
+    - "54.91.154.110"    # Polymarket skill reverse shell target
+    - "45.115.38.27"     # PyPI MCP reverse shell target (JFrog)
+  domains:
+    - "webhook.site"     # Common exfiltration endpoint
+    - "requestbin.com"   # Common exfiltration endpoint
+    - "ngrok.io"         # Tunnel endpoint (legitimate but suspicious in products)
+
+# ─── ECOSYSTEM STATISTICS (context for coaching) ──────────────────────────
+ecosystem_stats:
+  total_malicious_skills: 1184
+  malicious_rate_clawhub: "36.82%"
+  malicious_rate_source: "Snyk ToxicSkills scan of 3,984 skills (2026-02)"
+  hardcoded_secrets_rate: "10.9%"
+  exposed_openclaw_instances: 17500
+  mcp_ecosystem_cves: "70+"

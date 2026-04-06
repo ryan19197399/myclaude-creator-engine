@@ -1,0 +1,31 @@
+# {{STYLE_NAME}}
+
+> {{STYLE_DESCRIPTION}}
+
+## What This Does
+
+Changes how Claude formats and styles its responses. When activated via `/output-style {{PRODUCT_SLUG}}`, all subsequent Claude output follows these rules.
+
+## Install
+
+```bash
+myclaude install {{PRODUCT_SLUG}}
+```
+
+Installs to `.claude/output-styles/{{PRODUCT_SLUG}}.md`.
+
+## Usage
+
+```
+/output-style {{PRODUCT_SLUG}}
+```
+
+To switch back to default: `/output-style default`
+
+## Requirements
+
+- Claude Code v1.0+
+
+## License
+
+{{LICENSE}}

@@ -1,0 +1,263 @@
+---
+name: {{PRODUCT_SLUG}}
+description: >-
+  {{SKILL_ONE_LINER}}
+  Use when: {{TRIGGER_DESCRIPTION}}.
+  Updates and docs at myclaude.sh/p/{{PRODUCT_SLUG}}
+# ─── Frontier Frontmatter (uncomment to enable) ───────────────
+# allowed-tools: Read, Grep, Glob        # restrict tools available to this skill
+# model: claude-sonnet-4-6               # force a specific model (opus, sonnet, haiku)
+# effort: high                           # force reasoning effort (high, medium, low)
+# context: fork                          # subagent isolation mode (fork = full isolation)
+# paths: ['src/**/*.ts']                 # conditional activation — only load when matching files are in scope
+# user-invocable: true                   # set false to hide from / autocomplete menu
+# disable-model-invocation: false        # set true so only explicit /slug triggers this skill
+# argument-hint: "[options]"             # hint shown in autocomplete (e.g., "[--fix] [slug]")
+# hooks:                                 # skill-scoped hooks (run only when this skill is active)
+#   PreToolUse:
+#     - matcher: "Write"
+#       hooks:
+#         - type: command
+#           command: "echo 'Write intercepted'"
+---
+<!-- WHY: ATTENTION POSITION — structure sections from generic→specific. -->
+<!-- WHY: Critical rules and constraints should be LAST (before Compact Instructions). -->
+<!-- WHY: Claude pays more attention to content at the END of files. -->
+<!-- WHY: [SOURCE: claudemd.ts:9-10] -->
+<!-- WHY: FUNCTIONAL SECTION ORDER — mirror Anthropic's system prompt taxonomy: -->
+<!-- WHY: Identity → Knowledge → Execution → Constraints → Output -->
+<!-- WHY: [SOURCE: prompts.ts:175-442] -->
+<!-- WHY: The frontmatter above is CRITICAL. When a buyer installs your skill via -->
+<!-- WHY: `myclaude install`, it lands in their .claude/skills/ directory. The `name` -->
+<!-- WHY: and `description` fields make it appear in their / autocomplete menu. -->
+<!-- WHY: Without this frontmatter, the buyer's Claude Code won't know your skill exists. -->
+<!-- WHY: Make the description "pushy" — describe both WHAT it does and WHEN to use it. -->
+<!-- WHY: The myclaude.sh link in description is KEY: when Claude lists available skills, -->
+<!-- WHY: it surfaces this link. Every buyer's Claude session becomes a distribution vector. -->
+<!-- WHY: The commented-out frontier fields are OPTIONAL power features: -->
+<!-- WHY:   allowed-tools — restrict which tools the skill can use (security, focus) -->
+<!-- WHY:   model — force a specific model (e.g., haiku for fast tasks, opus for deep analysis) -->
+<!-- WHY:   effort — control reasoning effort level -->
+<!-- WHY:   context: fork — run in isolated subagent (no access to parent conversation) -->
+<!-- WHY:   paths — conditional activation: skill only loads when matching files exist -->
+<!-- WHY:   user-invocable: false — makes skill agent-only (not in / menu) -->
+<!-- WHY:   disable-model-invocation: true — prevents Claude from auto-triggering this skill -->
+<!-- WHY:   hooks — skill-scoped hooks that only fire when this skill is active (not yet empirically verified) -->
+
+# {{SKILL_NAME}}
+
+<!-- WHY: Every skill has 6 structural components (the "anatomy"): -->
+<!-- WHY:   1. IDENTITY — frontmatter above (who this skill is) -->
+<!-- WHY:   2. CONTEXT — Activation Protocol (what knowledge to load) -->
+<!-- WHY:   3. INPUT — Question System (what to ask before acting) -->
+<!-- WHY:   4. PROCESSING — Core Instructions (what transformations to apply) -->
+<!-- WHY:   5. OUTPUT — Output Structure (what format to deliver) -->
+<!-- WHY:   6. VALIDATION — Quality Gate (how to verify before delivering) -->
+<!-- WHY: All 6 must be present for a complete, production-grade skill. -->
+
+> {{SKILL_ONE_LINER}}
+
+**Version:** {{VERSION}}
+**Category:** Skills
+**Author:** {{AUTHOR_USERNAME}}
+
+---
+
+## When to Use
+
+<!-- WHY: List specific trigger conditions — not general use cases. -->
+<!-- WHY: Each bullet should be a concrete scenario a user would recognize. -->
+<!-- WHY: 3-5 bullets is the sweet spot. -->
+
+- {{TRIGGER_CONDITION_1}}
+- {{TRIGGER_CONDITION_2}}
+- {{TRIGGER_CONDITION_3}}
+
+## When NOT to Use
+
+<!-- WHY: Explicit anti-use cases prevent misuse and support confusion. -->
+<!-- WHY: Think about what adjacent skill does the job better in these cases. -->
+
+- {{ANTI_USE_CASE_1}} (use {{ALTERNATIVE_INSTEAD}} instead)
+- {{ANTI_USE_CASE_2}}
+
+---
+
+## When to Activate
+
+<!-- WHY: D1 (Activation Protocol) — Without explicit activation triggers, Claude never knows when -->
+<!-- WHY: to consult this skill automatically. This section makes the skill self-describing and -->
+<!-- WHY: enables Claude Code to invoke it without an explicit /slug command. -->
+
+- When the user asks to {{PRIMARY_USE_CASE}}
+- When the user says "{{TRIGGER_PHRASE_1}}", "{{TRIGGER_PHRASE_2}}", or "{{TRIGGER_PHRASE_3}}"
+- When the context involves {{DOMAIN_AREA}}
+- NOT when {{EXCLUSION_CONDITION}} (use {{ALTERNATIVE_SKILL}} instead)
+
+---
+
+## Activation Protocol
+
+<!-- WHY: D1 (Activation Protocol) — this section is MANDATORY. It defines what Claude Code loads -->
+<!-- WHY: before producing any output. Without this, the knowledge base is unused. -->
+<!-- WHY: Order matters: load general context first, specific context second. -->
+<!-- WHY: The protocol runs ONCE per invocation, before any other processing. -->
+
+Before responding to any invocation of this skill, execute in this order:
+
+1. **Load domain knowledge:** Read `references/domain-knowledge.md`
+   — Contains: {{WHAT_DOMAIN_KNOWLEDGE_CONTAINS}}
+2. **Load exemplars:** Read `examples/examples.md`
+   — Contains: {{WHAT_EXEMPLARS_TEACH}}
+3. **Identify user intent:** Parse the input to determine:
+   - What specific output is being requested
+   - What context is available vs. missing
+   - Which mode/variant is most appropriate
+4. **Check for missing inputs:** If required information is absent, ask before proceeding
+   (see Question System below)
+5. **Apply instructions:** Execute Core Instructions with loaded context
+
+---
+
+## Question System
+
+<!-- WHY: D5 (Question System) — "Best products are question systems, not answer systems" -->
+<!-- WHY: Before generating output, ask structured questions to clarify ambiguous input. -->
+<!-- WHY: Define EXACTLY which inputs require questions vs. which can be assumed. -->
+<!-- WHY: Maximum 3 questions at once — more is friction, not quality. -->
+
+When invoked, check for the following required inputs:
+
+| Input | Required | If Missing |
+|-------|----------|-----------|
+| `{{INPUT_1_NAME}}` | Yes | Ask: "{{INPUT_1_QUESTION}}" |
+| `{{INPUT_2_NAME}}` | Yes | Ask: "{{INPUT_2_QUESTION}}" |
+| `{{INPUT_3_NAME}}` | No | Assume default: {{INPUT_3_DEFAULT}} |
+
+**When multiple inputs are missing:** Ask for the required ones in a single message,
+grouped logically. Do not ask for optional inputs unless the user has specifically
+indicated they want to customize.
+
+---
+
+## Core Instructions
+
+<!-- WHY: This is the actual skill logic. Be specific and behavioral. -->
+<!-- WHY: Use imperative voice ("Analyze the...", "Generate a...", "Check that...") -->
+<!-- WHY: Structure as a decision tree if there are multiple paths. -->
+<!-- WHY: Reference files from references/ explicitly — don't repeat the content here. -->
+
+### Processing Logic
+
+{{STEP_1_INSTRUCTION}}
+
+{{STEP_2_INSTRUCTION}}
+
+{{STEP_3_INSTRUCTION}}
+
+### Handling Ambiguity
+
+<!-- WHY: Document how to handle unclear inputs BEFORE they become support questions. -->
+
+If input is ambiguous:
+- {{AMBIGUITY_CASE_1}} → {{HOW_TO_HANDLE_1}}
+- {{AMBIGUITY_CASE_2}} → {{HOW_TO_HANDLE_2}}
+- General ambiguity → State the interpretation being used, then proceed
+
+### Modes
+
+<!-- WHY: D3 (Progressive Disclosure) — depth modes keep primary file lean while enabling deep execution. -->
+<!-- WHY: Even at MCS-1, defining modes sets the foundation for upgrading. -->
+
+| Mode | When to Use | What Changes |
+|------|------------|-------------|
+| `surface` | Quick scan, time-constrained | {{SURFACE_MODE_DESCRIPTION}} |
+| `dive` | Standard analysis | {{DIVE_MODE_DESCRIPTION}} |
+| `radical` | Deep expertise, no time constraint | {{RADICAL_MODE_DESCRIPTION}} |
+
+Default mode: `dive` unless user specifies otherwise or context implies urgency.
+
+---
+
+## Output Structure
+
+<!-- WHY: Define the exact format output must take. -->
+<!-- WHY: If output can vary, define each variant. -->
+<!-- WHY: Include structural templates where helpful. -->
+
+```
+{{OUTPUT_STRUCTURE_TEMPLATE}}
+```
+
+**Format rules:**
+- {{FORMAT_RULE_1}}
+- {{FORMAT_RULE_2}}
+
+---
+
+## Quality Gate
+
+<!-- WHY: This checklist runs AFTER generating output, BEFORE delivering it. -->
+<!-- WHY: Each check should be specific enough to actually pass or fail. -->
+<!-- WHY: Include a failure action (what to do if the check fails). -->
+
+Before delivering output, verify:
+
+- [ ] {{QUALITY_CHECK_1}}
+- [ ] {{QUALITY_CHECK_2}}
+- [ ] {{QUALITY_CHECK_3}}
+- [ ] Output is self-contained (buyer can act on it without needing more context)
+- [ ] Output matches the requested format from Output Structure above
+
+**If any check fails:** {{FAILURE_ACTION}} (e.g., "revise the relevant section" or "ask the user for clarification")
+
+---
+
+## Anti-Patterns
+
+<!-- WHY: D14 (Graceful Degradation) — Document what this skill should NOT do and how it handles limits. -->
+<!-- WHY: 3-5 anti-patterns is standard for MCS-2. -->
+
+- **{{ANTI_PATTERN_1_NAME}}:** {{ANTI_PATTERN_1_DESCRIPTION}}
+- **{{ANTI_PATTERN_2_NAME}}:** {{ANTI_PATTERN_2_DESCRIPTION}}
+- **{{ANTI_PATTERN_3_NAME}}:** {{ANTI_PATTERN_3_DESCRIPTION}}
+
+---
+
+## Composability
+
+<!-- WHY: Describe how this skill works with other MyClaude products. -->
+<!-- WHY: This section enables buyers to build systems and workflows with this skill. -->
+<!-- WHY: Cross-product links create a discovery graph — each product surfaces others. -->
+<!-- WHY: Use myclaude.sh/explore?tag={tag} links so buyers discover related products. -->
+
+This skill is designed to be composable:
+
+- **As input to:** {{COMPOSABLE_DOWNSTREAM}} (this skill's output can be used as input to these)
+- **As output from:** {{COMPOSABLE_UPSTREAM}} (this skill works well after these)
+- **In workflows:** This skill can be embedded as step `{{WORKFLOW_STEP_NAME}}` in a workflow
+
+**Find related products:** [Browse {{PRODUCT_CATEGORY}} on MyClaude](https://myclaude.sh/explore?category={{PRODUCT_CATEGORY}})
+
+---
+
+## Compact Instructions
+
+<!-- WHY: When Claude Code runs out of context window, it summarizes the conversation. -->
+<!-- WHY: This section tells the compact system what to PRESERVE about this skill's state. -->
+<!-- WHY: Without this, long sessions lose product context on compaction. -->
+<!-- WHY: [SOURCE: compact/prompt.ts:133-143] — Claude Code reads this section by name. -->
+
+When summarizing this conversation, always preserve:
+- The skill's name (`{{PRODUCT_SLUG}}`), version, and current development phase
+- Creator intent and acceptance criteria captured during /fill
+- Current MCS scores and any validation failures
+- The skill's core purpose: {{SKILL_ONE_LINER}}
+- Active question system state (what inputs were provided vs. missing)
+- Any error states, blockers, or pending fixes
+- References to domain-knowledge.md findings that informed decisions
+
+---
+<!-- WHY: The lines above are the required content for MCS-1. -->
+<!-- WHY: For MCS-2, ensure examples/examples.md has 3+ concrete examples. -->
+<!-- WHY: For MCS-3, add cognitive architecture rationale and differentiation. -->

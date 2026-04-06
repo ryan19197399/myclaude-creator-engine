@@ -1,0 +1,42 @@
+# {{MIND_NAME}}
+
+{{MIND_ONE_LINER}}
+
+## Architecture
+
+This is a **cognitive mind** — a 5-layer cognitive architecture, not a flat advisor.
+
+| Layer | File | Purpose |
+|-------|------|---------|
+| 1. Boot | `AGENT.md` | Identity, principles, cognitive patterns |
+| 2. Cognitive Core | `references/cognitive-core.md` | Biography, architecture, singularity |
+| 3. Personality | `references/personality.md` | Behavioral matrix, style, interaction |
+| 4. Knowledge | `references/knowledge-base.md` | Domain depth + boundaries |
+| 5. Reasoning | `references/reasoning-engine.md` | Patterns, models, triggers |
+
+## Install
+
+```bash
+myclaude install {{PRODUCT_SLUG}}
+```
+
+## Usage
+
+This mind activates as a Claude Code agent:
+
+```
+/{{PRODUCT_SLUG}} "{{EXAMPLE_INPUT}}"
+```
+
+Or invoke via the Agent tool in any conversation where deep {{DOMAIN}} thinking is needed.
+
+## Requirements
+
+- Claude Code >= 1.0.0
+- Model: claude-opus-4-6 (recommended for cognitive depth)
+
+## What Makes This Different
+
+<!-- WHY: D13 — Buyers need to know why THIS mind vs a generic prompt. -->
+
+{{DIFFERENTIATION_STATEMENT}}
