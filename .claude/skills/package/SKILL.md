@@ -249,9 +249,9 @@ Emit only the fields relevant to the product type:
 
 **Step 4b — Generate agentskills.yaml** (Agent Skills Universal — 33+ platforms)
 
-The Agent Skills spec (agentskills.io) is the open standard adopted by Claude Code, Cursor,
-GitHub Copilot, VS Code, Gemini CLI, OpenAI Codex, Kiro, JetBrains, and 25+ more platforms.
-Generate this manifest so the product is installable everywhere.
+The Agent Skills format (YAML frontmatter + markdown instructions) is the structured skill definition
+format used natively by Claude Code and recognized by other AI coding tools.
+Generate this manifest for cross-platform compatibility.
 
 ```yaml
 # Agent Skills Universal Manifest

@@ -104,6 +104,8 @@ Um consultor de seguranca Kubernetes usou o engine para transformar 15 anos de e
 
 **O consultor forneceu a expertise. O engine cuidou de todo o resto.**
 
+> ✦ Essa e a tese: Claude e poderoso de fabrica. Mas o *seu* Claude — aumentado com expertise real — e outra coisa.
+
 ---
 
 ## O Que Voce Pode Criar
@@ -222,7 +224,7 @@ Rode `/validate` a qualquer momento. O engine mostra exatamente o que passa, o q
 | **CLI** (`@myclaude-cli/cli`) | Busque, instale, publique pelo terminal | [myclaude.sh](https://myclaude.sh) |
 | **Marketplace** | Navegue e instale com um comando | [myclaude.sh](https://myclaude.sh) |
 
-Produtos criados pelo engine seguem a [especificacao Agent Skills](https://agentskills.io/specification) — o padrao aberto publicado pela Anthropic e adotado por plataformas como Codex, VS Code/Copilot, Cursor e outras. Seus produtos funcionam onde o padrao e suportado.
+Produtos criados pelo engine usam o **formato Agent Skills** — YAML frontmatter com nome, descricao e restricoes, seguido de instrucoes em markdown. E o mesmo formato `SKILL.md` usado nativamente pelo Claude Code e reconhecido por outras ferramentas de IA que suportam definicoes estruturadas de skills.
 
 ---
 

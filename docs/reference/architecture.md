@@ -239,6 +239,8 @@ The system enforces security at multiple layers:
 | **Context firewall** | Isolates agent execution | Spawned agents cannot see parent conversation |
 | **Denied tools** | Restricts mind permissions | Minds cannot write/edit/execute — advisory only |
 
+> ◆ Security isn't a feature — it's a constraint the system was designed around. Every layer assumes adversarial input.
+
 ---
 
 **Next:** [Product Types](product-types.md) · [Quality System](quality-system.md) · [Commands](commands.md)

@@ -1,6 +1,6 @@
 # Quality System
 
-How the engine measures and ensures product quality.
+Quality is a number, not a feeling. The engine measures it so you don't have to guess.
 
 ---
 
@@ -162,6 +162,8 @@ Your craft is visibly improving.
 ```
 
 This is computed from data, not stored as a label. The engine observes your work and reports what it sees.
+
+> ✦ No other tool in the Claude Code ecosystem validates quality before publishing. Products that pass through this engine are verified — not just functional, but structurally sound.
 
 ---
 

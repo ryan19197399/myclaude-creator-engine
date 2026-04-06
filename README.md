@@ -12,7 +12,7 @@
 @license: MIT
 @plugin: .claude-plugin/marketplace.json
 @llms-txt: llms.txt
-@agent-skills: compatible with agentskills.io specification
+@agent-skills: compatible with Agent Skills format (SKILL.md with YAML frontmatter)
 -->
 
 <p align="center">
@@ -114,6 +114,8 @@ A Kubernetes security consultant used the engine to turn 15 years of expertise i
 
 **The consultant provided the expertise. The engine handled everything else.**
 
+> ✦ That's the thesis: Claude is powerful out of the box. But *your* Claude — augmented with real expertise — is something else entirely.
+
 ---
 
 ## What You Can Build
@@ -189,7 +191,7 @@ The Studio Engine is a **factory**. It helps you create your own.
 | **Distribution** | GitHub repo | Marketplace with one-command install |
 | **After install** | Depends on the repo | Self-contained, no dependency |
 
-**No other tool in the ecosystem validates quality before publishing.** MCS scoring is unique — your products are verified, not just functional.
+**No other tool in the ecosystem validates quality before publishing.** Your products are verified, not just functional.
 
 ---
 
@@ -232,7 +234,7 @@ Run `/validate` at any time. The engine shows exactly what passes, what needs wo
 | **CLI** (`@myclaude-cli/cli`) | Search, install, publish from the terminal | [myclaude.sh](https://myclaude.sh) |
 | **Marketplace** | Browse and install with one command | [myclaude.sh](https://myclaude.sh) |
 
-Products created by the engine follow the [Agent Skills specification](https://agentskills.io/specification) — the open standard published by Anthropic and adopted by platforms like Codex, VS Code/Copilot, Cursor, and others. Your products work anywhere the standard is supported.
+Products created by the engine use the **Agent Skills format** — YAML frontmatter with name, description, and constraints, followed by markdown instructions. This is the same `SKILL.md` format used natively by Claude Code and recognized by other AI coding tools that support structured skill definitions.
 
 ---
 

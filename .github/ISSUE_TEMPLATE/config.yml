@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions & Help
+    url: https://github.com/myclaude-sh/myclaude-creator-engine/discussions
+    about: Ask questions in Discussions, not Issues. We respond faster there.
+  - name: Product Showcase
+    url: https://github.com/myclaude-sh/myclaude-creator-engine/discussions/categories/show-and-tell
+    about: Share what you built with the engine.

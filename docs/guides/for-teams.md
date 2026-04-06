@@ -232,6 +232,8 @@ To update a live product:
 
 Keep a changelog section in your product. Teams that know what changed adopt updates faster.
 
+> ✦ One product, one install command, every team member on the same page. That's what shared standards look like.
+
 ---
 
 **Next:** [All Commands](../reference/commands.md) · [Product Types](../reference/product-types.md) · [Quality System](../reference/quality-system.md)

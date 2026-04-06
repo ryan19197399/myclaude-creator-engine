@@ -1,6 +1,6 @@
 # Product Types
 
-13 typed artifacts, each with specific structural DNA and installation targets.
+13 ways to package expertise. Each type has specific structural DNA, its own installation slot, and quality patterns the engine validates automatically.
 
 ---
 
@@ -17,9 +17,9 @@
 | **claude-md** | Behavioral rules and instructions | `.claude/rules/` | Team standards |
 | **hooks** | Lifecycle automation scripts | `~/.claude/hooks/` | Automation, CI/CD |
 | **statusline** | Terminal status widgets | `~/.claude/statusline-scripts/` | Productivity |
-| **output-style** | Response formatting rules | `.claude/output-styles/` | Output customization |
-| **design-system** | Design token systems | project directory | Frontend teams |
-| **application** | Full applications | project directory | Standalone tools |
+| **output-style** | Response formatting rules | *(experimental — not yet in CLI)* | Output customization |
+| **design-system** | Design token systems | `myclaude-products/{slug}/` | Frontend teams |
+| **application** | Full applications | `myclaude-products/{slug}/` | Standalone tools |
 | **bundle** | Meta-packages combining products | N/A | Product suites |
 
 ---
@@ -77,15 +77,21 @@ Terminal status widgets that display information in Claude Code's status bar —
 ### output-style
 Rules that control how Claude formats its responses — markdown conventions, code style preferences, verbosity levels, language choices.
 
+> *Engine-only — you can create and use output-style products locally, but CLI publish/install is not yet available. For now, share via git or manual copy.*
+
 **Create:** `/create output-style`
 
 ### design-system
 Design token systems with color palettes, typography scales, spacing rules. Exported to CSS, Tailwind, JSON, or framework-specific formats.
 
+> **Actionability note:** Design systems install to a project folder — Claude Code does not auto-discover them as slash commands. For full actionability, pair your design system with a companion **skill** that reads the tokens and generates code. The engine will prompt you to create one during `/fill`.
+
 **Create:** `/create design-system`
 
 ### application
-Full standalone applications. The engine scaffolds the structure, but the product lives outside Claude Code's skill system.
+Full standalone applications built with Claude Code. The product lives as a project directory.
+
+> **Actionability note:** Applications install to a project folder. For the best user experience, include a clear README with setup instructions, or pair with a companion **skill** that bootstraps the application.
 
 **Create:** `/create application`
 
@@ -102,12 +108,12 @@ When someone runs `myclaude install your-product`, the CLI downloads the product
 
 | Slot | Path | What Goes There |
 |:-----|:-----|:----------------|
-| Skills | `.claude/skills/your-product/` | Skills, agents, minds, squads, workflows, systems |
-| Rules | `.claude/rules/` | claude-md behavioral rules |
-| Hooks | `settings.json` | Lifecycle automation scripts |
-| Statusline | `~/.claude/statusline-scripts/` | Terminal status widgets |
-| Output Styles | `.claude/output-styles/` | Response formatting rules |
-| Project files | Project directory | Design systems, applications |
+| Skills | `.claude/skills/{slug}/` | Skills, agents, squads, workflows, systems |
+| Agents | `.claude/agents/{slug}.md` | Minds (domain advisors) |
+| Rules | `.claude/rules/{slug}.md` | claude-md behavioral rules |
+| Hooks | `~/.claude/hooks/{slug}/scripts/` | Lifecycle automation scripts |
+| Statusline | `~/.claude/statusline-scripts/{slug}.sh` | Terminal status widgets |
+| Project files | `myclaude-products/{slug}/` | Design systems, applications |
 
 Claude Code discovers installed products automatically on session start. Skills and agents appear in the command catalog. Rules become active immediately. Hooks fire on their configured events. No manual wiring needed.
 
@@ -124,11 +130,10 @@ Not all products are active at the same time. Claude Code loads them at differen
 ```
 ALWAYS ACTIVE (loaded every turn):
   claude-md     → behavioral rules, always governing
-  output-style  → formatting rules, always applied
 
 ON-DEMAND (zero cost until invoked):
   skill         → loaded when you type /skill-name
-  minds         → loaded when you type /minds-name
+  minds         → loaded when referenced via Agent tool
   workflow      → loaded when you type /workflow-name
 
 ON-SPAWN (isolated context):
@@ -138,6 +143,10 @@ ON-SPAWN (isolated context):
 EVENT-TRIGGERED (invisible, reactive):
   hooks         → fires on lifecycle events (tool calls, session start, etc.)
   statusline    → updates in the terminal render loop
+
+REFERENCE (project files, not auto-discovered):
+  design-system → token files in project folder, pair with a skill for actionability
+  application   → project files, include README with setup instructions
 ```
 
 **Why this matters:** Products that are always active (claude-md) consume tokens every turn — keep them short. Products that are on-demand (skills, minds) have zero cost until invoked — they can be as deep as needed.
@@ -229,7 +238,7 @@ For a more systematic choice:
 - **You want automation on Claude Code events** → `hooks`
 - **You want to combine multiple products** → `bundle`
 
-Still unsure? Run `/scout your-domain` — the engine will recommend the best type based on your domain analysis.
+Still unsure? Run `/scout your-domain` — the engine will recommend the best type based on your domain analysis. Or `/think` to brainstorm before committing.
 
 ---
 
@@ -246,7 +255,7 @@ When you run `/package`, the engine generates distribution-ready files in `.publ
 └── agentskills.yaml       ← Agent Skills spec manifest (cross-platform compatibility)
 ```
 
-The `SKILL.md` follows the [Agent Skills specification](https://agentskills.io) — YAML frontmatter with name, description, and optional tool/model constraints, followed by markdown instructions. This format is recognized by Claude Code and any platform that supports the standard.
+The `SKILL.md` uses the Agent Skills format — YAML frontmatter with name, description, and optional tool/model constraints, followed by markdown instructions. This is the native format recognized by Claude Code.
 
 Example frontmatter from a packaged product:
 
@@ -259,7 +268,7 @@ description: Deep Kubernetes security expertise — attack paths, CIS benchmarks
 
 ### Agent Skills Spec Constraints
 
-The `/package` output follows the [Agent Skills specification](https://agentskills.io/specification) published by Anthropic (Apache 2.0). Key constraints the engine enforces automatically:
+The `/package` output follows the Agent Skills format used by Claude Code. Key constraints the engine enforces automatically:
 
 | Field | Constraint |
 |:------|:-----------|
@@ -270,5 +279,7 @@ The `/package` output follows the [Agent Skills specification](https://agentskil
 Products packaged by the engine are compatible with any platform that supports the Agent Skills standard — including Claude Code and other tools that have adopted the specification.
 
 ---
+
+> ✦ Every product is self-contained after install — no engine dependency, no lock-in. The work is yours. The quality verification is ours.
 
 **Next:** [Architecture](architecture.md) · [Commands Reference](commands.md) · [Quality System](quality-system.md) · [Getting Started](../getting-started.md)

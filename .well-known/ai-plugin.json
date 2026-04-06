@@ -1,0 +1,21 @@
+{
+  "schema_version": "v1",
+  "name_for_human": "MyClaude Studio Engine",
+  "name_for_model": "myclaude-studio-engine",
+  "description_for_human": "Create, validate, and publish Claude Code products. Turn your expertise into tools anyone can install.",
+  "description_for_model": "A creation pipeline for Claude Code products. Use when users want to build custom skills, agents, minds, workflows, or other tool types for Claude Code. Supports 13 product types with 20 structural quality patterns. Guides users from research (/scout) through creation (/create), content filling (/fill), quality validation (/validate), testing (/test), packaging (/package), and publishing (/publish) to a marketplace (myclaude.sh). Adapts to non-developers. Products are self-contained after install. The only tool in the Claude Code ecosystem with quality scoring before publishing.",
+  "auth": {
+    "type": "none"
+  },
+  "api": {
+    "type": "claude-code-skills",
+    "url": "https://github.com/myclaude-sh/myclaude-creator-engine"
+  },
+  "logo_url": "https://raw.githubusercontent.com/myclaude-sh/myclaude-creator-engine/main/assets/myclaude-logo.png",
+  "contact_email": "hello@myclaude.sh",
+  "legal_info_url": "https://github.com/myclaude-sh/myclaude-creator-engine/blob/main/LICENSE",
+  "install": "myclaude studio",
+  "install_alt": "git clone https://github.com/myclaude-sh/myclaude-creator-engine",
+  "marketplace": "https://myclaude.sh",
+  "llms_txt": "https://raw.githubusercontent.com/myclaude-sh/myclaude-creator-engine/main/llms.txt"
+}

@@ -1,6 +1,6 @@
 # Package Your Expertise as an Installable Advisor
 
-You don't need to write code. You need expertise worth sharing.
+You don't need to write code. You need expertise worth packaging.
 
 The frameworks you've built, the decision-making patterns you've refined over years, the things you explain to every new client — those belong in a tool that anyone can install and use. This guide shows you exactly how to build it.
 
@@ -202,5 +202,7 @@ The things you tell clients NOT to do, the mistakes you've seen over and over �
 If the scout found that Claude already handles an area well, spend less time on it. Pour your depth into the gaps. That's where your advisor creates real value.
 
 ---
+
+> ✦ Your expertise deserves to be more than advice that disappears after a conversation. Make it permanent. Make it installable.
 
 **Next:** [Getting Started](../getting-started.md) · [Frequently Asked Questions](../faq.md) · [All Commands](../reference/commands.md)

@@ -2,11 +2,18 @@
 
 All 15 commands. Organized by pipeline phase, with usage examples and expected output.
 
+```
+  research       create       refine       verify       ship
+  /scout    →   /create  →   /fill   →  /validate →  /publish
+```
+
+> ✦ Each step feeds the next. Scout research flows into creation. Creation generates structure for filling. Filling produces content that validation scores. Nothing is disconnected.
+
 ---
 
 ## Pipeline Commands
 
-These commands follow a natural sequence. Each step feeds the next.
+These commands follow a natural sequence.
 
 ```
 /onboard → /scout → /create → /fill → /validate → /test → /package → /publish
@@ -181,6 +188,8 @@ Publish to [myclaude.sh](https://myclaude.sh). Shows a summary, requires your co
 
 **After publishing:** Anyone can install with `myclaude install your-product`.
 
+> ◆ The engine never publishes without your explicit confirmation. Your work, your decision, always.
+
 ---
 
 ## Utility Commands
@@ -282,5 +291,7 @@ Security audit for any codebase. STRIDE threat modeling, 300+ vulnerability patt
 | `/aegis` | Security audit | As needed |
 
 ---
+
+> ✦ Not sure where to start? `/status` always knows where you are. `/think` helps when you're stuck. `/scout` shows what's worth building.
 
 **Next:** [Product Types](product-types.md) · [Quality System](quality-system.md) · [Getting Started](../getting-started.md)

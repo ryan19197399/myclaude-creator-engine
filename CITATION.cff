@@ -1,0 +1,19 @@
+cff-version: 1.2.0
+title: "MyClaude Studio Engine"
+message: "If you use this software in your work, please cite it as below."
+type: software
+authors:
+  - name: "myclaude-sh"
+    website: "https://myclaude.sh"
+repository-code: "https://github.com/myclaude-sh/myclaude-creator-engine"
+url: "https://myclaude.sh"
+license: MIT
+version: "2.2.0"
+date-released: "2026-04-06"
+keywords:
+  - claude-code
+  - ai-tools
+  - agent-skills
+  - marketplace
+  - developer-tools
+abstract: "Creation pipeline for Claude Code products — research, create, validate, and publish skills, agents, squads, minds, and 9 more product types with 20 structural quality patterns."

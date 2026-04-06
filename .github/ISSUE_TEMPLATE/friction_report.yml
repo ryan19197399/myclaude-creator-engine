@@ -1,0 +1,43 @@
+name: Friction Report
+description: Something felt harder than it should — tell us about it
+title: "[friction] "
+labels: ["friction", "ux"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Friction reports are the most valuable contribution. If something felt off — confusing, slow, unclear — that's signal we need.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What were you trying to do?
+      placeholder: "I was trying to..."
+    validations:
+      required: true
+  - type: textarea
+    id: friction
+    attributes:
+      label: Where did it feel wrong?
+      description: What was confusing, slow, or unclear?
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What would have felt right?
+      description: How should the experience have been?
+  - type: dropdown
+    id: severity
+    attributes:
+      label: How much did it slow you down?
+      options:
+        - Minor — I figured it out, but it shouldn't have been that hard
+        - Moderate — I had to search for help or try multiple times
+        - Major — I gave up or needed external help
+    validations:
+      required: true
+  - type: input
+    id: command
+    attributes:
+      label: Which command or step?
+      placeholder: "/fill, /validate, /create minds, etc."

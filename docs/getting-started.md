@@ -2,9 +2,11 @@
 
 Create your first Claude Code product in one sitting — from zero to published on the marketplace.
 
-This guide walks you through every step. You will see exactly what to type, what the engine shows you, and what happens next. By the end, you will have a working product that anyone can install.
+This guide walks you through every step. You will see exactly what to type, what the engine shows you, and what happens next. By the end, you will have a working product that anyone can install with one command.
 
 **Time:** 15–30 minutes for a simple skill. Longer for deep products like cognitive minds.
+
+> ✦ **The shortest path:** Install → `/onboard` → `/scout` → `/create` → `/fill` → `/validate` → `/publish`. That's it. Everything below explains each step.
 
 ---
 
@@ -26,7 +28,7 @@ If you already have both, skip to Step 1.
 ```
 
 ```bash
-myclaude install studio-engine
+myclaude studio
 ```
 
 Or clone manually:
@@ -273,13 +275,15 @@ The engine shows a confirmation with the install command and marketplace URL.
 
 ## After You Publish
 
-Your product is live. Now what?
+✦ Your product is live. Your expertise is now installable.
 
-**Use it yourself.** The best products are ones the creator uses daily. Install your own product (`myclaude install your-product`) and use it in real work. Notice what feels right and what feels off. That friction is data.
+**Use it yourself.** The best products are ones the creator uses daily. Install your own product (`myclaude install your-product`) and use it in real work. Notice what feels right and what feels off. That friction is data — the most valuable kind.
 
-**Check if others are using it.** After a few days, run `myclaude stats your-product` to see install counts and usage data (when available).
+**Check if others are using it.** After a few days, run `myclaude stats your-product` to see install counts and usage data.
 
-**Iterate.** To update a published product: edit the files in `workspace/your-product/`, then re-run `/validate` → `/package` → `/publish`. The engine tracks versions automatically. Users update with `myclaude update your-product`.
+**Iterate.** Edit files in `workspace/your-product/`, then re-run `/validate` → `/package` → `/publish`. The engine tracks versions automatically. Users update with `myclaude update your-product`.
+
+> ◆ The moment someone installs your product, their Claude Code becomes something it wasn't before — because of what you know. That's the game.
 
 ---
 

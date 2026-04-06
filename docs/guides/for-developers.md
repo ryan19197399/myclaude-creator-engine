@@ -262,6 +262,8 @@ Then:
 
 Each imported skill is scored. What passes ships. What doesn't gets a repair list.
 
+> ✦ The tools you build for yourself today become the tools someone else installs tomorrow.
+
 ---
 
 **Next:** [All Commands](../reference/commands.md) · [Quality System](../reference/quality-system.md) · [Product Types](../reference/product-types.md)

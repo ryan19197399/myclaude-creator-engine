@@ -23,7 +23,7 @@ myclaude install {{PRODUCT_SLUG}}
 
 After installation, hook entries are merged into `.claude/settings.local.json` and handler scripts are copied to `~/.claude/hooks/{{PRODUCT_SLUG}}/scripts/`.
 
-**Also compatible with:** Any [Agent Skills](https://agentskills.io)-compliant platform.
+**Also compatible with:** Any AI coding tool that supports structured skill definitions.
 
 ## Usage
 

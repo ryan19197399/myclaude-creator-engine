@@ -1,6 +1,6 @@
 # FAQ
 
-Common questions about the MyClaude Studio Engine.
+Answers to the questions people actually ask.
 
 ---
 
@@ -74,7 +74,7 @@ No. MyClaude is an independent, community-driven project. The engine creates pro
 
 ### Are products compatible with other AI coding tools?
 
-Products created by the engine follow the [Agent Skills specification](https://agentskills.io/specification), the open standard published by Anthropic and adopted by platforms like Codex, VS Code/Copilot, and Cursor. While the engine pipeline runs in Claude Code, packaged products are valid `SKILL.md` files that work in any tool supporting the standard.
+Products created by the engine use the Agent Skills format — YAML frontmatter with name, description, and constraints, followed by markdown instructions. This is the same `SKILL.md` format used natively by Claude Code. Other AI coding tools that support structured skill definitions can also consume these files. The engine pipeline runs in Claude Code, but the output format is portable.
 
 ### What happens to my products if the engine updates?
 
@@ -95,10 +95,12 @@ Edit the product files in `workspace/your-product/`, then re-run the pipeline: `
 ### What does `myclaude install` actually do?
 
 It downloads your product from the marketplace and copies the files to the correct Claude Code slot:
-- Skills, agents, minds, squads, workflows → `.claude/skills/`
-- Behavioral rules (claude-md) → `.claude/rules/`
-- Hooks → registered in `settings.json`
-- Statusline → `~/.claude/statusline-scripts/`
+- Skills, agents, squads, workflows, systems → `.claude/skills/{slug}/`
+- Minds (domain advisors) → `.claude/agents/{slug}.md`
+- Behavioral rules (claude-md) → `.claude/rules/{slug}.md`
+- Hooks → `~/.claude/hooks/{slug}/scripts/`
+- Statusline → `~/.claude/statusline-scripts/{slug}.sh`
+- Design systems, applications → `myclaude-products/{slug}/`
 
 Claude Code discovers installed products automatically on session start. No manual configuration needed.
 
@@ -106,7 +108,7 @@ Claude Code discovers installed products automatically on session start. No manu
 
 The engine always shows the top 3 issues with specific fix instructions. If a pattern fails, the output tells you exactly what is missing and what to add. Run `/validate --fix` to auto-fix structural issues where possible. For the rest, follow the instructions — they reference specific sections in your product files.
 
-If you are genuinely stuck, run `/think` to brainstorm the issue, or open a [friction report](https://github.com/myclaude-sh/myclaude-creator-engine/issues/new?template=friction_report.md).
+If you are genuinely stuck, run `/think` to brainstorm the issue, or open a [friction report](https://github.com/myclaude-sh/myclaude-creator-engine/issues/new?template=friction_report.yml).
 
 ### What if `myclaude install` doesn't work?
 

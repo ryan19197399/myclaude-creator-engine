@@ -19,7 +19,7 @@ myclaude install {{PRODUCT_SLUG}}
 
 After installation, the mind is available at `.claude/agents/{{PRODUCT_SLUG}}.md` and is auto-discovered by Claude Code.
 
-**Also compatible with:** Any [Agent Skills](https://agentskills.io)-compliant platform.
+**Also compatible with:** Any AI coding tool that supports structured skill definitions.
 
 ## Usage
 

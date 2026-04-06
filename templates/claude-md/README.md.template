@@ -18,7 +18,7 @@ myclaude install {{PRODUCT_SLUG}}
 After installation, the skill is available at `.claude/rules/{{PRODUCT_SLUG}}.md`.
 Rules auto-load every Claude Code session in any Claude Code session.
 
-**Also compatible with:** Any [Agent Skills](https://agentskills.io)-compliant platform (Cursor, Codex, Gemini CLI, Copilot, and 30+ more).
+**Also compatible with:** Any AI coding tool that supports structured skill definitions (SKILL.md with YAML frontmatter).
 
 ## Usage
 

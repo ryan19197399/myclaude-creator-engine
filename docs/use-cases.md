@@ -1,6 +1,6 @@
 # Use Cases
 
-How different professionals use the Studio Engine to build tools that solve real problems in their domain.
+Real professionals. Real expertise. Real products anyone can install.
 
 ```
 THE ARC — every use case follows this shape:
@@ -242,6 +242,8 @@ Every use case follows the same arc:
 6. **`/publish` distributes it** — anyone installs with one command. Your expertise becomes infrastructure
 
 The engine doesn't create the expertise. You have that already. The engine turns it from something locked in your head into something installable, validated, and shareable — permanently.
+
+> ✦ Every product published makes the ecosystem smarter. Every install makes someone's Claude Code more capable. That's how expertise scales.
 
 ---
 

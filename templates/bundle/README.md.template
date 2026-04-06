@@ -31,7 +31,7 @@ myclaude install {{PRODUCT_SLUG}}
 
 This installs all included products in one command.
 
-**Also compatible with:** Any [Agent Skills](https://agentskills.io)-compliant platform.
+**Also compatible with:** Any AI coding tool that supports structured skill definitions.
 
 ## Usage
 

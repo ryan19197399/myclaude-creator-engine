@@ -1,0 +1,39 @@
+name: Feature Request
+description: Suggest a new capability or improvement
+title: "[feature] "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: Describe the frustration or gap this feature addresses.
+      placeholder: "I'm always frustrated when..."
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: What would the ideal solution look like?
+      description: How should it work? Be as specific as you can.
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Which area?
+      options:
+        - Pipeline (/scout, /create, /fill, /validate, /test, /package, /publish)
+        - Product types (skill, agent, squad, minds, workflow, etc.)
+        - Quality system (MCS scoring, structural patterns)
+        - CLI (myclaude commands)
+        - Marketplace (myclaude.sh)
+        - Documentation
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Any workarounds you've tried or other approaches you've thought of.

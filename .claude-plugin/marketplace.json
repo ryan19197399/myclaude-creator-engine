@@ -5,6 +5,30 @@
   "author": "myclaude-sh",
   "license": "MIT",
   "homepage": "https://myclaude.sh",
+  "repository": "https://github.com/myclaude-sh/myclaude-creator-engine",
+  "keywords": [
+    "claude-code",
+    "agent-skills",
+    "marketplace",
+    "quality-scoring",
+    "product-creation",
+    "developer-tools",
+    "ai-tools"
+  ],
+  "audience": [
+    "developers",
+    "domain-experts",
+    "consultants",
+    "researchers",
+    "writers",
+    "marketers",
+    "teams",
+    "agencies"
+  ],
+  "install": "myclaude studio",
+  "install_alt": "git clone https://github.com/myclaude-sh/myclaude-creator-engine",
+  "llms_txt": "llms.txt",
+  "ai_plugin": ".well-known/ai-plugin.json",
   "plugins": [
     {
       "name": "studio-engine-core",
