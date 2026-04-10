@@ -112,7 +112,9 @@ After the protocol completes:
    If found: "This connects to your existing {existing_slug} ({existing_type}). Building here extends your {domain} coverage."
    If the recommended products would bring the domain product count to `>= bundle_suggestion_threshold` (from `config.yaml → intelligence.portfolio`): "With these additions, you'd have {N} products in {domain} — consider bundling them for complete coverage."
 
-4. Show the setup recommendation summary using engine voice:
+4. **Vocabulary guard (mandatory before rendering):** Before emitting any creator-facing text in step 4, translate internal terms per ux-vocabulary.md. Specifically: "gap severity" → "how much is missing", "baseline delta" → "what Claude already knows vs. what's needed", "market saturation" → "how crowded this space is", "blue_ocean" → "wide-open opportunity". For non-developer creators (profile.type != "developer" and != "hybrid"), these plain-language substitutions are required. For developer/hybrid creators, technical terms may appear but must include a brief inline gloss on first use.
+
+5. Show the setup recommendation summary using engine voice:
    ```
    Scout complete. {N} gaps found, {M} researched, {P} products recommended.
 
@@ -124,4 +126,4 @@ After the protocol completes:
    Your expertise goes in next — accept this setup?
    /create {first_type} to start building.
    ```
-5. Update STATE.yaml `last_scout` field (not current_task — scout reports are not products)
+6. Update STATE.yaml `last_scout` field (not current_task — scout reports are not products)

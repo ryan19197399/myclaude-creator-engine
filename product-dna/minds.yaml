@@ -221,7 +221,7 @@ intent_topology:
   locale_adaptive_clause_required: true
   locale_adaptive_clause_source: references/locale-adaptive-clause.md
   locale_adaptive_clause_required_reason: "Every forged mind carries a runtime contract telling the mind to mirror the invoker's language in user-facing output while preserving structural markers in the source language. A mind forged in PT-BR is installable by a French user without retranslation. Injected by /create during W2.6 into templates/minds/AGENT.md.template and (for cognitive depth) into templates/minds/cognitive/AGENT.md.template."
-  locale_adaptive_clause_consumer_status: aspirational
+  locale_adaptive_clause_consumer_status: native
   consumer_status: aspirational
   consumer_status_reason: "Wave 2 W2.3 adds config.yaml routing extensions that consume intent_topology.delivery_mechanism_fixed and operational_nature_fixed for install-target resolution. Wave 2 W2.4 adds quality-gates.yaml Stage 0 Intent Coherence. Wave 2 W2.5 extends codex-drift-check.py with enum validation and derived-shape consistency checks."
 

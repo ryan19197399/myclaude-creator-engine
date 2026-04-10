@@ -318,7 +318,7 @@ intent_topology:
   locale_adaptive_clause_required: true
   locale_adaptive_clause_source: references/locale-adaptive-clause.md
   locale_adaptive_clause_required_reason: "Every forged agent carries a runtime contract that tells the agent to mirror the invoker's language in user-facing output, preserving the agent's source language in structural markers. An agent forged in PT-BR is installable by a French user without retranslation. The clause is ~4 lines in EN (runtime instructions parse most faithfully in EN) plus a localized header comment in the creator's language. Injected by /create during W2.6 and validated by codex-drift-check via marker grep."
-  locale_adaptive_clause_consumer_status: aspirational
+  locale_adaptive_clause_consumer_status: native
   locale_adaptive_clause_consumer_status_reason: "Wave 2 W2.6 creates references/locale-adaptive-clause.md, teaches /create to inject the clause into templates/agent/AGENT.md.template at scaffold time, and extends scripts/codex-drift-check.py with the marker-grep rule."
   consumer_status: aspirational
   consumer_status_reason: "Wave 2 W2.3 adds config.yaml routing extensions that consume intent_topology.delivery_mechanism and intent_topology.operational_nature. Wave 2 W2.4 adds quality-gates.yaml Stage 0 Intent Coherence. Wave 2 W2.5 extends codex-drift-check.py with enum validation. Wave 3+ teaches /create to walk the 12-step decision algorithm from references/capability-matrix.md §3."

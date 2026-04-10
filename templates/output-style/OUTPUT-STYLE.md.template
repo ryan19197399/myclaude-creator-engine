@@ -31,6 +31,19 @@ keep-coding-instructions: true
 
 {{FORMATTING_RULES}}
 
+## When NOT to Use
+
+<!-- WHY: D14 requires explicit degradation paths. Output styles carry overhead — -->
+<!-- WHY: creators must know when custom formatting adds friction instead of value. -->
+
+- When the output is consumed by a machine (API, parser, CI pipeline) — custom voice adds noise with no reader
+- When the response is a single line or a direct answer — style rules designed for multi-paragraph output create awkward over-formatting
+- When the domain already has a mandatory format (e.g., JSON schema, SARIF, OpenAPI) — style constraints conflict with spec compliance
+- When the user is in debug/diagnostic mode — neutral, dense output beats styled output for fast scanning
+- [Add domain-specific limitations]
+
+---
+
 ## Anti-Patterns
 
 <!-- WHY: D2 — What this style should NEVER produce. -->

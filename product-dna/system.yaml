@@ -206,7 +206,7 @@ intent_topology:
   locale_adaptive_clause_required: true
   locale_adaptive_clause_source: references/locale-adaptive-clause.md
   locale_adaptive_clause_required_reason: "Every forged system carries a runtime contract that propagates to ALL composed sub-parts: the CLAUDE.md fragment, each sub-agent, each sub-squad, each hook handler, and the output-style. Mirror the invoker's language in user-facing output while preserving structural markers in the source language. A system forged in PT-BR is installable by a French user as a complete organism: the composition contracts travel; every user-facing voice mirrors. Injected by /create during W2.6 into templates/system/ across all sub-part templates."
-  locale_adaptive_clause_consumer_status: aspirational
+  locale_adaptive_clause_consumer_status: native
   consumer_status: aspirational
   consumer_status_reason: "Wave 2 W2.3-W2.5 consume this block per the standard routing, Stage 0, and drift-check enum paths. System-specific note: Stage 0 Intent Coherence for system type must recursively validate each sub-part's intent_declaration, not just the system's."
 

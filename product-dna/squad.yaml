@@ -188,7 +188,7 @@ intent_topology:
   locale_adaptive_clause_required: true
   locale_adaptive_clause_source: references/locale-adaptive-clause.md
   locale_adaptive_clause_required_reason: "Every forged squad carries a runtime contract that propagates to the coordinator agent and all sub-agents: mirror the invoker's language in user-facing output while preserving handoff markers and orchestration protocol in the source language. A squad forged in PT-BR is installable by a French user: the coordination logic travels; the user-facing voice mirrors. Injected by /create during W2.6 into templates/squad/SQUAD.md.template and propagated to each sub-agent template."
-  locale_adaptive_clause_consumer_status: aspirational
+  locale_adaptive_clause_consumer_status: native
   consumer_status: aspirational
   consumer_status_reason: "This block is consumed by the standard routing table consumer, the Stage 0 intent coherence consumer, and the drift-check enum paths — the three consumers share the canonical enums declared here. The derived-mode rationale above names which enums are fixed and which are delegated to the per-sub-agent level."
 

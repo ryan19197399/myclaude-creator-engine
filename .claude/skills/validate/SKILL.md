@@ -76,6 +76,8 @@ Execute stages in order. Blocking stages stop on failure. Non-blocking stages re
 
 **Stage 0 runs first** when `.meta.yaml` contains an `intent_declaration` block. It is advisory — surfaces coherence drift as coaching, never blocks. Skips silently for legacy products that lack the declaration, with a one-line advisory note.
 
+**Stage 0 failure behavior:** If Stage 0 checks detect errors (enum_membership, type_legality, codex_consistency), they are reported as coaching items in the verdict — they appear in the output but do NOT affect the overall score or the pass/fail verdict. Stage 0 results are written to `.meta.yaml → stage_0_results` for downstream consumers but never prevent progression to Stage 1.
+
 **Stage 7 sub-stages (7b cognitive fidelity, 7c baseline delta, 7d composition check) are inside the stage 7 file — they only fire under their prerequisites and never need a separate load.**
 
 **Index:** `${CLAUDE_SKILL_DIR}/references/validation-stages/_index.md` lists all stages with file paths and routing rules.
@@ -98,6 +100,8 @@ Stage 9 (Voice Coherence) is the last stage at every level. Advisory — never b
 ---
 
 ### SCORING & OUTPUT
+
+**Vocabulary rule:** All creator-facing output uses ux-vocabulary.md tier names (Verified / Premium / Elite) instead of MCS-1/2/3. Stage names (Stage 0-9) are internal — creator sees "structure check", "content depth check", "expertise check", etc. DNA pattern IDs (D1-D20) never appear in creator output — describe the issue in plain language. Exception: developer/hybrid creators with technical_level=expert MAY see MCS-N labels with the vocabulary translation in parentheses.
 
 Read `${CLAUDE_SKILL_DIR}/references/validation-scoring.md` for:
 - Hard veto rules (pre-scoring)

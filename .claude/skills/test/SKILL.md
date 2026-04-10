@@ -178,3 +178,14 @@ Test is considered PASS if:
 3. **Binary pass/fail** — Provide specific failure descriptions, not just FAIL.
 4. **Skipping cleanup** — Worktree must be cleaned up after test, even on failure.
 5. **Testing the template** — If the product still has placeholder content, don't test. Suggest /fill first.
+
+---
+
+## Compact Instructions
+
+When context is compressed, preserve:
+- Product slug, type, and test status (pass/fail)
+- Which scenarios passed/failed (happy path, edge case, adversarial)
+- Type-specific test results if applicable
+- Worktree cleanup status
+- Whether test was blocking for MCS-2+ packaging

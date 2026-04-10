@@ -47,12 +47,13 @@ Extract domain expertise from creator conversation and inject into product files
    - `references/quality/engine-voice-core.md` — the micro voice contract carried through every question, section signal, and sparring line in /fill. This is where the Creator spends the most time; the voice cannot drift.
    - `references/ux-experience-system.md` §1 Context Assembly (build creator context), §2.2 Archetype-Aware Insights (adapt emphasis to creator goals), §2.3 Moment Awareness (mid-fill coaching)
    - `references/ux-vocabulary.md` — translate terms in any creator-facing output
+   **Vocabulary enforcement (mandatory):** Every question, section signal, sparring challenge, and progress message passes through ux-vocabulary.md translation before reaching the creator. Internal terms (Sparring, Pitfall, MCS, DNA tier, extraction mode) are replaced for non-dev creators. For dev/hybrid creators, terms may appear but always with context ("MCS-2 quality checks — these verify craft and expertise depth").
    - `references/quality/engine-voice.md` — full voice substrate. Load when composing section quality signals, sparring pressure, milestone celebrations, or brand moments.
    /fill is where the creator spends the MOST time. The experience must be warm coaching, not interrogation. Adapt: beginners get encouragement + examples. Experts get peer-level sparring. Celebrate section completions with progress visibility ("4/7 sections filled. Core identity locked in."). Hyper-personalize using creator.yaml fields — name, goals, expertise areas.
 5. Load product spec from `references/product-specs/{type}-spec.md`
 6. Load product DNA from `product-dna/{type}.yaml`
 7. Load `domain-map.md` if it exists (from /map) → use as knowledge source
-8. **Load scout report** if `.meta.yaml` has `scout_source` field → read `workspace/{scout_source}` for research context. Extract: baseline (Section 1), gaps (Section 2), research findings (Section 4). This intelligence drives research injection in the section walk.
+8. **Load scout report** if `.meta.yaml` has `intent_declaration.scout_source` field (canonical location) OR `.meta.yaml` root-level `scout_source` field (legacy fallback) → read `workspace/{scout_source}` for research context. Extract: baseline (Section 1), gaps (Section 2), research findings (Section 4). This intelligence drives research injection in the section walk.
 8b. **Domain intelligence back-reference:** Read `STATE.yaml → workspace.products[]`. Find products in the same `intelligence.domain` as the current product. If any exist with `intelligence.value_score` populated:
     - Read the most recent sibling's `.meta.yaml → intelligence` and `state.overall_score`
     - If sibling substance_score < 50: "Your last product in {domain} scored {substance}% substance. Focus on depth and real examples this time."

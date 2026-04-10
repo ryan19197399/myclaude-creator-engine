@@ -195,6 +195,48 @@ See `config/capability-index.yaml` for machine-readable capability mapping.
 
 ---
 
+## When NOT to Use
+
+<!-- WHY: D14 requires explicit degradation paths. Squads are complex — tell creators when a simpler form fits. -->
+
+- When a single agent can handle the full task — use `/create agent` instead
+- When agents don't need to share context or hand off — use independent skills
+- When the orchestration overhead exceeds the coordination value
+- When the domain is deterministic and rule-based — a skill or workflow is cheaper and more reliable
+- When the creator cannot define clear agent boundaries — ambiguous roles produce coordination failure, not collaboration
+- [Add domain-specific limitations]
+
+---
+
+## Quality Gate
+
+<!-- WHY: D4 requires 3+ verifiable criteria before output delivery. -->
+<!-- WHY: These gates apply to the squad's final output, not individual workflow steps. -->
+
+Before delivering squad output, verify:
+- [ ] All sub-agents produced output (no silent failures)
+- [ ] Handoff contracts between agents were honored (data shape matches)
+- [ ] Final synthesis integrates all agent perspectives (not just the last one)
+- [ ] No agent exceeded its declared scope (orchestrator enforced boundaries)
+- [ ] [Add domain-specific gate]
+
+---
+
+## Anti-Patterns
+
+<!-- WHY: D2 requires 5+ anti-patterns with prevention. Squads have specific failure modes. -->
+<!-- WHY: Most squad failures trace to one of these patterns — make them visible to the creator. -->
+
+| Pattern | Why It Fails | Prevention |
+|---------|-------------|------------|
+| Monolithic orchestrator | One agent does everything, others are decorative | Each agent must have exclusive responsibility |
+| Missing handoff contract | Agents pass unstructured data between steps | Define explicit input/output shape per handoff |
+| Consensus without conflict | Agents always agree (groupthink corrupts quality) | Include at least one adversarial/challenger role |
+| Orchestrator as bottleneck | Every message routes through orchestrator | Allow direct agent-to-agent handoffs where safe |
+| Silent agent failure | Agent fails but squad continues without its input | Orchestrator must verify all expected outputs arrived |
+
+---
+
 ## Compact Instructions
 
 <!-- WHY: Squads have the most complex state — multiple agents, workflows, coordination. -->

@@ -131,6 +131,7 @@ ALWAYS:
   → Brand frame: ✦ marker, MyClaude Studio box (for first product or guided mode)
   → Pipeline position: "scaffold → ▸ fill → validate → test → package → publish"
   → Clear next action: "/fill" (always the next step after create)
+  → VOCABULARY GUARD: Before emitting ANY creator-facing text, grep output for internal terms (MCS-N, DNA, D1-D20, scaffold, forge, substrate, habitable cell, intent_declaration, Sparring Protocol). If creator.profile.type is NOT "developer" or "hybrid", replace per ux-vocabulary.md. If "developer" or "hybrid", internal terms MAY appear but MUST be accompanied by context.
 ```
 
 **Default frame (guided mode or first 3 products):**

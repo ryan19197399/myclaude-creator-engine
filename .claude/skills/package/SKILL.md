@@ -124,6 +124,8 @@ Append MCS and Available badges to the end of `.publish/README.md`:
 
 <sub>Built with MyClaude Studio Engine</sub>
 ```
+**Precondition:** Verify `.publish/README.md` exists before injection. If missing (bundle type has no README requirement), skip badge injection silently — do not create a README just for badges.
+
 Rules:
 - Inject ONLY in `.publish/README.md` — never modify the original
 - MCS level from `.meta.yaml` `state.dna_compliance` or `overall_score`. Default to 1 if not validated
@@ -426,3 +428,15 @@ Technical: {N} files, {size}, {checksum_short}...
 5. **Silent failures** — If WHY stripping breaks markdown structure, detect and report.
 6. **Missing install artifacts** — hooks without scripts/, statusline without settings-fragment.json. Step 6b catches these. If /validate passed but /package fails here, the DNA spec is missing a required file check.
 7. **Shipping _comment keys in hooks.json** — Step 2 strips `_`-prefixed JSON keys. Verify after strip: no `_comment`, `_why`, `_events_reference` in .publish/ JSON files.
+
+---
+
+## Compact Instructions
+
+When context is compressed, preserve:
+- Product slug, type, and packaging state
+- Whether WHY stripping completed successfully
+- Manifest generation status (vault.yaml, plugin.json, agentskills.yaml)
+- Pricing intelligence results if computed
+- Any blocking issues (secrets detected, frontmatter missing, JSON invalid)
+- .publish/ directory path and file count

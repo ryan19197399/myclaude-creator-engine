@@ -196,6 +196,68 @@ Each component in this system can be used independently:
 
 ---
 
+## Activation Protocol
+
+<!-- WHY: Systems often require a boot sequence — components must initialize in order. -->
+<!-- WHY: Without an explicit activation protocol, users invoke in wrong order and components break. -->
+
+When the system is invoked via `{{ENTRY_POINT}}`:
+
+1. **Boot check** — Verify all required components are present (see Component Inventory)
+2. **Context load** — Read shared knowledge base from `references/`
+3. **Intent detection** — Parse user input against routing table
+4. **Component activation** — Activate only the components required by the detected intent
+5. **State handoff** — Pass context between components using the defined data contracts
+6. **Output delivery** — Route final output through `{{OUTPUT_COMPONENT}}`
+
+If any boot check fails, surface the missing component and halt — do not attempt partial execution.
+
+---
+
+## When NOT to Use
+
+<!-- WHY: D14 requires explicit degradation paths. Systems are the highest-complexity product type — -->
+<!-- WHY: creators must know when this form is overkill so they choose the right product type. -->
+
+- When a single skill or agent covers the use case — composition overhead is real cost
+- When components don't share state or knowledge — use independent products instead
+- When the routing logic is a single if/else — a skill with branching is simpler and faster
+- When no component requires another component's output — this is a bundle, not a system
+- When the creator cannot maintain all components — a system with stale components is worse than no system
+- [Add domain-specific limitations]
+
+---
+
+## Quality Gate
+
+<!-- WHY: D4 requires 3+ verifiable criteria before output delivery. -->
+<!-- WHY: System-level gates focus on composition integrity, not just individual component output. -->
+
+Before delivering system output, verify:
+- [ ] All activated components produced output (no silent routing failures)
+- [ ] Data contracts between components were honored (no schema mismatches)
+- [ ] Routing decision was deterministic — ambiguous inputs triggered clarification, not guessing
+- [ ] Shared knowledge base was read before any component wrote output
+- [ ] Final output reflects synthesis from all activated components, not just the terminal one
+- [ ] [Add domain-specific gate]
+
+---
+
+## Anti-Patterns
+
+<!-- WHY: D2 requires 5+ anti-patterns with prevention. Systems have composition-specific failure modes. -->
+<!-- WHY: These are different from squad anti-patterns — the failures here are architectural, not coordination. -->
+
+| Pattern | Why It Fails | Prevention |
+|---------|-------------|------------|
+| Components that call each other circularly | Infinite loop or deadlock with no exit | Define a directed acyclic graph (DAG) for all component interactions |
+| Routing by trial-and-error | System tries components until one "works" — unpredictable and slow | Every intent must map to exactly one deterministic path |
+| Shared mutable state without locking | Two components overwrite each other's output | Route through a single output component; never let two write simultaneously |
+| Treating the system as a monolith | Creator updates one component without checking others | Each component change triggers a cross-system integration check |
+| Undeclared component dependencies | Component A silently requires B's output without a defined contract | All inter-component dependencies must be listed in Component Inventory |
+
+---
+
 ## Compact Instructions
 
 <!-- WHY: Systems are the most complex product type — boot sequences, routing, component state. -->
