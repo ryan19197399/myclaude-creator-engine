@@ -4,7 +4,7 @@ description: >-
   Package a product for distribution across 33+ platforms. Strips WHY comments, generates
   triple manifests (vault.yaml + plugin.json + agentskills.yaml), stages .publish/. Use
   when: 'package', 'prepare for publish', or 'bundle it'.
-argument-hint: "[product-slug]"
+argument-hint: "[product-slug] [--express]"
 allowed-tools:
   - Read
   - Write
@@ -26,11 +26,15 @@ Stage a product for distribution with triple manifests (MyClaude + Anthropic Plu
 ## Activation Protocol
 
 1. Identify product: `$ARGUMENTS` as slug → `workspace/{slug}/`
+1b. **Mode selection (Express vs Guided).** Read `creator.yaml → preferences.workflow_style`. Resolve the flow mode:
+    - `--express` flag OR `workflow_style == "autonomous"` → **Express mode**. Skip the "confirm before stage" prompt, skip the manifest preview step, and produce a single post-stage summary. The safety invariants below still hold — only the conversational confirmations are trimmed.
+    - `workflow_style == "guided"` or missing → **Guided mode** (default). Confirm before staging, show manifest preview, and walk the creator through the pipeline with full voice.
 2. Read `.meta.yaml` → verify state is "validated" and MCS score >= 75%
 3. Read `creator.yaml` → load author metadata for manifests. If missing → "Creator profile not found. Run `/onboard` first." and stop.
 4. **Maintain creator persona**: Adapt language, depth, and examples to `profile.type` and `technical_level` throughout this skill's execution. A developer gets code examples; a domain expert gets plain language.
 5. Load `product-dna/{type}.yaml` → get install_target
 6. Load `config.yaml` → vault_defaults for missing fields
+7. **Load voice identity:** Load `references/quality/engine-voice-core.md`. Every user-facing line in this skill honors the ✦ signature, three tones, and six anti-patterns.
 
 ---
 
@@ -132,6 +136,12 @@ Grep all files in `.publish/` for the pattern `WHY:`. If match count > 0, re-run
 
 **Step 3 — Generate vault.yaml**
 
+Read `.meta.yaml → intent_declaration.language` (written by /create Step 11). This is
+the canonical source of truth for the product's source language — it captures what
+language the product was **forged in**, not what language the creator is currently
+using. If the field is missing (pre-Wave-3 legacy product), fall back to
+`creator.yaml → creator.language`, then to `"en"` as the final default.
+
 ```yaml
 # REQUIRED (from .meta.yaml + creator.yaml)
 name: "{slug}"
@@ -142,6 +152,18 @@ entry: "{primary file from product-dna/{type}.yaml}"
 license: "{from creator.yaml or config default}"
 price: {from .meta.yaml or 0}
 tags: ["{from .meta.yaml}"]
+
+# LOCALE CONTRACT — see references/locale-adaptive-clause.md §8 for the full wiring map.
+# source_language travels with the product to the marketplace so the UI can
+# render the "Source: {language} · Adapts to your language at runtime" badge.
+# These four fields are REQUIRED for any product that was forged with the
+# locale-adaptive clause (all 6 certified types). Omit the block only for
+# types that do not carry the clause (bundle, claude-md, application, hooks,
+# statusline, design-system, workflow — per locale-adaptive-clause.md §4).
+source_language: "{from .meta.yaml intent_declaration.language, fallback to creator.yaml language, fallback to 'en'}"
+locale_adaptive: true
+locale_adaptive_source: "references/locale-adaptive-clause.md"
+locale_adaptive_version: "1.0"
 ```
 
 **Step 3b — Pricing Intelligence** (Intelligence Layer integration)

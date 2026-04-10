@@ -32,6 +32,7 @@ Run sandbox tests on a product in an isolated environment.
 3. Load product-dna/{type}.yaml → get install_target pattern
 4. Verify product has content (state != scaffold)
 5. Create worktree isolation (this skill runs with `isolation: worktree`)
+6. **Load voice identity:** Load `references/quality/engine-voice-core.md`. Test result reporting — pass verdicts (celebrating tone), fail verdicts (confronting tone), diagnostics (conducting tone) — honors the ✦ signature, three tones, and six anti-patterns.
 
 ---
 

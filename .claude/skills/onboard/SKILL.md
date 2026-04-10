@@ -37,10 +37,12 @@ Discover and persist creator profile through intelligent scanning + minimal ques
 ## Activation Protocol
 
 1. Check for `creator.yaml` in project root
-2. **Exists** → load it, display summary, AskUserQuestion: "Is this still accurate?"
-   - Yes → exit, profile is current
-   - No → enter UPDATE MODE (see protocol file → Update Mode Flow)
-3. **Does not exist** → enter FULL ONBOARDING
+2. **Exists** → read `schema_version`:
+   - **`schema_version < 3`** → run **Phase 2.5d Schema v2→v3 Silent Migration** (protocol → Phase 2.5d) BEFORE any other action. Migration is atomic + reversible via `creator.yaml.bak.v2`. After migration succeeds, continue with step 2 against the new v3 file.
+   - **`schema_version == 3`** → load it, display summary, AskUserQuestion: "Is this still accurate?"
+     - Yes → exit, profile is current
+     - No → enter UPDATE MODE (see protocol file → Update Mode Flow)
+3. **Does not exist** → enter FULL ONBOARDING (Phases 0 → 6c). Run Phase 2.5b (Intent Profile Inference) + 2.5c (Language Confirmation Gate) between Phase 2.5 and Phase 3 — both are **mandatory for schema v3**.
 
 ---
 
@@ -54,10 +56,14 @@ Load `${CLAUDE_SKILL_DIR}/references/onboard-protocol.md` for full details on ev
 | **1 — Silent Deep Scan** | Run 5 scans in parallel: git identity, .claude/ root, project breadth, workspace, locale | protocol → Phase 1 |
 | **2 — Inference Engine** | Build draft profile: name, language, technical_level, profile.type, expertise. Weighted scoring (skills 3x, CLAUDE.md 3x, projects 2x, MCP 1x, rules 1x). Route to Express/Standard/Full path | protocol → Phase 2 |
 | **2.5 — Disambiguation** | If expert score (≥19) on Express/Standard path → one question: first time user? | protocol → Phase 2.5 |
-| **3 — Adaptive Questioning** | Express (2 calls) / Standard (2 calls) / Full (3 calls). See question scripts in protocol | protocol → Phase 3 |
+| **2.5b — Intent Profile Inference** | Derive 5 of 7 `intent_profile` fields from scan outputs (domain_depth, working_rhythm, maintenance_appetite, target_audience, external_dependency_tolerance). Mark `_inferred: true`. Defer `licensing_tolerance` to `/create minds --genius`. `usage_frequency_expectation` is asked in Phase 3 Call 2. **Mandatory for schema v3.** | protocol → Phase 2.5b |
+| **2.5c — Language Confirmation Gate** | Classify language detection as `high\|low\|fallback`. Silent announcement if high; one-question confirm if low; forced question if fallback. Persist `language_confidence` + `language_detection_sources`. **Mandatory for schema v3.** | protocol → Phase 2.5c |
+| **2.5d — Schema v2→v3 Migration** | Triggered only when an existing `creator.yaml` has `schema_version < 3`. Atomic + backed up to `creator.yaml.bak.v2`. Preserves all v2 fields. | protocol → Phase 2.5d |
+| **3 — Adaptive Questioning** | Express (2 calls) / Standard (2 calls) / Full (3 calls). Call 2 of all three paths now includes a 4th question on `usage_frequency_expectation` (schema v3). | protocol → Phase 3 |
 | **4 — Profile Type** | Infer type from all signals. Never ask directly | protocol → Phase 4 |
-| **5 — Generate creator.yaml** | Write schema v2 file. Validate YAML. Read back to verify | protocol → Phase 5 |
-| **6 — Closing + Intelligence Report** | Persona-adaptive next step + setup health + gap analysis + product recommendation. **Load UX stack**: `references/ux-experience-system.md` (§2.3 first scaffold moment = "first onboard" for brand), `references/quality/engine-voice.md` (Brand DNA — this is the FIRST myClaude Studio impression). Use brand frame: `┌─ MyClaude Studio ─┐`. Personalize with the name just captured. This is the moment the creator enters the myClaude universe — make it feel like arriving, not registering. | protocol → Phase 6, 6b, 6c |
+| **5 — Generate creator.yaml** | Write schema v3 file (includes `intent_profile`, `language_confidence`, `language_detection_sources`). Validate YAML. Read back to verify. | protocol → Phase 5 |
+| **5b — Seed creator-memory.yaml** | After creator.yaml is written and parses, seed the sibling `creator-memory.yaml` with a `first_onboard` event. Idempotent: silently skipped if a `first_onboard` event already exists. Validator: `scripts/creator-memory-validate.py`. Silent infrastructure — Phase 6 speaks, 5b prepares the ground. | protocol → Phase 5b |
+| **6 — Closing + Intelligence Report** | Persona-adaptive next step + setup health + gap analysis + product recommendation. **Load UX stack**: `references/quality/engine-voice-core.md` (loaded at activation start), `references/ux-experience-system.md` (§2.3 first scaffold moment = "first onboard" for brand), `references/quality/engine-voice.md` (full Brand DNA substrate loaded here because this is a peak moment: the FIRST myClaude Studio impression). Use brand frame: `┌─ MyClaude Studio ─┐`. Personalize with the name just captured. This is the moment the creator enters the myClaude universe — make it feel like arriving, not registering. After Phase 5 writes creator.yaml, Phase 5b appends the `first_onboard` event to `creator-memory.yaml` (create-if-absent with full schema shell per `scripts/creator-memory-validate.py`). This seeds the Ritual of Return Layer 2 for future sessions. | protocol → Phase 6, 6b, 6c |
 
 **Scan failure protocol:** See protocol → Scan Failure Protocol. Never crash. Never show raw errors.
 
@@ -77,8 +83,11 @@ Load `${CLAUDE_SKILL_DIR}/references/onboard-protocol.md` for full details on ev
 ## Quality Gate
 
 **Must pass before writing creator.yaml:**
-- Valid YAML, `schema_version: 2`
-- Required non-empty: `name`, `language`, `profile.type`, `profile.technical_level`, `preferences.default_license`, `preferences.default_category`, `preferences.quality_target`, `preferences.workflow_style`
+- Valid YAML, `schema_version: 3`
+- Required non-empty: `name`, `language`, `language_confidence`, `profile.type`, `profile.technical_level`, `preferences.default_license`, `preferences.default_category`, `preferences.quality_target`, `preferences.workflow_style`
+- Schema v3 intent_profile required non-null (except licensing_tolerance which is deferred): `intent_profile.domain_depth`, `intent_profile.working_rhythm`, `intent_profile.usage_frequency_expectation`, `intent_profile.maintenance_appetite`, `intent_profile.target_audience`, `intent_profile.external_dependency_tolerance`
+- `intent_profile._inferred` block present with one entry per intent_profile field
+- `language_confidence` ∈ {high, low, fallback, migrated}
 - `workflow_style` ∈ {guided, autonomous}. Default: `guided` for beginner/intermediate, `autonomous` for advanced/expert
 - `token_efficiency` ∈ {eco, balanced, unlimited}. Default: `balanced`. Eco minimizes context reads; unlimited loads full UX stack every time
 - `profile.type` ∈ {developer, prompt-engineer, domain-expert, marketer, operator, agency, hybrid}

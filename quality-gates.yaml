@@ -126,6 +126,134 @@ mcs_gates:
     editions: ["pro"]  # Tier 3 validation requires PRO agents
 
 # ---------------------------------------------------------------------------
+# STAGE 0 — INTENT COHERENCE (advisory)
+# Validates that the forged product still matches the intent_declaration the
+# creator made at /create time. Advisory means the stage NEVER blocks
+# publishing — it only surfaces coaching when the forge drifts from the
+# declared intent.
+#
+# Sources:
+# - references/intent-topology.md §2 (axis enums)
+# - references/runtime-host-dag.md §2 (derived host)
+# - references/capability-matrix.md §3 (12-step decision algorithm)
+# - config.yaml routing.common.intent_topology_enums (canonical enums)
+# - config.yaml routing.{type}.intent_topology (per-type contract)
+# - product-dna/{type}.yaml intent_topology (codex source of truth)
+# - .meta.yaml intent_declaration (persisted creator choice)
+# ---------------------------------------------------------------------------
+validation_stages:
+  stage_0_intent_coherence:
+    order: 0
+    mode: advisory
+    blocking: false
+    blocking_reason: "Stage 0 surfaces drift between declared intent and forged product as COACHING, not as a gate. Intent drift is a diagnostic signal for /validate to help the creator see what they built vs what they said they wanted — not a publishing blocker."
+    runs_when: "mcs_target >= MCS-1 AND .meta.yaml has intent_declaration field"
+    skips_when: "intent_declaration field missing (legacy product forged before the intent_declaration schema)"
+    skips_behavior: "Emit advisory note: 'Intent coherence check skipped — this product was forged before /create learned to persist intent_declaration. Re-run /create on this product to enable Stage 0, or continue — the other stages validate structural and DNA quality independently.'"
+    reads_from:
+      - ".meta.yaml → intent_declaration (delivery, nature, depth, cell, unroutable, unroutable_reason, scout_source)"
+      - "config.yaml → routing.{type}.intent_topology (legal values per type)"
+      - "config.yaml → routing.common.intent_topology_enums (canonical enums)"
+      - "product-dna/{type}.yaml → intent_topology (codex declaration)"
+      - "references/runtime-host-dag.md §2 (for host derivation check)"
+    checks:
+      enum_membership:
+        description: "Every axis value in intent_declaration is a member of the canonical enum in routing.common.intent_topology_enums."
+        severity: error
+        error_message: "intent_declaration.{axis} value '{value}' is not in the canonical enum. Legal values: {legal}."
+      type_legality:
+        description: "The declared (delivery, nature, depth) triple is legal for the declared type per routing.{type}.intent_topology."
+        severity: error
+        error_message: "Type '{type}' does not permit ({delivery}, {nature}, {depth}). Legal combinations: {legal_combinations}."
+      codex_consistency:
+        description: "The declared triple is consistent with the codex's intent_topology block. If codex declaration_mode=full, the triple must be in legal_values. If declaration_mode=derived, the triple must match the fixed values."
+        severity: error
+        error_message: "Codex product-dna/{type}.yaml declares {declaration_mode} mode with {fixed_or_legal}: declared value mismatch."
+      host_derivation:
+        description: "The runtime host derived from (delivery, nature) matches references/runtime-host-dag.md §2 table."
+        severity: warning
+        warning_message: "Runtime host {declared_host} does not match derivation for ({delivery}, {nature}) = {derived_host}. Host is computed, not declared — this is a drift signal."
+      unroutable_reason_enum:
+        description: "If intent_declaration.unroutable is true, unroutable_reason must be one of: no_habitable_cell, v2_cell_deferred, blocked_by_composition_gap, ambiguous_between_cells."
+        severity: error
+        error_message: "Invalid unroutable_reason '{value}'. See references/capability-matrix.md §3 Step 9."
+      locale_adaptive_clause_presence:
+        description: "The forged product's primary file contains the locale-adaptive clause markers (runtime contract injected by /create template substitution)."
+        severity: warning
+        warning_message: "Locale-adaptive clause markers not found in primary file. This product will not adapt to non-source-language invokers. Re-run /create or manually inject the clause from references/locale-adaptive-clause.md."
+      system_recursion:
+        description: "For type=system, recursively validate each sub-part's intent_declaration in addition to the system-level declaration."
+        severity: advisory
+        applies_to: ["system"]
+    writes_to:
+      ".meta.yaml → stage_0_results": {}
+      ".meta.yaml → intelligence.intent_coherence_score": "0-100 based on checks passed"
+      ".meta.yaml → intelligence.intent_drift_detected": "boolean"
+    # ---------------------------------------------------------------------
+    # consumer_status enum — the substrate must never declare a state it
+    # does not hold.
+    #   aspirational   — declaration only; no handler file exists; no
+    #                    consumer reads or acts on results. The stage is
+    #                    a design placeholder.
+    #   handler_ready  — a handler file exists and is testable in isolation,
+    #                    AND the /validate runner references the stage in
+    #                    its routing table, BUT end-to-end execution in
+    #                    production has not been empirically verified for
+    #                    every check. Wired, not yet proven.
+    #   native         — runner invokes the handler in production, every
+    #                    check executes, results persist, downstream
+    #                    consumers read the results and change behavior
+    #                    because of them. Full loop closed and observed.
+    # Promotion from handler_ready to native requires empirical verification.
+    # Demotion is allowed when a previously "native" stage turns out to
+    # have an incomplete consumer.
+    # ---------------------------------------------------------------------
+    consumer_status: handler_ready
+    consumer_status_reason: "The handler file at .claude/skills/validate/references/validation-stages/stage-0-intent-coherence.md is testable in isolation, and /validate SKILL.md routes Stage 0 at every MCS level via its Stage Execution table. /create persists the 19-field intent_declaration block in .meta.yaml via create-router.md Step 11, so the input exists. Promotion to native requires empirical end-to-end verification that every check (enum_membership, type_legality, codex_consistency, host_derivation, unroutable_reason_enum, locale_adaptive_clause_presence, system_recursion) runs against a real forged product and writes stage_0_results correctly."
+
+  stage_9_voice_coherence:
+    order: 9
+    mode: advisory
+    blocking: false
+    blocking_reason: "Stage 9 audits the product's README, primary file, and any user-facing sections against the myClaude voice contract in references/quality/engine-voice-core.md (micro) and references/quality/engine-voice.md (full). Voice drift is coaching, never blocking — the Creator's own voice is ALWAYS honored inside the myClaude frame. Stage 9 flags ONLY places where the Engine's own generated scaffolding or prefill contradicts the voice contract (generic praise, internal jargon leaked to non-dev, missing ✦ on peak moments, error paths that conflate Engine-fault and environment-fault)."
+    runs_when: "mcs_target >= MCS-1"
+    skips_when: "never — Stage 9 always executes, but gracefully degrades to 'no voice substrate found' if engine-voice-core.md is absent"
+    reads_from:
+      - "references/quality/engine-voice-core.md (micro voice contract — vocabulary, three tones, ✦ signature, anti-patterns, error voices)"
+      - "references/quality/engine-voice.md (full voice substrate — only if stage detects a peak moment in the product output)"
+      - "references/ux-vocabulary.md (translation layer — for non-dev creator audit)"
+      - "product primary file (SKILL.md / AGENT.md / etc.)"
+      - "product README.md"
+      - "creator.yaml → creator.profile.type (to calibrate non-dev jargon severity)"
+    checks:
+      signature_presence:
+        description: "Peak-moment outputs (celebration lines, first-product WOW, Ritual of Return Layer 1) contain the ✦ symbol exactly once. Non-peak outputs MAY use ✦, never more than once per line."
+        severity: warning
+        warning_message: "Peak moment detected but ✦ signature missing or stacked. See engine-voice-core.md §The ✦ signature."
+      vocabulary_always_never:
+        description: "Grep user-facing output for the always/never vocabulary declared in engine-voice-core.md §Vocabulary. 'user' (when meaning Creator), 'great job', 'looks good', 'I think maybe', 'sorry but' → flagged."
+        severity: warning
+        warning_message: "Voice drift — {pattern} matches an always/never rule in engine-voice-core.md §Vocabulary."
+      non_dev_jargon_leak:
+        description: "If creator.profile.type is non-developer (domain-expert, marketer, operator, domain-*), grep user-facing output for internal vocabulary that should be translated per ux-vocabulary.md: MCS-N, D1-D20, scaffold, forge, activation protocol (as user-facing term), quality gate (as user-facing term)."
+        severity: warning
+        warning_message: "Non-dev creator — '{jargon}' leaked to user-facing output. Translate per references/ux-vocabulary.md."
+        applies_to_creator_type: ["domain-expert", "marketer", "operator", "domain-generalist"]
+      error_voice_distinction:
+        description: "If the product contains error paths, verify each error path declares its voice (engine-fault vs environment-fault per engine-voice-core.md §Error as intimacy). Conflating both in one handler is a P10 violation."
+        severity: advisory
+        advisory_message: "Error path present but voice (engine-fault vs environment-fault) not explicitly declared. See engine-voice-core.md §Error as intimacy."
+      tone_singularity:
+        description: "Each output block (section, dashboard panel, celebration, feedback) commits to ONE of three tones (conducting / celebrating / confronting). Mixing two tones in one block is an anti-pattern."
+        severity: advisory
+        advisory_message: "Output block mixes tones — pick conducting, celebrating, or confronting per engine-voice-core.md §Three tones."
+    writes_to:
+      ".meta.yaml → stage_9_results": {}
+      ".meta.yaml → intelligence.voice_coherence_score": "0-100 based on warnings triggered (100 = clean, each warning -10)"
+    consumer_status: handler_ready
+    consumer_status_reason: "The handler file at .claude/skills/validate/references/validation-stages/stage-9-voice-coherence.md declares five checks (signature_presence, vocabulary_always_never, non_dev_jargon_leak, error_voice_distinction, tone_singularity) with explicit grep patterns and severity. The handler is testable in isolation and the /validate SKILL.md Stage Execution table routes Stage 9 at every MCS level. Promotion to native requires the /validate runner to read the handler, execute the five checks against the product's primary file and README in production, and persist stage_9_results to .meta.yaml — end-to-end verification that the full loop closes. Stage 9 is advisory at every status level — it audits P10 Touch Integrity coherence as coaching, never as a blocker."
+
+# ---------------------------------------------------------------------------
 # PUBLISH PREREQUISITES
 # Conditions that MUST be true before /publish can proceed
 # ---------------------------------------------------------------------------

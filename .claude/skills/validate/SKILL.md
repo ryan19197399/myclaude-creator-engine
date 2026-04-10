@@ -4,7 +4,7 @@ description: >-
   Run MCS quality validation on products in workspace/. Three-tier system: MCS-1
   structure, MCS-2 quality + anti-commodity, MCS-3 deep review. Returns scored reports
   with fix instructions. Use when: 'validate', 'check quality', or before publishing.
-argument-hint: "[--level=1|2|3] [--fix] [--batch]"
+argument-hint: "[--level=1|2|3] [--fix] [--batch] [--express]"
 allowed-tools:
   - Read
   - Glob
@@ -27,9 +27,13 @@ Run MCS quality checks on any product in `workspace/` and return actionable, sco
 1. Detect product type: read `.meta.yaml` → `product.type` and `state.phase`
    - Missing → infer from file structure (SKILL.md, AGENT.md, SQUAD.md, hooks.json, etc.)
    - Cannot determine → ask: "What product type is this?"
+1b. **Mode selection (Express vs Guided).** Read `creator.yaml → preferences.workflow_style`. Resolve the flow mode:
+    - `--express` flag OR `workflow_style == "autonomous"` → **Express mode**. Skip the coaching explanations after each stage, suppress the remediation menu, and deliver a single verdict block at the end (pass/warn/fail + fix instructions in a compact list). Persona tone still holds; only the conversational scaffolding is trimmed.
+    - `workflow_style == "guided"` or missing → **Guided mode** (default). Walk each stage with the full coaching voice and propose remediation interactively after failing stages.
 2. **Maintain creator persona**: Read `creator.yaml` → adapt to `profile.type` and `technical_level`
-3. **Load voice identity**: Read `references/quality/engine-voice.md` → verdict format
+3. **Load voice identity**: Load `references/quality/engine-voice-core.md`. Load the full `references/quality/engine-voice.md` only for peak moments (first-pass milestone celebration, confronting failure verdict) — see UX Stack below.
 4. Load DNA requirements: `product-dna/{type}.yaml`
+4b. **Load architectural DNA:** Read `structural-dna.md`. The 10 architectural principles and the Tier 1 DNA patterns (D1-D4, D13, D14) are the canonical audit baseline — Stages 3 and 5 grep the product against them, and any violation surfaces as coaching.
 5. Load product spec: `references/product-specs/{type}-spec.md`
 6. Load config: `config.yaml` → scoring weights, thresholds, placeholder patterns
 7. Load gates: `quality-gates.yaml` → state transition rules
@@ -55,26 +59,33 @@ Run MCS quality checks on any product in `workspace/` and return actionable, sco
 
 Execute stages in order. Blocking stages stop on failure. Non-blocking stages report but continue.
 
-**Load detailed stage protocols from references/ on demand:**
+**Load detailed stage protocols from references/ on demand. Each stage is a separate file — load only the stage(s) you need for the current `--level`.**
 
 | Stage | Name | Blocking | Reference |
 |-------|------|----------|-----------|
-| 1 | Structural | YES | Read `${CLAUDE_SKILL_DIR}/references/validation-stages.md` → Stage 1 |
-| 2 | Integrity | YES | Same file → Stage 2 |
-| 3 | DNA Tier 1 | YES (MCS-1) | Same file → Stage 3 |
-| 4 | DNA Tier 2 | no (MCS-2) | Same file → Stage 4 |
-| 5 | DNA Tier 3 | no (MCS-3, PRO) | Same file → Stage 5 |
-| 6 | CLI Preflight | YES | Same file → Stage 6 |
-| 7 | Anti-Commodity | no (MCS-2+) | Same file → Stage 7 |
-| 7b | Cognitive Fidelity | no (cognitive minds) | Same file → Stage 7b |
-| 7c | Baseline Delta | no (if scout) | Same file → Stage 7c |
-| 7d | Composition Check | no (bundles) | Same file → Stage 7d |
-| 8 | Value Intelligence | no (MCS-2+) | Read `${CLAUDE_SKILL_DIR}/references/value-intelligence.md` |
+| **0** | **Intent Coherence** (W3.7) | **advisory** | Read `${CLAUDE_SKILL_DIR}/references/validation-stages/stage-0-intent-coherence.md` |
+| 1 | Structural | YES | Read `${CLAUDE_SKILL_DIR}/references/validation-stages/stage-1-structural.md` |
+| 2 | Integrity | YES | Read `${CLAUDE_SKILL_DIR}/references/validation-stages/stage-2-integrity.md` |
+| 3 | DNA Tier 1 | YES (MCS-1) | Read `${CLAUDE_SKILL_DIR}/references/validation-stages/stage-3-dna-tier1.md` |
+| 4 | DNA Tier 2 | no (MCS-2) | Read `${CLAUDE_SKILL_DIR}/references/validation-stages/stage-4-dna-tier2.md` |
+| 5 | DNA Tier 3 | no (MCS-3, PRO) | Read `${CLAUDE_SKILL_DIR}/references/validation-stages/stage-5-dna-tier3.md` |
+| 6 | CLI Preflight + 6b Health | YES (6) / advisory (6b) | Read `${CLAUDE_SKILL_DIR}/references/validation-stages/stage-6-cli-preflight.md` |
+| 7 | Anti-Commodity (+ 7b/7c/7d) | no (MCS-2+) | Read `${CLAUDE_SKILL_DIR}/references/validation-stages/stage-7-anti-commodity.md` |
+| 8 | Value Intelligence | no (MCS-2+) | Read `${CLAUDE_SKILL_DIR}/references/value-intelligence.md` (legacy) OR `${CLAUDE_SKILL_DIR}/references/validation-stages/stage-8-value-intelligence.md` (new) |
+| **9** | **Voice Coherence** | **advisory** | Read `${CLAUDE_SKILL_DIR}/references/validation-stages/stage-9-voice-coherence.md` |
+
+**Stage 0 runs first** when `.meta.yaml` contains an `intent_declaration` block. It is advisory — surfaces coherence drift as coaching, never blocks. Skips silently for legacy products that lack the declaration, with a one-line advisory note.
+
+**Stage 7 sub-stages (7b cognitive fidelity, 7c baseline delta, 7d composition check) are inside the stage 7 file — they only fire under their prerequisites and never need a separate load.**
+
+**Index:** `${CLAUDE_SKILL_DIR}/references/validation-stages/_index.md` lists all stages with file paths and routing rules.
 
 **Stage routing by level:**
-- `--level=1` (MCS-1): Stages 1, 2, 3, 6
-- `--level=2` (MCS-2): Stages 1, 2, 3, 4, 6, 7, 7b-7d, 8
-- `--level=3` (MCS-3): Stages 1, 2, 3, 4, 5, 6, 7, 7b-7d, 8
+- `--level=1` (MCS-1): Stages **0**, 1, 2, 3, 6, **9**
+- `--level=2` (MCS-2): Stages **0**, 1, 2, 3, 4, 6, 7, 7b-7d, 8, **9**
+- `--level=3` (MCS-3): Stages **0**, 1, 2, 3, 4, 5, 6, 7, 7b-7d, 8, **9**
+
+Stage 9 (Voice Coherence) is the last stage at every level. Advisory — never blocks publish. Stage 9 audits the product against the myClaude voice contract (P10 Touch Integrity anchor).
 
 ### UX STACK (load before rendering output)
 

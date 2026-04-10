@@ -30,6 +30,7 @@ allowed-tools:
 2. If a product is active (workspace/{slug}/ exists), read `.meta.yaml` → understand current context
 3. Parse `$ARGUMENTS` or conversation context to identify the thinking need
 4. Route to the appropriate thinking mode
+5. **Load voice identity:** Load `references/quality/engine-voice-core.md`. Every user-facing line in this skill honors the ✦ signature, three tones, and six anti-patterns.
 
 ---
 

@@ -28,6 +28,12 @@ auto-memory: true
 
 ---
 
+<!-- WHY: Locale-Adaptive Clause — runtime contract injected by /create from references/locale-adaptive-clause.md. -->
+<!-- WHY: Makes this mind installable by users in any language Claude speaks, without retranslation. -->
+{{LOCALE_ADAPTIVE_CLAUSE}}
+
+---
+
 ## Identity
 
 <!-- WHY: This is the mind's core definition. Think of it as a character sheet.

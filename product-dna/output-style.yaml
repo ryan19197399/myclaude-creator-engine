@@ -1,77 +1,947 @@
-# product-dna/output-style.yaml — DNA requirements for Output Styles
-# Read by /create, /validate, /package when type=output-style
-# CC Source-verified: output styles are .md files in .claude/output-styles/
-# with optional frontmatter (name, description, keep-coding-instructions)
+# product-dna/output-style.yaml — Codex for Output Styles
+# Read by /create, /fill, /validate, /test, /package, /publish (and /import,
+# /map, /status when they read product-dna) when type=output-style.
+#
+# This file is the SINGLE SOURCE OF TRUTH for everything the Engine knows
+# about this product type. Skills consult this file rather than re-deriving
+# type knowledge per invocation.
+#
+# Schema version: 3.0.0 (Sprint 8 Wave 2 — codex)
+# Schema additions over v2.2:
+#   essence, architectural_principles, operational_modes, freedom_levels,
+#   lifecycle (10 skills), flow, failure_modes, invariants, security_profile,
+#   marketplace_taxonomy, lifecycle_shared_refs, state_machine_hooks,
+#   validation_pipeline_refs, schema_consumer_status
+
+# ===========================================================================
+# IDENTITY (preserved from v2.2)
+# ===========================================================================
+
 
 type: output-style
-primary_file: "OUTPUT-STYLE.md"
-install_target: ".claude/output-styles/{slug}.md"
-template: "templates/output-style/"
+primary_file: OUTPUT-STYLE.md
+install_target: .claude/output-styles/{slug}.md
+template: templates/output-style/
+canonical_spec: references/product-specs/output-style-spec.md
+essence:
+  one_line: A reusable instruction set for how Claude should write.
+  amplifies: Consistent voice and formatting across every Claude response in a session.
+  refuses:
+  - Domain expertise — output styles shape voice, not knowledge.
+  - Tool use — output styles cannot call tools or read files.
+  - Multi-turn logic — output styles are stateless instructions, not workflows.
+  trade_offs:
+    gains:
+    - Lowest barrier to ship — single markdown file, no references.
+    - Universal applicability — affects every response while active.
+    - Zero invocation cost — no slash command needed; selection IS activation.
+    sacrifices:
+    - No domain reasoning — cannot replace a skill or agent.
+    - Mutually exclusive — only one style active at a time per session.
+    - No state — cannot remember earlier turns.
+    worth_it_when: The creator's value is HOW Claude communicates, not WHAT Claude reasons about.
+architectural_principles:
+  P1_purpose_before_shape:
+    specialization: Before scaffolding, the creator must declare what kind of output (technical docs, creative writing, concise reports) and for which audience. Shape is always answered second.
+    enforced_by:
+    - discovery_questions.minimum_set
+    - lifecycle.create.type_specific.discovery_phase
+    blocks_forge_when: Creator cannot answer 'what kind of output should Claude produce with this style?' in one sentence.
+  P2_constraint_before_feature:
+    specialization: The Anti-Patterns section is filled BEFORE the Voice & Tone section. What the style refuses is more load-bearing than what it embraces — because output styles override Claude's defaults,
+      the negation must be explicit.
+    enforced_by:
+    - dna_patterns.tier1.D2
+    - lifecycle.fill.type_specific.sections_walked
+    blocks_forge_when: Anti-Patterns section has fewer than 3 explicit refusals.
+  P3_composition_over_monolith:
+    specialization: Output styles are intentionally single-file. They DO NOT compose with each other (only one active at a time). Composition happens by SCOPING — keep each style narrow and let creators
+      switch styles per task.
+    enforced_by:
+    - token_economics.optimization_notes
+    - invariants
+    blocks_forge_when: Style file exceeds 4K characters — too broad to be a single voice.
+  P4_contract_before_narrative:
+    specialization: The frontmatter (name + description + keep-coding-instructions) IS the contract. Body prose specializes the contract but never replaces it. Description must say WHEN to use this style,
+      not WHY it exists.
+    enforced_by:
+    - frontmatter.required
+    - lifecycle.validate.type_specific.per_stage_hooks.stage_2_integrity
+    blocks_forge_when: description field is missing or longer than 200 characters.
+  P5_failure_mode_before_happy_path:
+    specialization: The style declares what to do when Claude is asked something the style cannot serve (e.g., a creative-writing style asked for code). The Anti-Patterns and Quality Criteria sections jointly
+      cover this — Anti-Patterns says what NOT to produce, Quality Criteria says what good output looks like.
+    enforced_by:
+    - dna_patterns.tier1.D2
+    - dna_patterns.tier1.D4
+    - failure_modes
+    blocks_forge_when: Anti-Patterns or Quality Criteria sections are missing.
+  P6_state_at_the_edge:
+    specialization: Output styles are STATELESS by design. They have no .meta.yaml fields beyond the standard product state. Any information the style needs lives in the file itself — no session memory,
+      no cross-turn persistence.
+    enforced_by:
+    - dna_patterns.tier2.D8
+    - invariants
+    blocks_forge_when: Style attempts to reference session variables, memory scopes, or persistent state.
+  P7_read_before_write:
+    specialization: /create reads the canonical spec AND template AND product-dna AND creator.yaml before generating any scaffold (4 reads). /validate reads the full product file before scoring (1+ reads,
+      0 writes). Read-before-write ratio for this type is ≥3:1 for write skills, infinite for read skills.
+    enforced_by:
+    - lifecycle.create.type_specific.read_before_write_ratio
+    - lifecycle.validate.type_specific.read_before_write_ratio
+    blocks_forge_when: Skill writes scaffold without first reading template + product-dna + canonical_spec.
+  P8_invisibility_of_mechanism:
+    specialization: User-facing strings in the style file (description, headers, examples) MUST NOT reference the Engine, internal validation tiers, or substrate names. The buyer experiences a writing voice,
+      not the machinery that produced it.
+    enforced_by:
+    - lifecycle.validate.type_specific.per_stage_hooks.stage_7_anti_commodity
+    blocks_forge_when: grep on user-facing strings finds substrate vocabulary in the published artifact.
+  P9_recursive_integrity:
+    specialization: /validate output-style passes when run against an output style that itself was used to generate this product-dna file's prose. The codex eats its own cooking.
+    enforced_by:
+    - lifecycle.validate.type_specific.dogfood_check
+    consumer_status: aspirational
+    consumer_status_reason: Wave 3 ensina /validate a aplicar dogfood checks contra product-dna files. Hoje é declaração, não enforcement.
+    blocks_forge_when: Codex cannot pass its own validator when applied to itself — prose in this file violates the principles it enforces.
+operational_modes:
+  supports:
+  - structure
+  default: structure
+  rationale: 'Output styles are too small to warrant a discovery phase. The creator
 
-# Output styles are the SIMPLEST product type — a single markdown file
-# with instructions for how Claude should format its responses.
-# The frontmatter is minimal. The body is the style definition.
+    knows what voice they want; /create asks 4 discovery questions and
 
-# DNA pattern requirements (lightweight — output styles are simple artifacts)
+    scaffolds. There is no domain to research, no architecture to explore.
+
+    Discovery mode is not blocked — it is simply unnecessary friction for
+
+    a 78-line product file.
+
+    '
+  discovery_entry_via:
+    skill: /think
+    reason: If the creator is unsure WHAT voice to forge, /think (not /scout) is the right entry point — output styles do not benefit from market research.
+freedom_levels:
+  valid:
+  - 1
+  - 2
+  - 3
+  default: 2
+  rationale: 'Output styles work best at low-to-mid freedom because the creator is
+
+    typically curating a personal voice, not delegating creative decisions.
+
+    Levels 4-5 are NOT valid for this type: autonomous voice generation
+
+    produces generic prose because there is nothing to anchor against.
+
+    '
+  per_level_behavior:
+    1: Engine asks every voice/tone/formatting/anti-pattern question explicitly. Creator confirms each. Used for first output style.
+    2: Engine proposes voice phrasing from creator's discovery answers. Creator edits or accepts. Default for most creators.
+    3: Engine extracts voice from a seed example the creator provides (a paragraph they wrote). Creator audits the extraction.
+  consumer_status: aspirational
+  consumer_status_reason: Wave 3 ensina /create e /fill a consultar freedom_level antes de operar. Hoje é declaração.
+
+# ===========================================================================
+# INTENT TOPOLOGY — derived shape (delivery + nature fixed; depth N/A)
+# ===========================================================================
+# Axis source: references/intent-topology.md §2. Output-style is ambient
+# constitutional (loaded every turn as part of the CLAUDE.md 4-tier hierarchy)
+# and advisor (it shapes how Claude responds without mutating external state).
+# Cognitive_depth does not apply — output styles are declarative formatting
+# contracts, not cognitive architectures. Declaration mode: derived.
+
+intent_topology:
+  declaration_mode: derived
+  declaration_mode_reason: "Output-style has fixed (delivery_mechanism, operational_nature) with cognitive_depth not applicable. Every output style is loaded ambient and operates as a declarative shaping contract on Claude's own responses — no mutation, no persona cognition. Declaring full enums would be tautological."
+  runtime_shape_note: "delivery_mechanism=ambient_constitutional, operational_nature=advisor, cognitive_depth=N/A. See references/runtime-host-dag.md §2 row 1 (ambient_constitutional + any → [session_root])."
+  delivery_mechanism_fixed: ambient_constitutional
+  operational_nature_fixed: advisor
+  cognitive_depth_applicable: false
+  cognitive_depth_applicable_reason: "Output styles are formatting contracts, not cognitive architectures. They declare voice, tone, structure, and anti-patterns — all declarative. There is no embodied cognition to discriminate by depth."
+  runtime_host_derived: "[session_root]"
+  locale_adaptive_clause_required: true
+  locale_adaptive_clause_source: references/locale-adaptive-clause.md
+  locale_adaptive_clause_required_reason: "Every forged output style carries a runtime contract telling Claude to adapt the voice/tone rules to the invoker's language while preserving the style's structural markers. An output style forged in PT-BR (e.g., a warm-coaching voice in Portuguese) becomes installable by a French user: the STRUCTURE of the voice (warm, coaching, 3-paragraph, question-then-answer) travels; the LANGUAGE of delivery mirrors the invoker. Injected by /create during W2.6 into templates/output-style/OUTPUT-STYLE.md.template."
+  locale_adaptive_clause_consumer_status: aspirational
+  consumer_status: aspirational
+  consumer_status_reason: "Wave 2 W2.3-W2.5 consume this block per the standard routing, Stage 0, and drift-check enum paths."
+
+lifecycle:
+  map:
+    role: Output styles do not need domain mapping — voice is creator preference, not extracted knowledge.
+    optional: true
+    inputs: []
+    outputs: []
+    consumer_status: aspirational
+    consumer_status_reason: Wave 3 ensina /map a consultar product-dna.{type}.lifecycle.map antes de oferecer extração de conhecimento.
+    blocks_when: []
+    next_action: null
+    next_action_reason: read-only skill — /map writes domain-map.md, next action determined by creator
+    type_specific:
+      skip_recommended: true
+      skip_message: Output styles do not need /map. Voice and tone are personal — describe them directly in /create.
+  scout:
+    role: Output styles do not benefit from /scout — there is no domain to research, no marketplace gap analysis to run on voice.
+    optional: true
+    inputs: []
+    outputs: []
+    consumer_status: aspirational
+    consumer_status_reason: Wave 3 ensina /scout a consultar product-dna.{type}.lifecycle.scout.skip_recommended antes de iniciar research budget.
+    blocks_when: []
+    next_action: null
+    next_action_reason: read-only research skill — next action determined by scout report recommendation
+    type_specific:
+      skip_recommended: true
+      skip_message: Output styles do not need scouting. Run /create output-style {slug} directly. If you want to see existing styles, use /explore instead.
+  import:
+    role: Bring an existing output-style file from .claude/output-styles/{slug}.md into the Engine workspace for validation, packaging, and republish.
+    inputs:
+    - 'Source: ~/.claude/output-styles/{slug}.md (system) OR project .claude/output-styles/{slug}.md'
+    - creator.yaml (author metadata)
+    outputs:
+    - workspace/{slug}/OUTPUT-STYLE.md (renamed from {slug}.md to match workspace convention)
+    - workspace/{slug}/README.md (synthesized if missing — the source file usually has none)
+    - 'workspace/{slug}/.meta.yaml (state: content if README synth needed; validated if structural pass)'
+    blocks_when:
+    - workspace/{slug}/ already exists (no --force)
+    - Source file has no YAML frontmatter (not a valid output style)
+    consumer_status: blocked
+    consumer_status_reason: /import SKILL.md tabela de detecção lista 9 tipos (skill, agent, squad, workflow, design-system, prompt, claude-md, application, system). output-style está AUSENTE. Wave 3 deve
+      adicionar output-style + hooks + statusline + bundle + minds à tabela de detecção do /import.
+    next_action: /validate {slug}
+    optional: true
+    type_specific:
+      detection_pattern: single .md file in .claude/output-styles/ with frontmatter containing 'name' and 'description' fields
+      rename_on_import:
+        from: '{slug}.md'
+        to: OUTPUT-STYLE.md
+        reason: Workspace convention is OUTPUT-STYLE.md as primary file. /package will rename it back at publish time.
+      auto_detected_phase: content (output-style files installed in .claude/output-styles/ are by definition non-template — they were generated for use)
+  create:
+    role: Scaffold the OUTPUT-STYLE.md template, fill frontmatter, ask 4 discovery questions, write WHY comments. State transitions to scaffold.
+    inputs:
+    - field: creator.yaml
+      purpose: Author metadata, technical_level for adapting scaffold tone.
+    - field: type
+      value: output-style
+    - field: slug
+      purpose: Validates against ^[a-z0-9][a-z0-9-]{2,39}$, becomes filename + frontmatter.name.
+    - field: discovery_answers
+      purpose: Voice description, formatting rules, anti-patterns, keep-coding-instructions choice.
+    outputs:
+    - workspace/{slug}/OUTPUT-STYLE.md (template-filled with WHY comments)
+    - 'workspace/{slug}/README.md (4-section skeleton: what/install/usage/requirements)'
+    - 'workspace/{slug}/.meta.yaml (state: scaffold)'
+    blocks_when:
+    - slug invalid (regex mismatch)
+    - workspace/{slug}/ already exists and --force not specified
+    - creator.yaml missing AND micro-onboard fails
+    consumer_status: partial
+    consumer_status_reason: '/create lê este arquivo hoje (linha 33 SKILL.md: ''Load product-dna/{category}.yaml''). Lê dna_patterns + frontmatter + discovery_questions. NÃO lê architectural_principles,
+      lifecycle, essence, freedom_levels. Wave 3 ensina /create a consumir as novas seções.'
+    next_action: /fill {slug}
+    optional: false
+    type_specific:
+      activates_templates:
+      - templates/output-style/OUTPUT-STYLE.md.template
+      - templates/output-style/README.md.template
+      activates_dna_at_scaffold:
+      - D2
+      - D4
+      - D13
+      discovery_phase:
+        questions_source: this file → discovery_questions.minimum_set (canonical)
+        legacy_source: .claude/skills/create/references/discovery-questions.md (does NOT contain output-style entry — this codex IS the source of truth)
+        legacy_status: DEPRECATED for output-style — Wave 4 should remove output-style references from discovery-questions.md OR align it with this codex
+        depth_questions: this file → discovery_questions.depth_set (used at freedom_level=1)
+      read_before_write_ratio: 4:1 (canonical_spec + template + product-dna + creator.yaml read; 1 OUTPUT-STYLE.md written)
+  fill:
+    role: Walk the 4 OUTPUT-STYLE.md sections (Voice & Tone, Formatting Rules, Anti-Patterns, Quality Criteria) and extract creator expertise into prose.
+    inputs:
+    - 'workspace/{slug}/.meta.yaml (must be state: scaffold or content)'
+    - workspace/{slug}/OUTPUT-STYLE.md (current state with WHY comments)
+    - creator.yaml (persona)
+    - this file (sections_walked, sparring_protocol)
+    outputs:
+    - workspace/{slug}/OUTPUT-STYLE.md (sections filled, WHY comments preserved)
+    - 'workspace/{slug}/.meta.yaml (state: content, fill_progress updated)'
+    consumer_status: partial
+    consumer_status_reason: '/fill lê este arquivo hoje (linha 46 SKILL.md: ''Load product DNA from product-dna/{type}.yaml''). NÃO consulta lifecycle.fill.sections_walked. Wave 3 ensina /fill a usar sections_walked
+      como spec do section walker.'
+    next_action: /validate {slug}
+    optional: false
+    blocks_when: []
+    type_specific:
+      sections_walked:
+      - name: Voice & Tone
+        why: How Claude speaks — register, vocabulary, sentence rhythm.
+        sparring_required: true
+        deepening_offered: true
+      - name: Formatting Rules
+        why: What the output looks like — headers, lists, code blocks, length.
+        sparring_required: false
+        deepening_offered: false
+      - name: Anti-Patterns
+        why: What this style refuses — specific behaviors to never exhibit.
+        sparring_required: true
+        deepening_offered: false
+        minimum_items: 3
+      - name: Quality Criteria
+        why: How to verify the output matches the style.
+        sparring_required: false
+        deepening_offered: true
+        minimum_items: 3
+      fill_protocol_section: null
+      fill_protocol_section_reason: '.claude/skills/fill/references/fill-protocol.md does NOT have a type-specific coaching block for output-style (verified via grep — only generic ''application/statusline/output-style:
+        Standard execution-focused'' line exists). Output styles use the generic section walker. Wave 3 may add a dedicated block, or leave generic — declare here either way.'
+      sparring_protocol: Light sparring — output styles ship at MCS-1, deep sparring is not required. One Generic Test challenge per major section is sufficient.
+      research_injection_eligible: false
+      research_injection_reason: Voice and tone are creator preferences, not researchable facts.
+  validate:
+    role: Run structural + integrity + DNA Tier 1 checks. Output styles do not run Tier 3 (most patterns N/A). MCS-2 is the practical ceiling.
+    inputs:
+    - workspace/{slug}/OUTPUT-STYLE.md
+    - workspace/{slug}/README.md
+    - workspace/{slug}/.meta.yaml
+    - this file (product-dna/output-style.yaml)
+    - config.yaml (scoring weights, placeholder patterns)
+    - quality-gates.yaml (state transitions)
+    outputs:
+    - 'workspace/{slug}/.meta.yaml (state: validated, scores populated)'
+    - Validation report (READY / NEEDS WORK / NOT READY)
+    consumer_status: partial
+    consumer_status_reason: '/validate lê este arquivo hoje (linha 34 SKILL.md: ''Load DNA requirements: product-dna/{type}.yaml''). Lê dna_patterns + mcs_expectations. NÃO consulta lifecycle.validate.per_stage_hooks.
+      Wave 3 ensina /validate a usar per_stage_hooks como spec por tipo (substituindo prose hardcoded em validation-stages/stage-N.md por consulta declarativa).'
+    optional: false
+    blocks_when: []
+    next_action: /package {slug}
+    type_specific:
+      stages_run:
+        mcs1:
+        - 1
+        - 2
+        - 3
+        - 6
+        mcs2:
+        - 1
+        - 2
+        - 3
+        - 4
+        - 6
+        - 7
+        - 8
+        mcs3_not_applicable: true
+        mcs3_reason: Output styles have no Tier 3 DNA patterns — system MCS-3 ceiling does not apply.
+      per_stage_hooks:
+        stage_1_structural:
+          check: Glob workspace/{slug}/OUTPUT-STYLE.md AND README.md exist.
+          blocking: true
+        stage_2_integrity:
+          check: YAML frontmatter parses. Required fields (name, description) present. No placeholder patterns. Description ≤200 chars.
+          blocking: true
+        stage_3_dna_tier1:
+          required_patterns:
+          - D2
+          - D4
+          - D13
+          not_applicable_patterns:
+          - D1
+          - D3
+          - D14
+          - D19
+          check_d2: Anti-Patterns section exists with ≥3 items.
+          check_d4: Quality Criteria section exists with ≥3 items.
+          check_d13: README.md has 4 sections (what/install/usage/requirements).
+          blocking: true
+        stage_4_dna_tier2:
+          required_patterns:
+          - D16
+          recommended_patterns:
+          - D15
+          not_applicable_patterns:
+          - D5
+          - D6
+          - D7
+          - D8
+          - D17
+          - D20
+          check_d15: examples/ directory with before/after output comparisons (recommended for MCS-2).
+          check_d16: No hardcoded paths anywhere in OUTPUT-STYLE.md.
+          blocking: false
+        stage_5_dna_tier3:
+          not_applicable: true
+          reason: Output styles have no Tier 3 DNA patterns.
+        stage_6_cli_preflight:
+          check: myclaude validate {slug} succeeds (frontmatter + size + secrets).
+          blocking: true
+        stage_7_anti_commodity:
+          check: Substance score — does the style say something a generic 'be professional' style would not?
+          blocking: false
+          coaching_only: true
+          invisibility_check: grep user-facing strings for substrate vocabulary (Engine, MCS, DNA, tier, validate). Zero matches required.
+        stage_8_value_intelligence:
+          check: Value score, suggested price range, market position.
+          blocking: false
+          runs_at_mcs:
+          - 2
+          recommended_pricing_strategy: free or signal — output styles rarely justify >$5.
+      read_before_write_ratio: 'Read-only skill — no writes to product files. Updates .meta.yaml only. Effective ratio: 6 reads : 1 .meta.yaml write.'
+      dogfood_check:
+        description: P9 enforcement — /validate output-style applied against this product-dna file's prose treats it as if it were the body of an output style.
+        method: Grep for substrate names in user-facing strings of this file. Verify no anti-patterns from any shipped output style exemplar are violated.
+        consumer_status: aspirational
+        consumer_status_reason: Wave 3 ensina /validate a rodar dogfood checks contra product-dna files. Hoje é declaração.
+      next_action_pass: /package {slug}
+      next_action_fail: /validate --fix {slug} OR fix manually + /validate
+  test:
+    role: Sandbox-install the output style and verify activation. Output styles do not have deep behavioral tests — type-specific tests are minimal.
+    inputs:
+    - workspace/{slug}/ (validated)
+    - this file (install_target pattern)
+    outputs:
+    - workspace/{slug}/.meta.yaml (test_result, last_tested)
+    - Test report
+    consumer_status: partial
+    consumer_status_reason: '/test lê este arquivo hoje (linha 35 SKILL.md: ''Load product-dna/{type}.yaml → get install_target pattern''). NÃO consulta lifecycle.test.type_specific_steps. Wave 3 ensina
+      /test a usar type_specific_steps como spec do Step 2b table (substituindo prose hardcoded por consulta declarativa).'
+    optional: true
+    blocks_when: []
+    next_action: /package {slug}
+    type_specific:
+      required_for_mcs:
+      - 3
+      optional_for_mcs:
+      - 1
+      - 2
+      sandbox_isolation: 'worktree (context: fork)'
+      type_specific_steps:
+      - step: Frontmatter parse
+        check: YAML frontmatter valid. name and description present. keep-coding-instructions is boolean if present.
+        on_fail: Report invalid frontmatter line and field name.
+      - step: Style file ≤4K chars
+        check: wc -c {slug}.md ≤4000.
+        on_fail: Style file too long — output styles persist in context while active and should be lean.
+      - step: Install path simulation
+        check: Copy to {worktree}/.claude/output-styles/{slug}.md (mocked) and verify the file is readable.
+        on_fail: Install target path violation.
+      - step: Activation simulation
+        check: Verify the file would be loadable by CC's SystemPromptBuilder (no syntax errors that would crash the loader).
+        on_fail: Output style would crash CC's style loader on activation.
+      scenarios_applicable: false
+      scenarios_reason: Output styles are not invoked with input — they shape ALL output while active. Behavioral testing is via the buyer's daily use, not sandbox scenarios.
+      next_action_pass: /package {slug}
+  package:
+    role: Strip WHY comments, rename OUTPUT-STYLE.md to {slug}.md, generate triple manifests.
+    inputs:
+    - 'workspace/{slug}/ (state: validated)'
+    - creator.yaml (author metadata)
+    - this file (install_target, package_rename)
+    - config.yaml (vault_defaults)
+    outputs:
+    - workspace/{slug}/.publish/{slug}.md (renamed, stripped, attribution injected)
+    - workspace/{slug}/.publish/README.md (badges injected)
+    - workspace/{slug}/.publish/vault.yaml (MyClaude marketplace manifest)
+    - workspace/{slug}/.publish/agentskills.yaml (Agent Skills universal manifest)
+    - workspace/{slug}/.publish/CHANGELOG.md
+    - workspace/{slug}/.publish/LICENSE.md
+    - 'workspace/{slug}/.meta.yaml (state: packaged)'
+    consumer_status: partial
+    consumer_status_reason: '/package lê este arquivo hoje (linha 32 SKILL.md: ''Load product-dna/{type}.yaml → get install_target''). Consome install_target + package_rename + frontmatter.required. NÃO
+      consulta lifecycle.package.step_6b_verify. Wave 3 ensina /package a usar step_6b_verify como spec por tipo.'
+    next_action: /publish {slug}
+    optional: false
+    blocks_when: []
+    type_specific:
+      strips:
+      - '<!-- WHY: ... --> (HTML comments)'
+      - '# WHY: lines'
+      - .meta.yaml (never shipped)
+      - domain-map.md (never shipped)
+      renames:
+        from: OUTPUT-STYLE.md
+        to: '{slug}.md'
+        reason: Claude Code expects output styles as flat {slug}.md files in .claude/output-styles/.
+      injects:
+      - field: marketplace_url in frontmatter
+        value: https://myclaude.sh/p/{slug}
+        purpose: Viral attribution — every buyer carries the marketplace link in every session.
+      - field: Attribution comment at file end
+        value: '<!-- Published on MyClaude (myclaude.sh) | Quality: MCS-{level} ({score}%) | Engine: Studio v3 -->'
+      - field: Badges in README.md footer
+        value: MCS badge + Available badge + Built with MyClaude Studio Engine
+      plugin_json_block: null
+      plugin_json_reason: Output styles are NOT distributed via plugin.json. They use vault.yaml and agentskills.yaml only.
+      agentskills_yaml_block: 'Generate with platforms: [claude-code, ''*'']. Output styles are recognized by any Agent Skills-compatible platform.'
+      step_6b_verify:
+      - '{slug}.md exists in .publish/ (renamed from OUTPUT-STYLE.md)'
+      - Frontmatter has name + description
+      - No WHY comments remaining (grep verification)
+      - File size ≤4K characters
+  publish:
+    role: Push to myclaude.sh marketplace. Output styles are simple — no special publish handling.
+    inputs:
+    - 'workspace/{slug}/.publish/ (state: packaged)'
+    - myclaude CLI auth (myclaude auth)
+    - creator confirmation
+    outputs:
+    - Live marketplace listing at https://myclaude.sh/p/{slug}
+    - 'workspace/{slug}/.meta.yaml (state: published, published_at, version)'
+    blocks_when:
+    - state != packaged
+    - myclaude auth missing
+    - creator declines confirmation
+    consumer_status: partial
+    consumer_status_reason: '/publish reads vault.yaml from .publish/, doesn''t directly read product-dna at runtime. Distribution channel routing in config.yaml.intelligence.distribution.channels_by_type
+      doesn''t include output-style today. Wave 3 should add output-style: [''myclaude'', ''agentskills''] there.'
+    optional: false
+    next_action: null
+    next_action_reason: terminal action — product is live, feedback loop begins via post_publish_actions
+    type_specific:
+      distribution_channels:
+      - channel: myclaude
+        primary: true
+        url_pattern: https://myclaude.sh/p/{slug}
+      - channel: agentskills_universal
+        primary: false
+        scope: 33+ Agent Skills-compatible platforms
+      - channel: anthropic-plugin
+        primary: false
+        applicable: false
+        reason: Output styles are not in plugin.json.
+      confirmation_required: true
+      confirmation_message_template: Publish {slug} as a free output style on myclaude.sh? [y/N]
+      post_publish_actions:
+      - 'Suggest: ''Use it daily. The best validation is your own use.'''
+      - 'Surface install command: myclaude install {slug}'
+      - 'Schedule check-in (Proactive #14): 7 days post-publish, ask about install count.'
+  status:
+    role: Display this product type in the dashboard with type-appropriate UX vocabulary, intelligence fields, and next-action coaching.
+    inputs:
+    - workspace/{slug}/.meta.yaml (state, scores, intelligence)
+    - this file (essence.one_line for ux_type_name fallback)
+    - references/ux-vocabulary.md (canonical user-facing type name)
+    outputs:
+    - Dashboard line for the product
+    - Portfolio intelligence section if score data present
+    consumer_status: aspirational
+    consumer_status_reason: '/status reads .meta.yaml today. Doesn''t consult product-dna for ux_type_name (it consults references/ux-vocabulary.md). Wave 3 may add fallback: if ux-vocabulary.md missing,
+      read product-dna.{type}.lifecycle.status.ux_type_name.'
+    optional: true
+    blocks_when: []
+    next_action: null
+    next_action_reason: read-only dashboard — no state mutation, no next action
+    type_specific:
+      ux_type_name: Output Style
+      ux_type_name_source: references/ux-vocabulary.md → product types table
+      state_emoji_rules: Universal — uses status/SKILL.md state display rules.
+      portfolio_role_default: standalone
+      portfolio_role_reason: Output styles do not compose with each other (mutually exclusive).
+flow: "```mermaid\nflowchart LR\n  THINK[/think optional/] -.->|voice unclear| CREATE[/create output-style/]\n  IMPORT[/import existing/] -.->|already in .claude/output-styles/| WORKSPACE\n  CREATE -->|scaffold|\
+  \ WORKSPACE[(workspace/slug/)]\n  WORKSPACE --> FILL[/fill/]\n  FILL -->|content| VALIDATE[/validate/]\n  VALIDATE -->|fail| VALIDATE\n  VALIDATE -->|pass MCS-1| PACKAGE[/package/]\n  VALIDATE -.->|optional\
+  \ MCS-2| TEST[/test/]\n  TEST --> PACKAGE\n  PACKAGE -->|packaged| PUBLISH[/publish/]\n  PUBLISH -->|live| MARKET[(marketplace + creator daily use)]\n  MARKET -.->|feedback loop, install metrics| CREATE\n\
+  \n  STATUS[/status/] -.->|read-only| WORKSPACE\n\n  classDef writeSkill fill:#e1f5ff,stroke:#0277bd\n  classDef readSkill fill:#fff8e1,stroke:#f9a825\n  classDef gate fill:#fff4e1,stroke:#ef6c00\n  classDef\
+  \ terminal fill:#e8f5e9,stroke:#2e7d32\n  class CREATE,FILL,PACKAGE writeSkill\n  class STATUS,VALIDATE,TEST gate\n  class PUBLISH terminal\n  class IMPORT,THINK readSkill\n```\n"
+failure_modes:
+- mode: creator cannot articulate the voice
+  detection: /fill receives 'I'm not sure' or vague answers to Voice & Tone questions.
+  degradation: Engine offers 3 voice exemplars (technical, conversational, lyrical) and asks creator to pick one as a starting anchor.
+  recovery: After picking exemplar, /fill walks the section using the exemplar as scaffold and asks creator to deviate where they disagree.
+- mode: style file exceeds 4K characters
+  detection: wc -c during /validate Stage 2 or /test type-specific check.
+  degradation: Validation flags as warning at 2K-4K, blocks at >4K. Output styles persist while active — long files inflate every turn.
+  recovery: Suggest splitting into two narrower styles, or cutting Voice & Tone elaboration in favor of one strong example.
+- mode: anti-pattern section has fewer than 3 items
+  detection: /validate Stage 3 D2 check.
+  degradation: Score capped at MCS-1 partial. Engine offers 5 generic refusals creator can adapt.
+  recovery: Creator picks 3 refusals, customizes them. /validate re-runs.
+- mode: frontmatter description exceeds 200 characters
+  detection: /validate Stage 2 integrity check.
+  degradation: Anthropic Output Styles spec recommends short descriptions. Long descriptions inflate ambient cost while active.
+  recovery: Engine proposes a compressed version, creator approves or edits.
+- mode: creator tries to add references/ directory
+  detection: /validate Stage 1 detects unexpected directory.
+  degradation: Output styles are intentionally single-file. references/ violates P3 (composition over monolith) for this type.
+  recovery: Engine suggests converting to type=skill if domain knowledge is needed, or cutting the references entirely.
+- mode: 'creator tries to set keep-coding-instructions: false without understanding'
+  detection: '/fill or /validate detects keep-coding-instructions: false in frontmatter.'
+  degradation: false REPLACES Claude's default coding behavior entirely — easy to break a buyer's coding workflow accidentally.
+  recovery: 'Engine surfaces: ''You set keep-coding-instructions: false. This means buyers using this style will lose Claude''s default coding behavior. Confirm intent or change to true.'''
+invariants:
+- 'Single primary file: OUTPUT-STYLE.md (renamed to {slug}.md at package time).'
+- No references/ directory — output styles are single-file.
+- Mutually exclusive — only one output style active per session.
+- Stateless — no .meta.yaml fields beyond standard product state.
+- Maximum 4K characters in primary file (style persists while active).
+- Tier 3 DNA patterns are ALL non-applicable — MCS-3 is structurally impossible.
+- package_rename always applies (OUTPUT-STYLE.md → {slug}.md) — no exception.
+- Distributed via vault.yaml + agentskills.yaml ONLY — never via plugin.json.
+- Activation is binary (selected or not selected) — no partial activation.
+- examples/ directory is OPTIONAL at MCS-1, RECOMMENDED at MCS-2 (per canonical spec).
+security_profile:
+  aegis_applicable: false
+  reason: Output styles are pure text instructions injected into the system prompt. They have no execution surface, no shell access, no file IO, no network calls, no tool invocation. The only attack vector
+    is prompt content itself, which is the same surface as a normal user message.
+  attack_surfaces: []
+  shell_execution: false
+  file_io: false
+  network_calls: false
+  tool_invocation: false
+  installation_trust_level: trusted_text
+  installation_trust_reason: Installs to .claude/output-styles/{slug}.md as a text file. No script execution at install time.
+  consumer_status: aspirational
+  consumer_status_reason: '/aegis does not consult product-dna today. Wave 3 may teach /aegis to skip types where security_profile.aegis_applicable: false.'
+marketplace_taxonomy:
+  default_category: output-style
+  default_price: 0
+  default_license: MIT
+  pricing_rationale: Output styles are voice templates — buyers rarely pay >$5. Free or signal pricing is the natural ceiling. A premium output style is rare and usually means the creator has packaged a
+    recognized brand voice.
+  bundle_eligible: false
+  bundle_eligible_reason: Output styles are mutually exclusive. Bundling 5 output styles still only lets the buyer use one at a time, which is poor value composition.
+  composition_eligible_with: []
+  composition_eligible_reason: Output styles do not compose. They are an exclusive runtime selection.
+  consumer_status: aspirational
+  consumer_status_reason: /package today reads vault_defaults from config.yaml (generic). Wave 3 ensina /package a consultar product-dna.{type}.marketplace_taxonomy primeiro, com vault_defaults como fallback.
+  natural_tags:
+    scope: flat
+    flat:
+    - voice
+    - formatting
+    - writing
+    - communication
+    - style
+  pricing_strategy:
+    scope: flat
+    flat:
+      strategy: free
+      strategy_max: signal
+      range_usd:
+      - 0
+      - 5
 dna_patterns:
   tier1:
-    D1:  { required: false, name: "Activation Protocol",    applicable: false }
-    D2:  { required: true,  name: "Anti-Pattern Guard",     check: "grep anti-pattern or 'never' section with >=3 items" }
-    D3:  { required: false, name: "Progressive Disclosure",  applicable: false }
-    D4:  { required: true,  name: "Quality Gate",            check: "grep quality criteria or 'good output looks like' section" }
-    D13: { required: true,  name: "Self-Documentation",      check: "README.md with what/install/usage" }
-    D14: { required: false, name: "Graceful Degradation",    applicable: false }
-    D19: { applicable: false }
+    D1:
+      required: false
+      applicable: false
+      name: Activation Protocol
+      reason: Output styles are not invoked — they activate by being selected. No protocol to load.
+    D2:
+      required: true
+      applicable: true
+      name: Anti-Pattern Guard
+      check: grep '## Anti-Patterns' section with >=3 items
+    D3:
+      required: false
+      applicable: false
+      name: Progressive Disclosure
+      reason: Single-file by design — no references/ allowed.
+    D4:
+      required: true
+      applicable: true
+      name: Quality Gate
+      check: grep '## Quality Criteria' or 'good output looks like' section with >=3 items
+    D13:
+      required: true
+      applicable: true
+      name: Self-Documentation
+      check: README.md with what/install/usage/requirements
+    D14:
+      required: false
+      applicable: false
+      name: Graceful Degradation
+      reason: Stateless — no execution to degrade. Failure modes handled at forge time, not runtime.
+    D19:
+      required: false
+      applicable: false
+      name: Attention-Aware Authoring
+      reason: Single-file under 4K — attention zones do not apply.
   tier2:
-    D5:  { required: false, applicable: false }
-    D6:  { required: false, applicable: false }
-    D7:  { required: false, applicable: false }
-    D8:  { required: false, applicable: false }
-    D15: { required: false, name: "Testability",             check: "examples/ with before/after output comparisons" }
-    D16: { required: true,  name: "Composability",           check: "no hardcoded project paths, works across codebases" }
-    D17: { required: false, applicable: false }
+    D5:
+      required: false
+      applicable: false
+      name: Question System
+      reason: Output styles do not accept input — they shape output.
+    D6:
+      required: false
+      applicable: false
+      name: Confidence Signaling
+      reason: Output styles do not emit claims — they shape voice.
+    D7:
+      required: false
+      applicable: false
+      name: Pre-Execution Gate
+      reason: No execution — activation is binary.
+    D8:
+      required: false
+      applicable: false
+      name: State Persistence
+      reason: Stateless by design (P6 specialization).
+    D15:
+      required: false
+      applicable: true
+      name: Testability
+      check: examples/ with before/after output comparisons
+      note: Optional for MCS-1, recommended for MCS-2 per canonical spec.
+    D16:
+      required: true
+      applicable: true
+      name: Composability
+      check: no hardcoded project paths, works across codebases
+    D17:
+      required: false
+      applicable: false
+      name: Hook Integration
+      reason: Output styles do not interact with hooks.
+    D20:
+      required: false
+      applicable: false
+      name: Cache-Friendly Design
+      reason: Output styles are not always-loaded — they activate on selection. claude-md is the only type with D20 required.
   tier3:
-    D9:  { required: false, applicable: false }
-    D10: { required: false, applicable: false }
-    D11: { required: false, applicable: false }
-    D12: { required: false, applicable: false }
-    D18: { required: false, applicable: false }
-    D20: { applicable: false }
-
+    D9:
+      required: false
+      applicable: false
+      name: Orchestrate Don't Execute
+      reason: No orchestration — single artifact.
+    D10:
+      required: false
+      applicable: false
+      name: Handoff Specification
+      reason: No handoffs — single artifact.
+    D11:
+      required: false
+      applicable: false
+      name: Socratic Pressure
+      reason: No reasoning to challenge.
+    D12:
+      required: false
+      applicable: false
+      name: Compound Memory
+      reason: Stateless (P6 specialization).
+    D18:
+      required: false
+      applicable: false
+      name: Subagent Isolation
+      reason: No subagents.
 mcs_expectations:
-  mcs1: "D2, D4, D13 PASS. Score >= 75%."
-  mcs2: "Tier 1 + D15, D16 PASS. Score >= 85%."
-  mcs3: "Not typical for output styles."
-
-# Frontmatter fields for OUTPUT-STYLE.md (CC native spec)
+  mcs1:
+    dna_required:
+    - D2
+    - D4
+    - D13
+    score_min: 75
+    blocks_publish: true
+    natural_ceiling: false
+  mcs2:
+    dna_required:
+    - D2
+    - D4
+    - D13
+    - D16
+    dna_recommended:
+    - D15
+    score_min: 85
+    blocks_publish: false
+    natural_ceiling: true
+    ceiling_reason: Output styles have only 4 applicable DNA patterns. MCS-2 is the practical maximum quality tier.
+  mcs3:
+    applicable: false
+    reason: Output styles have ZERO Tier 3 DNA patterns. MCS-3 is structurally impossible for this type.
 frontmatter:
   required:
-    - name                    # display name for the style
-    - description             # when to use this style
+  - name
+  - description
   optional:
-    - "keep-coding-instructions"  # boolean — if true, Claude keeps its default coding instructions alongside this style
-
-# Package behavior
+  - keep-coding-instructions
+  forbidden:
+  - tools
+  - allowed-tools
+  - denied-tools
+  - memory
+  - hooks
+  - paths
 package_rename:
-  from: "OUTPUT-STYLE.md"
-  to: "{slug}.md"
-
-# Token economics [SOURCE: loadOutputStylesDir.ts:1-80]
+  from: OUTPUT-STYLE.md
+  to: '{slug}.md'
+  applies_at: package time
+  reason: Claude Code's .claude/output-styles/ directory expects flat {slug}.md files.
+template_files:
+- source: OUTPUT-STYLE.md.template
+  target: OUTPUT-STYLE.md
+  dna_injected:
+  - D2
+  - D4
+  why_comments: true
+- source: README.md.template
+  target: README.md
+  dna_injected:
+  - D13
+  why_comments: true
 token_economics:
-  catalog_cost: "Zero — output styles are not in skill catalog"
-  invocation_cost: "Low — style prompt loaded when user selects this style"
-  ambient_cost: "Zero when not active. LOW when active (style stays in context)"
-  optimization: "Keep style rules concise. Active styles persist across turns."
+  catalog_cost_tokens: 0
+  catalog_cost_reason: Output styles are not in the skill catalog — they activate via selection, not invocation.
+  invocation_cost: low
+  invocation_cost_reason: When the buyer selects this style, the file content loads into the system prompt and persists while active.
+  ambient_cost: zero_when_inactive
+  ambient_cost_active: low
+  ambient_cost_reason: 'Zero tokens when not selected. When selected, the entire style file persists in context across turns (low: ~500-1500 tokens for a typical 2K char style).'
+  optimization_notes: 'Output styles persist in context while active. Every character costs tokens
 
-# Compact instructions applicability
+    on every turn. Keep style files lean — under 2K is ideal, 4K is the hard
+
+    ceiling. Move elaborations to README.md (not loaded at runtime) rather than
+
+    bloating the style file with examples.
+
+    '
 compact_instructions:
   applicable: true
-  location: "OUTPUT-STYLE.md → ## Compact Instructions section"
-  preserves: "voice/tone rules, formatting rules, anti-patterns, keep-coding-instructions setting"
-
-# Discovery questions for /create
+  location: 'OUTPUT-STYLE.md → ## Compact Instructions section'
+  preserves:
+  - voice and tone rules
+  - formatting rules
+  - anti-patterns (what this style refuses)
+  - keep-coding-instructions setting value
+  source_reference: compact/prompt.ts:133-143
+  reason_for_applicability: Output styles persist across compaction — without compact instructions, the buyer's Claude reverts to default style mid-conversation, breaking the buyer's workflow silently.
 discovery_questions:
-  - "What kind of output should Claude produce with this style? (technical docs, creative writing, concise reports, etc.)"
-  - "What formatting rules should Claude follow? (headers, lists, code blocks, etc.)"
-  - "What should Claude NEVER do when using this style?"
-  - "Should Claude keep its default coding instructions alongside your style rules?"
+  source_of_truth: this file (canonical for output-style)
+  legacy_location: .claude/skills/create/references/discovery-questions.md
+  legacy_status: GAP — discovery-questions.md does NOT contain an output-style entry (verified via grep). This codex is the authoritative source. Wave 4 should either add output-style to discovery-questions.md
+    aligned with this codex, OR deprecate discovery-questions.md entirely in favor of per-type codex blocks.
+  minimum_set:
+  - What kind of output should Claude produce with this style? (technical docs, creative writing, concise reports, etc.)
+  - What formatting rules should Claude follow? (headers, lists, code blocks, line length)
+  - What should Claude NEVER do when using this style? (at least 3 specific refusals)
+  - Should Claude keep its default coding instructions alongside your style rules? (true/false — default true)
+  depth_set:
+  - Who is the audience for the output this style produces? (a senior engineer, a non-technical stakeholder, your future self?)
+  - Pick a paragraph you wrote that captures the voice you want. What makes it feel like you?
+  - What is the ONE word that describes this voice that no other style on the marketplace would claim?
+  - When would a buyer SWITCH AWAY from this style? (knowing the boundary builds trust)
+  per_subtype: null
+  per_subtype_reason: Output styles have no subtypes.
+state_machine_hooks:
+  source_file: quality-gates.yaml
+  source_section: states
+  scope: universal
+  type_specific_branches: []
+  regression_rules: Universal — file edit after validation regresses to content.
+  publish_prerequisites_addendum: []
+  publish_prerequisites_addendum_reason: Output styles add no prerequisites beyond the universal set.
+validation_pipeline_refs:
+  stage_1: .claude/skills/validate/references/validation-stages/stage-1-structural.md
+  stage_2: .claude/skills/validate/references/validation-stages/stage-2-integrity.md
+  stage_3: .claude/skills/validate/references/validation-stages/stage-3-dna-tier1.md
+  stage_4: .claude/skills/validate/references/validation-stages/stage-4-dna-tier2.md
+  stage_5: null
+  stage_5_reason: Output styles have no Tier 3 DNA patterns.
+  stage_6: .claude/skills/validate/references/validation-stages/stage-6-cli-preflight.md
+  stage_7: .claude/skills/validate/references/validation-stages/stage-7-anti-commodity.md
+  stage_8: .claude/skills/validate/references/validation-stages/stage-8-value-intelligence.md
+  index: .claude/skills/validate/references/validation-stages/_index.md
+lifecycle_shared_refs:
+  ux_experience:
+    path: references/ux-experience-system.md
+    consumed_by:
+    - /create
+    - /fill
+    - /validate
+    - /package
+    - /test
+    - /help
+    - /status
+    sections_relevant_to_type:
+    - §1 Context Assembly
+    - §2.3 Moment Awareness (first scaffold)
+    invisibility_audit_status: PRE-EXISTING DEBT — Wave 4 scope (Yellow Flag from S116)
+  ux_vocabulary:
+    path: references/ux-vocabulary.md
+    consumed_by:
+    - /create
+    - /fill
+    - /validate
+    - /package
+    - /test
+    - /help
+    - /status
+    purpose: Translate internal type names ('output-style') to user-facing names ('Output Style')
+    invisibility_audit_status: PRE-EXISTING DEBT — Wave 4 scope
+  engine_voice:
+    path: references/quality/engine-voice.md
+    consumed_by:
+    - /create
+    - /fill
+    - /validate
+    - /package
+    - /test
+    - /help
+    - /status
+    purpose: Brand DNA, sfumato constraints, voice markers
+    invisibility_audit_status: Acceptable — engine-voice IS the engine speaking
+  intelligence_layer:
+    path: references/intelligence-layer.md
+    consumed_by:
+    - /validate
+    - /package
+    - /scout
+    purpose: Value scoring, pricing strategy, portfolio analysis
+    invisibility_audit_status: PRE-EXISTING DEBT — Wave 4 scope
+  product_spec:
+    path: references/product-specs/output-style-spec.md
+    consumed_by:
+    - /create
+    - /validate
+    purpose: Canonical spec for output-style file structure, frontmatter schema, install target, activation
+    invisibility_audit_status: Clean (verified via Read)
+schema_consumer_status:
+  fully_wired_sections:
+  - type, primary_file, install_target, template (read by /create, /validate, /package, /test, /import)
+  - dna_patterns (read by /validate Stage 3, 4, 5)
+  - mcs_expectations (read by /validate scoring)
+  - frontmatter (read by /create scaffold + /package Step 1.5 verify)
+  - package_rename (read by /package Step 1.5)
+  - template_files (read by /create scaffold)
+  - 'discovery_questions.minimum_set (read by /create — but PARTIAL: legacy fallback to discovery-questions.md which has GAP for output-style)'
+  partially_wired_sections:
+  - lifecycle.create (skill reads product-dna but not lifecycle.create.discovery_phase)
+  - lifecycle.fill (skill reads product-dna but not lifecycle.fill.sections_walked)
+  - lifecycle.validate (skill reads product-dna but not lifecycle.validate.per_stage_hooks)
+  - lifecycle.test (skill reads product-dna but not lifecycle.test.type_specific_steps)
+  - lifecycle.package (skill reads product-dna but not lifecycle.package.step_6b_verify)
+  aspirational_sections:
+  - essence (no consumer)
+  - architectural_principles (no consumer; consumed by Wave 3 dogfood checks)
+  - operational_modes (no consumer; consumed by Wave 3 mode-aware skills)
+  - freedom_levels (no consumer; consumed by Wave 3 freedom-aware skills)
+  - lifecycle.map / lifecycle.scout / lifecycle.import / lifecycle.publish / lifecycle.status (skills don't consult product-dna for these flows yet)
+  - flow (rendered nowhere yet; consumed by Wave 3 /map and /status)
+  - failure_modes (consumed by Wave 3 /validate Stage 7 advisory)
+  - invariants (consumed by Wave 3 /validate as schema bump triggers)
+  - security_profile (consumed by Wave 3 /aegis routing)
+  - marketplace_taxonomy (consumed by Wave 3 /package vault.yaml gen)
+  - lifecycle_shared_refs (consumed by Wave 3 skills as load manifests)
+  - schema_consumer_status (this section — consumed by humans + S118 executor)
+  blocking_gaps_for_this_type:
+  - id: GAP-1
+    where: .claude/skills/import/SKILL.md table of detected types
+    issue: 9 types listed, output-style absent (along with hooks, statusline, bundle, minds)
+    wave_to_fix: 3
+    severity: blocks /import for 5 of 13 types
+  - id: GAP-2
+    where: .claude/skills/create/references/discovery-questions.md
+    issue: 12 sections, output-style absent — codex is the only source today
+    wave_to_fix: 4
+    severity: PARTIAL — codex covers it, but architectural inconsistency remains
+  - id: GAP-3
+    where: .claude/skills/fill/references/fill-protocol.md
+    issue: 'Only generic ''application/statusline/output-style: Standard'' line — no dedicated coaching block'
+    wave_to_fix: 3
+    severity: PARTIAL — generic walker works, dedicated block would be better
+  - id: GAP-4
+    where: config.yaml → intelligence.distribution.channels_by_type
+    issue: output-style not in channels_by_type table
+    wave_to_fix: 3
+    severity: MINOR — defaults apply, but type-specific channels missing

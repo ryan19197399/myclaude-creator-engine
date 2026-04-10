@@ -1,117 +1,2419 @@
-# product-dna/skill.yaml — DNA requirements for Skills
-# Read by /create, /validate, /package when type=skill
+# product-dna/skill.yaml — Codex for Skills
+# Read by /create, /fill, /validate, /test, /package, /publish (and /import,
+# /map, /status when they read product-dna) when type=skill.
+#
+# This file is the SINGLE SOURCE OF TRUTH for everything the Engine knows
+# about the Skill product type. Skills are the PRIMARY product type — the
+# Engine optimizes skill creation above all others. Every other family-skill
+# type (agent, squad, system, minds) inherits the architecture declared here.
+#
+# Schema version: 3.0.0 (Sprint 8 Wave 2 — codex)
+# Identical schema additions to output-style.yaml (essence, architectural_principles,
+# operational_modes, freedom_levels, lifecycle×10, flow, failure_modes, invariants,
+# security_profile, marketplace_taxonomy, lifecycle_shared_refs, state_machine_hooks,
+# validation_pipeline_refs, schema_consumer_status) PLUS skill-specific sections:
+# archetypes, description_engineering, progressive_disclosure_model, maturity_model,
+# quality_rubric, anti_patterns_catalog, reasoning_frameworks, decision_trees,
+# stakeholder_mapping, output_patterns, workflow_patterns.
+
+# ===========================================================================
+# IDENTITY (preserved from v2.2)
+# ===========================================================================
+
 
 type: skill
 primary_file: SKILL.md
-install_target: ".claude/skills/{slug}/"
-template: "templates/skill/"
+install_target: .claude/skills/{slug}/
+template: templates/skill/
+canonical_spec: references/product-specs/skill-spec.md
+essence:
+  one_line: A focused, reusable cognitive routine that turns Claude from generalist into domain specialist.
+  amplifies: On-demand expertise injection — Claude loads the skill's procedural knowledge, anti-patterns, and references at invocation time, producing outputs no untrained Claude could match.
+  philosophy: Skills are cognitive extensions, not documentation. They transform Claude from generalist into specialist through procedural knowledge, domain heuristics, and computational resources that
+    do not exist in the base training.
+  refuses:
+  - Persistent state between invocations — skills are activated per call, not sessions; agents are the right type for that.
+  - Replacing Claude's general intelligence — skills augment, they do not substitute.
+  - Becoming a chat assistant — skills are focused routines with explicit triggers, not open-ended companions.
+  - Wrapping a single prompt with no structure — that is a prompt, not a skill.
+  trade_offs:
+    gains:
+    - Highest leverage of all 13 types — one well-designed skill amplifies thousands of invocations.
+    - Composable — skills compose with other skills, agents, systems, hooks, and output styles.
+    - Cache-friendly — frontmatter is the only ambient cost; body and references load on demand.
+    - Native marketplace fit — skills are the primary distribution unit on myclaude.sh and the Anthropic plugin marketplace.
+    sacrifices:
+    - Higher forge cost — a state-of-the-art skill requires the full 6-phase creation cycle (discovery, architecture, description engineering, content development, validation, iteration).
+    - Description is load-bearing — a poor description means the skill never activates, regardless of body quality.
+    - Stateless within invocation — skills cannot remember earlier turns of the same session unless paired with hooks or memory scopes.
+    worth_it_when: The creator has procedural knowledge that Claude does not have natively, and the same procedure will be invoked repeatedly across sessions.
+architectural_principles:
+  P1_purpose_before_shape:
+    specialization: 'Before scaffolding, the creator must answer four questions: (1) what specific problem does this skill solve, (2) who is the target user, (3) what triggers should activate this skill,
+      (4) what output format does it produce. Shape (archetype, structure, scripts) is always answered second.'
+    enforced_by:
+    - discovery_questions.minimum_set
+    - archetypes.selection_required
+    - lifecycle.create.type_specific.discovery_phase
+    blocks_forge_when: Creator cannot answer 'what specific problem does this skill solve in one sentence' or 'what triggers should activate this skill'.
+  P2_constraint_before_feature:
+    specialization: Anti-Patterns and 'When NOT to Use' are filled BEFORE the Core Instructions. Skills override Claude's default reasoning in their domain, so what the skill refuses is more load-bearing
+      than what it embraces. The 18 anti-pattern catalog (AP-D1 to AP-P3) is the constraint vocabulary.
+    enforced_by:
+    - dna_patterns.tier1.D2
+    - anti_patterns_catalog
+    - lifecycle.fill.type_specific.sections_walked
+    blocks_forge_when: Anti-Patterns section has fewer than 5 items AND When-Not-To-Use section is missing or generic.
+  P3_composition_over_monolith:
+    specialization: A skill is a composition surface, not a monolith. Primary file ≤500 lines (hard rule from Anthropic guidance). Domain knowledge in references/. Repetitive determinism in scripts/. Output
+      artifacts in assets/. A skill that puts everything in SKILL.md violates progressive disclosure and burns context on every activation.
+    enforced_by:
+    - dna_patterns.tier1.D3
+    - progressive_disclosure_model
+    - invariants
+    blocks_forge_when: Primary SKILL.md exceeds 500 lines OR has zero references/ files.
+  P4_contract_before_narrative:
+    specialization: The frontmatter (name + description + optional fields) IS the contract. Description is the ONLY mechanism of activation — the body only loads AFTER the trigger fires. Description must
+      follow the [ACTION] + [DOMAIN] + [TRIGGERS] + [SCOPE] + [KEYWORDS] formula. Triggers must be numbered. Keywords must cover synonyms users speak.
+    enforced_by:
+    - frontmatter.required
+    - description_engineering
+    - lifecycle.validate.type_specific.per_stage_hooks.stage_3_dna_tier1
+    blocks_forge_when: description field is missing, vague ('helps with X'), or lacks numbered triggers.
+  P5_failure_mode_before_happy_path:
+    specialization: 'Skills declare BOTH happy-path quality criteria (D4 Quality Gate) AND failure modes (D14 Graceful Degradation). The 18-anti-pattern catalog enumerates failure surfaces. Each skill must
+      answer: what happens when input is ambiguous, when references/ are missing, when scripts/ fail, when the user invokes outside scope.'
+    enforced_by:
+    - dna_patterns.tier1.D14
+    - failure_modes
+    - anti_patterns_catalog
+    blocks_forge_when: When-Not-To-Use section is missing OR no degradation behavior is documented.
+  P6_state_at_the_edge:
+    specialization: Skills are stateless within invocation, but skills with continuity needs (D8 State Persistence) declare state files explicitly. State NEVER lives in conversation memory — always in YAML/JSON
+      files at the boundary. If a skill needs cross-session memory, it declares a memory scope in frontmatter (user|project|local), not implicit assumptions.
+    enforced_by:
+    - dna_patterns.tier2.D8
+    - frontmatter.optional
+    blocks_forge_when: Skill describes 'remembering' behavior without declaring a state file or memory scope.
+  P7_read_before_write:
+    specialization: /create reads creator.yaml + scout report (if exists) + this codex + templates/skill/ + canonical_spec BEFORE generating any scaffold (5 reads). /validate reads the full skill + references/
+      + this codex BEFORE scoring. The minimum read-before-write ratio for skills is 3:1.
+    enforced_by:
+    - lifecycle.create.type_specific.read_before_write_ratio
+    - invariants
+    blocks_forge_when: Skill scaffolded without reading creator.yaml, this codex, or templates.
+  P8_invisibility_of_mechanism:
+    specialization: User-facing strings in published skills (description, README, examples) MUST NOT reference Engine internals, validation tiers, DNA pattern names, or substrate vocabulary. The buyer experiences
+      a domain expert, not the machinery that produced it. The meta-skill framework that informed this codex is INTERNAL knowledge — its archetype names (executor/guide/framework/meta) are vocabulary the
+      codex uses to coach creators, NOT vocabulary the published skill exposes to buyers.
+    enforced_by:
+    - lifecycle.validate.type_specific.per_stage_hooks.stage_7_anti_commodity
+    blocks_forge_when: grep on user-facing strings in published artifact finds substrate vocabulary.
+  P9_recursive_integrity:
+    specialization: /validate skill must pass when applied to the Engine's own skills (the 16 in .claude/skills/ that ARE the Engine pipeline). The codex's quality rubric is the rubric the Engine's own
+      skills are scored against. A codex that demands MCS-3 from its creators while its own production skills score MCS-1 is dishonest by construction.
+    enforced_by:
+    - lifecycle.validate.type_specific.dogfood_check
+    - quality_rubric
+    consumer_status: aspirational
+    consumer_status_reason: Wave 3 ensina /validate a rodar dogfood checks contra os 16 SKILL.md do próprio Engine.
+    blocks_forge_when: Codex cannot pass its own validator when applied to itself — prose in this file violates the principles it enforces.
+operational_modes:
+  supports:
+  - structure
+  - discovery
+  default: structure
+  rationale: 'Skills support BOTH modes. A creator with a clear procedural domain
 
-# DNA pattern requirements (from PRD §3 Applicability Matrix)
+    (e.g., "I want to package my code review checklist as a skill") enters
+
+    structure mode directly via /create skill. A creator without clear
+
+    intent (e.g., "I have lots of expertise but don''t know what to build")
+
+    enters discovery mode via /scout {domain} → /map → /create skill.
+
+    The pipeline auto-detects which mode by reading creator inputs.
+
+    '
+  discovery_entry_via:
+    skill: /scout
+    fallback: /map
+    rationale: /scout researches the domain marketplace and gaps. /map extracts the creator's expertise into a domain-map.md that pre-fills the scaffold. Both feed /create skill.
+freedom_levels:
+  valid:
+  - 1
+  - 2
+  - 3
+  - 4
+  - 5
+  default: 3
+  rationale: 'Skills work across the full freedom spectrum. The level depends on the
+
+    creator''s experience AND on the archetype: EXECUTOR skills tolerate
+
+    higher freedom (templates handle most decisions), FRAMEWORK skills
+
+    benefit from lower freedom (every principle is a creator decision).
+
+    '
+  per_level_behavior:
+    1: Engine asks every section question explicitly. Sparring on every section. Used for first skill — produces a fully-coached MCS-2 scaffold.
+    2: Engine proposes section content from discovery answers. Creator confirms each. Default for second-time creators.
+    3: Engine fills sections from discovery + scout report (if exists). Creator audits. DEFAULT for experienced creators with clear intent.
+    4: Engine generates full draft from creator.yaml + scout report + domain-map. Creator reviews and edits. Used by 5+ products published creators.
+    5: Engine generates skill end-to-end with minimal interaction. Creator audits final artifact. Used by power creators forging variations on existing skills.
+  per_archetype_default:
+    executor: 3
+    guide: 2
+    framework: 1
+    meta: 1
+  consumer_status: aspirational
+  consumer_status_reason: Wave 3 ensina /create e /fill a consultar freedom_level antes de calibrar perguntas.
+
+# ===========================================================================
+# DEPTH DISCRIMINATOR — procedural vs advisory vs cognitive (first-class forge decision)
+# ===========================================================================
+# This section mirrors the minds.yaml depth_discriminator idiom (line ~208)
+# and extends it with a THIRD depth value that is skill-specific: procedural.
+# The three depths bifurcate the skill type by cognitive load and architectural
+# commitment:
+#
+#   procedural — DEFAULT. No persona, no 5-layer, no C1-C7 strands. The 4
+#     archetypes (executor/guide/framework/meta) live here. ~99% of skills.
+#
+#   advisory — Persona voice + bounded knowledge + confidence signaling. NO
+#     5-layer cognitive architecture. Inherits the agent.yaml ADVISER archetype
+#     pattern (read-only tool pool, confidence graduation, structured recommendation
+#     output) adapted for the skill container. Single primary file SKILL.md plus
+#     references/ for domain notes. MCS ceiling: 2 (Stage 7b requires 5-layer).
+#
+#   cognitive — Full 5-layer architecture with all 7 C1-C7 strands shipped as
+#     skill. Effectively a cognitive mind delivered via the skill container
+#     instead of the minds container. RARE — the creator must deliberately
+#     choose this depth, justify why a skill (not a minds) is the correct
+#     container, and pay the 5-10x forge cost. MCS ceiling: 3. Cognitive depth
+#     for skill references the SAME rubric minds.yaml uses — no divergence of
+#     the quality bar. Stage 7b cognitive_fidelity scoring is eligible iff all
+#     5 layer files and 7 strands are present.
+#
+# The depth discriminator is asked BEFORE the archetype selection, because the
+# archetype catalog (executor/guide/framework/meta) only applies to procedural
+# depth. An advisory or cognitive skill does not pick an archetype — it inherits
+# its structural shape from the depth.
+
+depth_discriminator:
+  rationale: "Skills bifurcate into procedural (default — the 4 archetypes executor/guide/framework/meta, no persona, no 5-layer), advisory (persona + bounded knowledge + confidence signaling, no 5-layer, inherits agent.yaml ADVISER patterns), and cognitive (apex 5-layer architecture with 7 DNA strands C1-C7, shipped via the skill container). The depth choice is not cosmetic — it determines template path, required files, DNA pattern set, archetype applicability, rubric strictness, Stage 7b cognitive_fidelity eligibility, forge cost, and pricing strategy. The choice is made BEFORE the archetype question because archetypes only apply to procedural depth."
+  selection_required: true
+  selection_phase: lifecycle.create.type_specific.discovery_phase
+  selection_question: "Is this skill procedural (default — technical/methodological routine via one of the 4 archetypes), advisory (declared-persona judgment with bounded knowledge, no cognitive architecture), or cognitive (apex 5-layer architecture with 7 DNA strands, premium)?"
+  selection_order: FIRST
+  selection_order_reason: "Every downstream /create question depends on depth — archetype catalog only applies to procedural, required files differ per depth, rubric strictness differs per depth, pricing differs per depth. Asking depth first prevents re-work and prevents creators from defaulting into cognitive without understanding the 5-10x forge cost."
+  procedural:
+    one_line: "Technical or methodological routine — the 4 archetypes live here. Default depth for ~99% of skills."
+    description: "A procedural skill is a focused cognitive routine that turns Claude from generalist into domain specialist through procedural knowledge, heuristics, and optional scripts/references. No declared persona, no 5-layer cognitive architecture, no C1-C7 strands. The creator picks ONE of the 4 archetypes (executor, guide, framework, meta) and inherits that archetype's structural shape. Single primary file SKILL.md plus optional scripts/, references/, assets/. Forge cost: LOW to MEDIUM depending on archetype. Install simplicity: HIGH. Pricing: solid ($5-20) or premium ($15-40) for meta archetype."
+    template: templates/skill/
+    required_files:
+    - SKILL.md
+    - README.md
+    - "references/ (optional but recommended for MCS-2)"
+    - "scripts/ (executor archetype only)"
+    target_lines: "<500 primary file per archetype body_target_lines"
+    structure: "Archetype-driven — SKILL.md holds frontmatter + activation protocol + core instructions + anti-patterns + quality gate. References/ holds deep knowledge loaded on demand per D3."
+    archetype_applicable: true
+    archetype_catalog: [executor, guide, framework, meta]
+    dna_required: [D1, D2, D3, D4, D13, D14, D19]
+    dna_recommended: [D15, D17, D20]
+    cognitive_dna_required: []
+    rubric: "Scored against skill.yaml quality_rubric + archetype-specific validation_checklist. NOT eligible for Stage 7b cognitive_fidelity (that stage is cognitive-depth only)."
+    mcs_ceiling: 3
+    mcs_ceiling_reason: "Procedural skills reach MCS-3 through archetype mastery and DNA pattern excellence — the 4 archetypes have production exemplars at MCS-3 across executor, guide, framework, and meta categories. Procedural does not require the 5-layer architecture because it is not claiming embodied cognition; it is claiming procedural expertise."
+    forge_cost_estimate: "2-6 hours for a prepared creator (executor/guide), 4-10 hours (framework/meta)"
+    use_when:
+    - Creator wants to forge a technical or methodological routine with clear inputs and outputs
+    - The skill's value comes from procedural knowledge (steps, heuristics, scripts, templates), NOT from a declared persona or cognitive architecture
+    - The skill will be invoked per-call with no continuity requirement across sessions
+    - Pricing strategy is solid ($5-20) or premium ($15-40) for meta-archetype forges
+  advisory:
+    one_line: "Declared-persona skill — bounded domain judgment with confidence signaling. No 5-layer architecture."
+    description: "An advisory skill is a focused routine that expresses DECLARED-PERSONA judgment within a bounded domain. Unlike procedural, it has an explicit persona voice and a declared knowledge boundary. Unlike cognitive, it does NOT instantiate the 5-layer cognitive architecture — the persona is scoped to the skill invocation, not to a cross-session embodied mind. Advisory skills inherit the agent.yaml ADVISER archetype pattern (read-only tool pool, confidence graduation per config.yaml certainty_bands, structured recommendation output) adapted for the skill container: activation happens via description match, not Task() spawn. Single primary file SKILL.md plus optional references/ for deep domain notes. Forge cost: MEDIUM. Install simplicity: HIGH. Pricing: solid ($10-25)."
+    template: templates/skill/
+    required_files:
+    - SKILL.md
+    - README.md
+    - "references/ (recommended for MCS-2)"
+    target_lines: "200-400"
+    structure: "Flat with persona voice — SKILL.md holds frontmatter + activation protocol + declared persona + knowledge boundary + core instructions + confidence signaling rules + anti-patterns + quality gate."
+    archetype_applicable: false
+    archetype_catalog_note: "The 4 archetypes (executor/guide/framework/meta) do not apply to advisory depth. Advisory skills inherit their structural shape from the depth itself, not from an archetype."
+    dna_required: [D1, D2, D3, D4, D6, D13, D14, D19]
+    dna_recommended: [D5, D11, D15]
+    cognitive_dna_required: []
+    cognitive_dna_recommended: [C1, C5, C6]
+    cognitive_dna_recommended_note: "C1 identity declaration, C5 communication DNA, C6 knowledge domains are recommended for advisory skills because they sharpen the persona voice and the knowledge boundary. Not required — advisory is not scored against Stage 7b."
+    rubric: "Scored against skill.yaml quality_rubric + minds.yaml advisory anti-patterns (overclaim, generic voice, missing boundary). NOT eligible for Stage 7b cognitive_fidelity (that stage requires 5-layer architecture)."
+    mcs_ceiling: 2
+    mcs_ceiling_reason: "Advisory skills do not ship the 5-layer architecture that Stage 7b fidelity scoring requires. MCS-2 is the structural ceiling for advisory depth. Creators seeking MCS-3 with a persona must either (a) choose cognitive depth and pay the 5-layer forge cost, or (b) choose the minds type instead of skill type."
+    forge_cost_estimate: "3-6 hours for a prepared creator with a clear persona and domain boundary"
+    use_when:
+    - Creator wants a declared-persona advisor delivered as a skill (per-call activation, not Task() spawn, not cross-session continuity)
+    - The skill's value comes from focused domain judgment with persona voice, not from a full cognitive architecture
+    - The persona is scoped to the invocation (no 5-layer memory, no biographical anchor, no cognitive flow beyond the domain method)
+    - Pricing strategy is solid ($10-25)
+    - "Creator has read the procedural vs advisory decision gate and deliberately chose advisory — not defaulted into it by picking a persona they did not need"
+  cognitive:
+    one_line: "Apex cognitive architecture delivered as skill — 5 layers, 7 DNA strands, Stage 7b fidelity rubric, premium pricing."
+    description: "A cognitive skill is an embodied cognitive architecture shipped through the skill container (instead of the minds container). All 5 layer files (L1 Boot → L5 Reasoning Engine) and all 7 C1-C7 strands are present and scored against Stage 7b cognitive_fidelity with the SAME rubric minds.yaml uses — no divergence of quality bar. The skill container is chosen (instead of minds) when the creator has a strong reason: the cognition is invoked per-call rather than as a cross-session persona, or the marketplace fit is stronger as a skill for discovery reasons. RARE depth — the creator must justify why skill (not minds) is the correct container, and must pay the 5-10x forge cost. Forge cost: HIGH. Install simplicity: MEDIUM (5 files instead of 1). Pricing: premium ($20-60)."
+    template: templates/skill/cognitive/
+    template_fallback: templates/minds/cognitive/
+    template_fallback_reason: "templates/skill/cognitive/ does not yet exist — Wave 3+ creates it. Until then, /create falls back to templates/minds/cognitive/ and renames AGENT.md → SKILL.md during scaffold. This is an explicit debt, tracked as GAP-SKILL-COGNITIVE-TEMPLATE."
+    required_files:
+    - SKILL.md
+    - references/cognitive-core.md
+    - references/personality.md
+    - references/knowledge-base.md
+    - references/reasoning-engine.md
+    - README.md
+    - examples/examples.md
+    target_lines_total: "800-1200"
+    target_lines_per_file:
+      SKILL_md: "150-250 (L1 Boot)"
+      cognitive_core_md: "200-300 (L2)"
+      personality_md: "150-250 (L3)"
+      knowledge_base_md: "150-300 (L4)"
+      reasoning_engine_md: "100-200 (L5)"
+    structure: "5-layer — SKILL.md (L1) holds boot; references/ holds L2-L5 with named files; loaded via progressive disclosure per D3. Identical layer shape to minds.yaml cognitive_architecture."
+    archetype_applicable: false
+    archetype_catalog_note: "The 4 procedural archetypes (executor/guide/framework/meta) do not apply to cognitive depth. Cognitive skills inherit their structural shape from the 5-layer architecture, not from an archetype."
+    dna_required: [D1, D2, D3, D4, D5, D6, D11, D13, D14, D15, D19]
+    dna_recommended: [D17, D20]
+    cognitive_dna_required: [C1, C2, C3, C4, C5, C6, C7]
+    rubric: "Scored against skill.yaml quality_rubric + minds.yaml anti-patterns + cognitive_fidelity_scoring (layer_completeness 0.30 + identity_integrity 0.25 + cognitive_depth 0.25 + substance 0.20) — SAME rubric as cognitive minds. No divergence of quality bar."
+    rubric_source: product-dna/minds.yaml#cognitive_dna_strands
+    rubric_source_reason: "Cognitive depth for skill MUST reference the identical rubric minds.yaml uses. A cognitive skill that scored lower on Stage 7b than a cognitive mind of the same quality would be a schema asymmetry Lozano explicitly ruled out."
+    mcs_ceiling: 3
+    mcs_ceiling_reason: "Cognitive skills ship the full 5-layer architecture that Stage 7b fidelity scoring requires. MCS-3 apex is achievable when all 7 strands score in the top rubric tier AND substance check passes (real examples, concrete reasoning patterns, specific boundaries, measurable baseline delta against vanilla Claude)."
+    forge_cost_estimate: "10-20 hours for a prepared creator with a complete domain map and a clear reason to choose skill over minds"
+    use_when:
+    - Creator wants a deep cognitive emulation delivered through the skill container specifically (per-call activation via description match, not Task() spawn)
+    - The cognition's marketplace fit is stronger as a skill than as a minds product (discovery, naming, install semantics)
+    - Domain depth justifies the 5-layer forge cost (the cognitive architecture is the product's differentiator, not just its wrapper)
+    - Pricing strategy is premium ($20-60)
+    - "Creator has read the procedural vs advisory vs cognitive decision gate AND the skill-vs-minds composition question, and deliberately chose skill-cognitive — not defaulted into it"
+    decision_vs_minds: "If the cognition would work equally well as a minds product, prefer minds. Choose skill-cognitive ONLY when the per-call activation semantics and skill-marketplace discovery are load-bearing."
+  decision_gate:
+    ask_explicitly_in: lifecycle.create.type_specific.discovery_phase.first_question
+    default: procedural
+    default_reason: "Procedural is the overwhelming default. ~99% of skills are procedural. Creators who genuinely want a declared persona will say so; creators who genuinely want cognitive depth will justify the 5-10x forge cost and the skill-vs-minds container choice. When in doubt, start procedural."
+    escalation_rule: "A procedural skill can be upgraded to advisory by adding a declared persona + knowledge boundary + confidence signaling rules. An advisory skill can be upgraded to cognitive by adding the 4 missing layer files (L2-L5) and re-running /validate with Stage 7b enabled. The reverse downgrades are also possible by removing the respective structures."
+  consumer_status: aspirational
+  consumer_status_reason: "Wave 3 teaches /create to walk the depth discriminator as the FIRST question when type=skill, BEFORE the archetype question. config.yaml routing.skill.depth will consume the procedural/advisory/cognitive discriminator for install file lists, required DNA sets, and Stage 7b eligibility (Wave 2 W2.3)."
+
+# ===========================================================================
+# INTENT TOPOLOGY — the three transversal axes + locale adaptation contract
+# ===========================================================================
+# This block is the codex-side declaration of the Wave 1 intent topology.
+# The Engine's /create skill translates creator natural-language intent into
+# three orthogonal axes — delivery_mechanism, operational_nature, cognitive_depth
+# — and derives the runtime host from the first two. This block declares which
+# axis values are LEGAL for the skill type and persists the contract the
+# codex-drift-check script validates at every gate.
+#
+# Axis source: references/intent-topology.md §2 (6 × 4 × 3 enumeration).
+# Runtime host derivation: references/runtime-host-dag.md §2 (computed table).
+# Decision algorithm: references/capability-matrix.md §3 (12-step walk).
+#
+# Mapping from creator experience (Q1/Q2/Q3 in /create router) to axis values
+# lives in references/capability-matrix.md §3. Example: Q1 "DO something"
+# maps to operational_nature ∈ {executor}; Q1 "THINK about something" maps
+# to operational_nature ∈ {advisor}. The codex does not duplicate the mapping
+# table — it only declares the enums that are legal HERE so drift-check can
+# validate the forged product's .meta.yaml intent_declaration against them.
+
+intent_topology:
+  declaration_mode: full
+  declaration_mode_reason: "Skill is one of TWO certified codices (skill + agent) where delivery_mechanism and operational_nature have genuine multiplicity — a skill can be ambient (path-scoped or invoked-slash) AND can be executor or advisor. Full declaration is required because the creator's choice among the legal values is the forge decision. See references/intent-topology.md §2 for the full enumeration and references/runtime-host-dag.md for the derived host set."
+  delivery_mechanism:
+    legal_values:
+    - ambient_path_scoped
+    - invoked_slash_command
+    default: invoked_slash_command
+    default_reason: "Invoked slash commands are the overwhelming majority of skills — the creator types `/my-skill` and the body loads. Path-scoped skills are a legitimate but specialized variant where the skill dormant until a matching file is touched (the `paths:` frontmatter field activates this delivery mode)."
+    excluded_values:
+    - ambient_constitutional  # claude-md only (always in ambient window)
+    - invoked_task_spawn      # agent/minds/squad (task tool spawn)
+    - reflex_hook_binding     # hooks only (27 canonical events)
+    - composed_system         # system only (multi-destination bundle)
+    excluded_values_reason: "Each excluded value belongs to a different product type's install contract. A skill that matched one of these delivery modes would be a mis-typed product — either it should be claude-md (ambient_constitutional), or agent/minds/squad (invoked_task_spawn), or hooks (reflex_hook_binding), or system (composed_system)."
+  operational_nature:
+    legal_values:
+    - executor
+    - advisor
+    default: executor
+    default_reason: "The procedural-archetype skill space (executor, guide, framework, meta) is mutation-capable by default — the skill runs scripts, edits files, produces artifacts. Advisor skills are a legitimate variant (typically guide or framework archetype) where the skill delivers judgment without mutation; the quality_rubric and anti_patterns_catalog bifurcate correctly for both."
+    excluded_values:
+    - orchestrator  # agent + squad (delegation-only tool pool)
+    - observer      # hooks only (AgentHook background actors)
+    excluded_values_reason: "Orchestrator skills would be agents in disguise — the routing-only tool pool signature is the agent type's discriminator. Observer skills would be hook handlers in disguise — background write-to-memory actors belong to the hooks type install contract."
+  cognitive_depth:
+    legal_values:
+    - procedural
+    - advisory
+    - cognitive
+    default: procedural
+    default_reason: "Mirrors depth_discriminator.decision_gate.default above. The full rationale is in depth_discriminator — this block only RESTATES the legal enum for drift-check consumption, not the decision semantics."
+    source: depth_discriminator  # this codex, line ~208
+    source_reason: "The depth discriminator is first-class in skill.yaml (W2.1). intent_topology.cognitive_depth is the machine-readable enum mirror that drift-check and config.yaml routing consume. The decision gate semantics (procedural vs advisory vs cognitive, when to escalate, forge cost estimates) live ONLY in depth_discriminator to avoid duplication."
+  runtime_host_note:
+    computed_by: references/runtime-host-dag.md
+    example_combinations:
+      ambient_path_scoped__executor: "[session_root, preloaded_in_agent*]"
+      ambient_path_scoped__advisor: "[session_root, preloaded_in_agent*]"
+      invoked_slash_command__executor: "[session_root]"
+      invoked_slash_command__advisor: "[session_root]"
+    note: "Host is derived from the (delivery, nature) pair at validate time. The skill codex never declares a `host:` field — see references/runtime-host-dag.md §1 for why host-as-derived is P1 Purpose Before Shape applied to topology."
+  locale_adaptive_clause_required: true
+  locale_adaptive_clause_source: references/locale-adaptive-clause.md
+  locale_adaptive_clause_required_reason: "Every forged skill carries a runtime contract that tells Claude to mirror the invoker's language in user-facing output, preserving the skill's source language in structural markers. This makes a skill forged in PT-BR installable by a French user without retranslation. The clause is ~4 lines in EN (runtime instructions for Claude are most faithfully parsed in EN) plus a localized header comment explaining the purpose in the creator's language. The clause is injected into the scaffold by /create during W2.6 and validated by codex-drift-check via the locale-clause marker grep. Consumer status: aspirational until W2.6 lands the reference file, the template injection, and the drift-check rule."
+  locale_adaptive_clause_consumer_status: aspirational
+  locale_adaptive_clause_consumer_status_reason: "Wave 2 W2.6 creates references/locale-adaptive-clause.md, teaches /create to inject the clause into templates/skill/SKILL.md.template at scaffold time, and extends scripts/codex-drift-check.py with a marker-grep rule that validates every forged product carries the canonical clause by hash or marker line identity."
+  consumer_status: aspirational
+  consumer_status_reason: "Wave 2 W2.3 adds config.yaml routing extensions that consume intent_topology.delivery_mechanism and intent_topology.operational_nature for install-target resolution and DNA set selection. Wave 2 W2.4 adds quality-gates.yaml Stage 0 Intent Coherence that reads .meta.yaml intent_declaration and re-derives the expected form from this block. Wave 2 W2.5 extends codex-drift-check.py with enum validation that cross-checks legal values against this block. Wave 3+ teaches /create to walk the 12-step decision algorithm from references/capability-matrix.md §3 and write the resolved triple to .meta.yaml intent_declaration."
+
+archetypes:
+  selection_required: true
+  selection_phase: lifecycle.create.discovery_phase
+  selection_question: Which archetype best matches the skill you are forging?
+  hybrid_policy: Identify the DOMINANT archetype. Use the secondary to enrich. Never declare two equal archetypes — that is design indecision.
+  executor:
+    when_to_use: Skills that perform precise technical operations with high predictability. Value comes from reliable automation of repetitive tasks.
+    freedom_level: low
+    error_tolerance: minimal
+    primary_focus: deterministic scripts
+    knowledge_type: procedural technical
+    typical_output: transformed files or data
+    structure:
+      scripts: many
+      references: technical_apis
+      body_style: numbered steps + quick reference table
+      assets: templates_optional
+    description_formula: '[Technical verb] [file/data type] with [specific operations]. Use when: (1) [op1], (2) [op2], (3) [op3], (4) [op4], (5) [op5]. Domains: [format], [library1], [library2], [operation].'
+    recommended_verbs:
+    - process
+    - convert
+    - extract
+    - transform
+    - manipulate
+    - generate
+    examples_by_domain:
+    - PDF processor (extract, merge, split, rotate)
+    - Spreadsheet editor (create, format, formulas)
+    - Image converter (PNG/JPG/WebP, resize, optimize)
+    validation_checklist:
+    - Each core operation has a dedicated script
+    - Scripts have docstring with USE, WHEN, OUTPUT
+    - Quick reference table maps operation → script → output
+    - Body has troubleshooting section for common errors
+    - Edge cases documented in references/edge-cases.md
+    body_target_lines: <200 (excluding examples)
+    typical_dna_emphasis:
+    - D1
+    - D2
+    - D4
+    - D7
+    - D14
+    - D15
+  guide:
+    when_to_use: Skills that orient processes with acceptable variation. Value comes from methodological knowledge and adaptation to context.
+    freedom_level: medium
+    error_tolerance: moderate
+    primary_focus: procedures + decision points
+    knowledge_type: methodological
+    typical_output: context-adapted actions
+    structure:
+      scripts: few_optional
+      references: methodology + examples + variations + troubleshooting
+      body_style: decision tree + branched processes
+      assets: checklists_optional
+    description_formula: 'Guide [process/methodology] for [objective] with contextual adaptation. Use when: (1) [situation A], (2) [situation B], (3) [complex decision], (4) [methodology need]. Domains:
+      [area], [methodology], [context].'
+    recommended_verbs:
+    - guide
+    - conduct
+    - orient
+    - assist
+    examples_by_domain:
+    - Code review guide (per change type + project context)
+    - Debugging guide (reproducible vs intermittent vs production)
+    - Testing strategy (coverage, prioritization, risk)
+    validation_checklist:
+    - Decision tree visualized with all branches
+    - Each branch has documented adjustment heuristics
+    - Adjustment matrix table present
+    - Quality checklist defined
+    - Examples cover at least 2 contrasting branches
+    body_target_lines: <400 (core process)
+    typical_dna_emphasis:
+    - D1
+    - D2
+    - D4
+    - D5
+    - D6
+    - D14
+  framework:
+    when_to_use: Skills that establish abstract principles, design systems, philosophical patterns. Value comes from conceptual orientation that guides creative and architectural decisions.
+    freedom_level: high
+    error_tolerance: high
+    primary_focus: principles + heuristics
+    knowledge_type: conceptual / philosophical
+    typical_output: principle-guided decisions
+    structure:
+      scripts: rare
+      references: principles + patterns + anti-patterns + examples
+      body_style: 3-5 central principles + decision spectrums + heuristics + anti-patterns
+      assets: inspiration_visual
+    description_formula: '[Conceptual verb] [domain] applying [philosophy/principles] for [quality objective]. Use when: (1) create/design [X], (2) evaluate [X], (3) define standards, (4) decide about [X].
+      Domains: [creative area], [principle], [style], [quality].'
+    recommended_verbs:
+    - establish
+    - apply
+    - architect
+    - define
+    - create
+    examples_by_domain:
+    - Frontend design framework (intentional + non-generic)
+    - API design framework (consistency + DX)
+    - Writing style framework (clarity + precision)
+    validation_checklist:
+    - 3-5 core principles (no more)
+    - 'Each principle has: declaration + reason + implications + tension + violation marker'
+    - Decision spectrums visualized
+    - Heuristics are actionable (SE...ENTÃO...PORQUE format)
+    - Anti-patterns critical section present
+    - Quality evaluation has objective criteria (not 'is it good?')
+    body_target_lines: 200-400
+    typical_dna_emphasis:
+    - D1
+    - D2
+    - D4
+    - D11
+    framework_principle_anatomy:
+    - 'DECLARATION: one memorable actionable sentence'
+    - 'REASON: why this principle matters'
+    - 'IMPLICATIONS: what to do differently'
+    - 'TENSION: what other values it competes with'
+    - 'VIOLATION: how to identify the principle breaking'
+  meta:
+    when_to_use: Skills that generate other structures, automate creative processes, dynamic templates. Value comes from multiplying productivity through intelligent generation.
+    freedom_level: maximum_controlled
+    error_tolerance: low_output_must_be_correct
+    primary_focus: generation + validation
+    knowledge_type: meta-cognitive
+    typical_output: generated structures / artifacts
+    structure:
+      scripts: generators_validators_analyzers_optimizers
+      references: archetypes + patterns + quality + cognitive
+      body_style: decision framework + phased process + quality criteria + quick reference
+      assets: templates_per_type
+    description_formula: 'Meta-skill for [create/generate/architect] [output type] with integrated validation. Use when: (1) create new [X], (2) optimize [X], (3) diagnose [X], (4) learn principles of [X],
+      (5) validate [X]. Domains: [meta-area], [generation], [quality], [architecture].'
+    recommended_verbs:
+    - architect
+    - create
+    - generate
+    - optimize
+    - validate
+    - diagnose
+    examples_by_domain:
+    - Skill generator (this codex's spiritual sibling)
+    - MCP server builder
+    - Template engine
+    validation_checklist:
+    - Decision framework at top of body
+    - Phased creation process (Discovery → Architecture → Generation → Validation → Iteration)
+    - Generator script functional and tested
+    - Validator script produces objective scoring
+    - Quality rubric with measurable criteria
+    - End-to-end example showing full workflow
+    body_target_lines: 300-500
+    typical_dna_emphasis:
+    - D1
+    - D2
+    - D4
+    - D5
+    - D7
+    - D9
+    - D10
+    - D11
+    - D15
+    required_scripts:
+    - generator
+    - validator
+    optional_scripts:
+    - analyzer
+    - optimizer
+  hybrids:
+    executor_guide:
+      description: Technical operations with contextual decisions
+      when: Operations have a deterministic core but the wrapper logic adapts to context
+      example: deployment skill — scripts for each platform, decision tree for which platform
+    framework_guide:
+      description: Principles with applied process
+      when: Abstract framework needs concrete application steps
+      example: design system skill — principles + step-by-step component creation
+    meta_framework:
+      description: Generator with design principles
+      when: Generates outputs that themselves embody framework principles
+      example: this codex itself — generates product-dna files following 9 architectural principles
+  consumer_status: aspirational
+  consumer_status_reason: /create today does not ask the creator to select an archetype. Wave 3 ensina /create a perguntar archetype como primeira pergunta de discovery e a injetar coaching tipo-específico.
+description_engineering:
+  importance: CRITICAL — description is the only field always-loaded by Claude Code's catalog. A skill with perfect body and broken description never activates.
+  formula:
+    structure: '[ACTION] + [DOMAIN] + [TRIGGERS] + [SCOPE] + [KEYWORDS]'
+    components:
+      action: Verbs describing the primary capability
+      domain: Area / artifact type the skill manipulates
+      triggers: Numbered list of situations that should activate
+      scope: (optional) what the skill does NOT do, explicit limits
+      keywords: Domain terms for semantic match
+  template_universal: '[Verb1] and [verb2] [domain] with [capability1], [capability2] and [capability3].
+
+    Use when: (1) [specific trigger], (2) [specific trigger], (3) [specific trigger],
+
+    (4) [specific trigger], (5) [specific trigger].
+
+    Domains: [keyword1], [keyword2], [keyword3], [keyword4], [keyword5].
+
+    '
+  size_target_words: 50-150
+  size_floor_words: 30
+  size_ceiling_words: 200
+  size_rationale: Description is always loaded in catalog. <30 = no triggers. >200 = pollutes global context for every session, even when skill never activates.
+  trigger_count_target: 5-7
+  trigger_count_floor: 3
+  trigger_count_ceiling: 10
+  trigger_format: numbered list (1), (2), (3) — implicit lists do not parse cleanly
+  keyword_layers:
+    layer_1_technical:
+      description: Precise technical terms — library names, formats, protocols
+      examples:
+      - pypdf
+      - xlsx
+      - REST
+    layer_2_domain:
+      description: Area concepts
+      examples:
+      - spreadsheet
+      - report
+      - API
+    layer_3_synonyms:
+      description: Variations users speak
+      examples:
+      - excel = spreadsheet = planilha
+    layer_4_actions:
+      description: Domain action verbs
+      examples:
+      - extract
+      - convert
+      - format
+  rubric:
+    max_points: 10
+    criteria:
+      verb_action:
+        scoring:
+          0: absent
+          1: generic ('helps')
+          2: specific ('processes', 'creates')
+      domain:
+        scoring:
+          0: vague ('things')
+          1: general ('documents')
+          2: precise ('PDF', 'xlsx')
+      triggers:
+        scoring:
+          0: none
+          1: 1-2 vague
+          2: 5+ numbered specific
+      keywords:
+        scoring:
+          0: none
+          1: 2-3
+          2: 5+ including synonyms
+      size:
+        scoring:
+          0: <30 or >250 words
+          1: 30-50 or 150-250
+          2: 50-150 words
+  anti_patterns:
+  - vague description ('helps with PDFs')
+  - triggers in body (body never read before activation)
+  - gigantic description (>200 words pollutes ambient context)
+  - missing keywords (user says 'excel' but skill only knows 'xlsx')
+  - infinite scope ('does everything related to data')
+  - jargon without context ('implements ETL pipelines')
+  - implicit triggers ('various document tasks')
+  validation_test:
+    positive_test: If the user says X, does this skill activate? Test for each numbered trigger.
+    negative_test: If the user says Y (similar but distinct), does this skill correctly NOT activate?
+    target_metrics:
+      activation_correct_rate: '>90%'
+      false_positive_rate: <5%
+  consumer_status: partial
+  consumer_status_reason: /validate Stage 3 D1 hoje só checa 'activation/protocol section + references/ ref'. Wave 3 ensina Stage 3 a aplicar a description rubric completa (5 critérios × 0-2 = 10 pontos)
+    como spec executável.
+progressive_disclosure_model:
+  level_1_frontmatter:
+    always_loaded: true
+    contains:
+    - name
+    - description
+    function: trigger decision — Claude reads this on every session to decide whether to invoke
+    budget_words: 100
+    budget_chars: 500
+    cost_per_session: always
+    optimization_priority: MAXIMUM — every word is paid for in every session, even if skill never activates
+  level_2_skill_md_body:
+    loaded_when: skill activates (slug invoked OR Claude auto-invokes via description match)
+    contains:
+    - activation_protocol
+    - when_to_use
+    - when_not_to_use
+    - core_instructions
+    - output_format
+    - quality_gate
+    - anti_patterns
+    function: procedural instructions Claude follows during this invocation
+    budget_lines_hard: 500
+    budget_lines_soft: 350
+    budget_words: 5000
+    cost_per_invocation: loaded once per activation
+    optimization_priority: HIGH — body is loaded every time skill activates
+  level_3_references_scripts_assets:
+    loaded_on_demand: true
+    contains:
+      references: domain knowledge files, loaded by Claude when skill body points to them
+      scripts: executable code, run via Bash without loading file content (or read first if uncertain)
+      assets: output artifacts, used without loading
+    function: deep knowledge, computational determinism, output materials
+    budget: unlimited_but_each_load_costs
+    cost_per_invocation: only when skill body explicitly references the file
+    optimization_priority: MEDIUM — pay only when needed, but each load adds latency and tokens
+  loading_decision_tree:
+    rule: 'For each piece of content, ask:
+
+      1. Critical for trigger decision? → Level 1 (description)
+
+      2. Necessary every time skill activates? → Level 2 (body)
+
+      3. Necessary sometimes? → Level 3 (references/)
+
+      4. Repetitive deterministic code? → Level 3 (scripts/)
+
+      5. Output artifact? → Level 3 (assets/)
+
+      6. Rarely useful? → DO NOT INCLUDE
+
+      '
+  reference_organization_patterns:
+    hub_and_spoke:
+      when_to_use: Skill with multiple independent domains
+      structure: SKILL.md (hub) + references/{domain1}.md + references/{domain2}.md
+    layered_depth:
+      when_to_use: Frequent simple cases + rare complex cases
+      structure: SKILL.md (10% quickstart + 60% common cases) + references/advanced.md (30%)
+    conditional_branches:
+      when_to_use: Mutually exclusive paths
+      structure: SKILL.md (core workflow) + references/{branch_a}.md + references/{branch_b}.md
+    reference_library:
+      when_to_use: Skill with much reference material
+      structure: SKILL.md (process) + references/api.md + references/examples.md + references/troubleshooting.md + references/glossary.md
+  reference_best_practices:
+    pointer_clarity: Each reference must have an explicit pointer in the body. Orphan references (file exists but body never references it) are a critical anti-pattern.
+    pointer_context: 'BAD: ''See references/oauth.md''. GOOD: ''For OAuth 2.0 with PKCE: references/oauth.md (includes flows, tokens, refresh, errors)''.'
+    nesting_max: 1
+    nesting_rule: SKILL.md → references/x.md is OK. SKILL.md → references/x.md → references/y.md → references/z.md is forbidden.
+    toc_required_when: reference file >100 lines
+  scripts_load_vs_execute:
+    execute_without_loading:
+      when: Script is well-documented, behavior is predictable
+      action: python scripts/script.py <args>
+    load_then_execute:
+      when: Need to adapt or understand behavior, debug, unexpected output
+      action: Read script first, then execute or modify
+  ideal_distribution_pct:
+    description: 5-10% of total skill content
+    body: 30-50% of total skill content
+    references: 40-60% of total skill content
+    scripts: varies by archetype
+  red_flags:
+  - description >200 words → too much context-pollution
+  - body >500 lines → split to references
+  - single reference >1000 lines → split into multiple files
+  - zero references → check if body is bloated
+  - orphan references → add pointers OR delete
+  consumer_status: partial
+  consumer_status_reason: /validate Stage 3 D3 (Progressive Disclosure) checa primary <500 lines + references/ exists. NÃO checa nesting depth, orphan references, pointer clarity, ou ideal distribution.
+    Wave 3 enriquece Stage 3 D3 com a checklist completa.
+maturity_model:
+  levels:
+    1_embryonic:
+      label: Embryonic
+      description: Basic SKILL.md works. Generic description. Minimal structure. No validation yet.
+      entry_criteria:
+      - SKILL.md exists and is valid YAML
+      - Description present (any quality)
+      - Body has minimal instructions
+      - Skill activates in at least 1 case
+      rubric_score_range: <15
+      typical_time_to_next_level: hours
+      next_level_requirements:
+      - Add triggers to description
+      - Structure body in sections
+      - Add at least 1 example
+    2_functional:
+      label: Functional
+      description: Description with basic triggers. Body structured in sections. Examples present. Covers main use case.
+      entry_criteria:
+      - Description has triggers (even if not numbered)
+      - Body has identifiable quick start
+      - At least 2 examples
+      - Main flow documented
+      - Rubric score ≥15/30
+      rubric_score_range: 15-19
+      typical_time_to_next_level: days
+      next_level_requirements:
+      - Number triggers in description
+      - Add keywords
+      - Create references for details
+      - Document scripts
+      - Add troubleshooting
+    3_robust:
+      label: Robust
+      description: Description optimized with triggers and keywords. Progressive disclosure implemented. Scripts documented. Error handling present. Tested in multiple scenarios.
+      entry_criteria:
+      - 'Description: numbered triggers + keywords'
+      - Body <500 lines
+      - References organized with pointers
+      - Scripts with complete docstring
+      - 3+ contrasting examples
+      - Troubleshooting for common errors
+      - Rubric score ≥20/30
+      - Tested in 5+ real scenarios
+      rubric_score_range: 20-24
+      typical_time_to_next_level: weeks
+      activation_correct_target: '>80%'
+      false_positive_target: <10%
+      task_success_target: '>70%'
+    4_optimized:
+      label: Optimized
+      description: Token density maximized. Zero redundancy. Quality metrics achieved. Composability with other skills. Iterated based on data.
+      entry_criteria:
+      - Rubric score ≥25/30
+      - Each dimension ≥8/10
+      - Token density >0.7
+      - Zero unnecessary files
+      - Zero redundancy between files
+      - Tested in 20+ scenarios
+      - Iterated at least 2x based on feedback
+      - Composable with at least 1 other skill
+      rubric_score_range: 25-27
+      typical_time_to_next_level: months
+      activation_correct_target: '>90%'
+      false_positive_target: <5%
+      task_success_target: '>85%'
+      token_efficiency_target: '>0.7'
+    5_reference:
+      label: Reference
+      description: Exemplar in domain. Patterns extracted as reusable knowledge. Influences design of other skills. Complete decision documentation. Published success metrics.
+      entry_criteria:
+      - Rubric score ≥28/30
+      - Used as template for new skills
+      - Patterns documented and referenced
+      - Success metrics tracked (activation, satisfaction)
+      - Changelog of evolution
+      - Feedback loop established
+      rubric_score_range: 28-30
+      activation_correct_target: '>95%'
+      false_positive_target: <2%
+      task_success_target: '>90%'
+      reuse_as_template_target: '>0 (other skills derived from this one)'
+  evolution_anti_patterns:
+    skip_levels:
+      symptom: Try to jump from N1 to N4 directly
+      why_bad: Weak fundamentals cause cascading problems
+      antidote: Evolve incrementally, validating each level
+    premature_optimization:
+      symptom: Optimize tokens before functional foundation
+      why_bad: Optimizing the wrong thing
+      antidote: First functional (N2-N3), then optimized (N4)
+    stagnation:
+      symptom: Skill stays at N2-N3 indefinitely
+      why_bad: Never reaches potential
+      antidote: Regular assessment + improvement cycle
+  improvement_cycle:
+    steps:
+    - assess_via_rubric
+    - identify_gaps
+    - implement_improvements
+    - validate_via_test
+    - reassess
+    cadence: weekly for N1-N3, monthly for N4-N5
+  consumer_status: aspirational
+  consumer_status_reason: /validate Stage 8 (value_intelligence) hoje computa value_score de 4 fatores. Wave 3 estende Stage 8 a também emitir current_maturity_level + next_level_requirements como coaching.
+quality_rubric:
+  total_points: 30
+  scope: skill craft quality (artifact-level), complementary to MCS (product-level)
+  relationship_to_mcs: Rubric runs in /validate Stage 7 (anti_commodity coaching). MCS runs in Stages 3-4 (structural+DNA). A skill can score MCS-2 with rubric 18/30 (structurally fine, craftsmanship weak)
+    — the rubric is what catches that gap.
+  dimensions:
+    description:
+      max_points: 10
+      criteria:
+        verb_action:
+          0: absent or non-action verb
+          1: generic verb ('helps with')
+          2: specific action verb ('processes', 'creates', 'analyzes')
+        domain:
+          0: vague ('things')
+          1: general ('documents')
+          2: precise ('PDF forms', 'TypeScript interfaces')
+        triggers:
+          0: none
+          1: 1-2 vague triggers
+          2: 5+ numbered specific triggers
+        keywords:
+          0: none
+          1: 2-3 keywords
+          2: 5+ keywords including synonyms
+        size:
+          0: <30 words OR >250 words
+          1: 30-50 OR 150-250 words
+          2: 50-150 words (sweet spot)
+    body:
+      max_points: 10
+      criteria:
+        quick_start:
+          0: absent
+          1: '>50 lines'
+          2: <30 lines, actionable
+        structure:
+          0: chaotic
+          1: sections but disorganized
+          2: clear logical flow
+        examples:
+          0: none
+          1: generic OR >5 similar
+          2: 2-4 contrasting
+        conciseness:
+          0: '>700 lines'
+          1: 500-700 lines
+          2: <500 lines
+        voice:
+          0: passive, vague
+          1: mixed
+          2: imperative, specific
+    structure:
+      max_points: 10
+      criteria:
+        progressive_disclosure:
+          0: everything in body
+          1: partial split
+          2: body core + references detailed
+        references:
+          0: orphan or absent
+          1: present but poorly organized
+          2: organized + clear pointers
+        scripts:
+          0: undocumented
+          1: partial docs
+          2: USE + WHEN + OUTPUT in every script
+        assets:
+          0: mixed with references
+          1: separated but disorganized
+          2: well-categorized
+        cleanliness:
+          0: unnecessary files present
+          1: some extras
+          2: only necessary files
+  scoring_thresholds:
+    state_of_art:
+      range: 27-30
+      verdict: Production-ready and reference-grade
+    excellent:
+      range: 23-26
+      verdict: Production-ready
+    good:
+      range: 19-22
+      verdict: Minor adjustments recommended
+    functional:
+      range: 15-18
+      verdict: Improvements needed before production
+    deficient:
+      range: 11-14
+      verdict: Significant refactor needed
+    critical:
+      range: 0-10
+      verdict: Rewrite from scratch
+  per_dimension_minimum: 6
+  per_dimension_failure_consequences:
+    description_below_6: Skill does not activate correctly
+    body_below_6: Confusing instructions
+    structure_below_6: Hard to maintain
+  quick_validation_5min:
+    description:
+    - Numbered triggers present? (+1)
+    - Domain keywords? (+1)
+    - 50-150 words? (+1)
+    body:
+    - Quick start <30 lines? (+1)
+    - Examples present? (+1)
+    - <500 lines? (+1)
+    structure:
+    - References with pointers? (+1)
+    - Scripts documented? (+1)
+    - No extra files? (+1)
+    quick_score_max: 9
+    quick_thresholds:
+      8_to_9: approved
+      6_to_7: review
+      below_6: failed
+  consumer_status: aspirational
+  consumer_status_reason: /validate Stage 7 hoje faz substance check coaching. Wave 3 ensina Stage 7 a aplicar a quality_rubric completa como ranking adicional ao MCS score, surfaceando per-dimension breakdown.
+anti_patterns_catalog:
+  description_failures:
+    AP_D1:
+      name: Vague Description
+      symptom: 'description: ''helps with documents'''
+      problem: Weak semantic match — activates in wrong contexts or fails to activate when expected
+      severity: critical
+      fix: Apply description_engineering.formula — verb + domain + triggers + keywords
+    AP_D2:
+      name: Triggers in Body
+      symptom: '## When to use this skill section in SKILL.md body'
+      problem: Body only loads AFTER trigger fires. The 'when to use' section is never read for activation decisions.
+      severity: critical
+      fix: Move all 'when to use' logic to description field
+    AP_D3:
+      name: Gigantic Description
+      symptom: description >200 words
+      problem: Description is always loaded. Pollutes global context for every session, even when skill never activates.
+      severity: medium
+      fix: Cut to 50-150 words. Move details to body.
+    AP_D4:
+      name: Missing Keywords
+      symptom: 'description: ''create spreadsheets with data'''
+      problem: User saying 'excel' or 'xlsx' fails to activate the skill
+      severity: high
+      fix: Add domain keyword layers (technical + domain + synonyms + actions)
+  structure_failures:
+    AP_S1:
+      name: Monolithic Body
+      symptom: SKILL.md with 1500 lines of continuous content
+      problem: Context bloat, hard navigation, loads everything always
+      severity: high
+      fix: Split into references/, keep body <500 lines
+    AP_S2:
+      name: Orphan References
+      symptom: references/advanced.md exists but SKILL.md never points to it
+      problem: Claude does not know the file exists, never loads it
+      severity: critical
+      fix: Always add a pointer in body for each reference
+    AP_S3:
+      name: Deep Nesting
+      symptom: SKILL.md → references/a.md → references/b.md → references/c.md
+      problem: Hard to follow, multiple loads to reach information
+      severity: medium
+      fix: Maximum 1 level of nesting. All refs linked from body.
+    AP_S4:
+      name: Unnecessary Files
+      symptom: Skill directory with CHANGELOG.md, CONTRIBUTING.md, INSTALLATION.md
+      problem: Clutter, confusion, wasted tokens if loaded
+      severity: low
+      fix: Skills contain only SKILL.md + scripts/ + references/ + assets/. Nothing else.
+  content_failures:
+    AP_C1:
+      name: Excessive Explanations
+      symptom: '## What is PDF section explaining what PDFs are'
+      problem: Claude already knows. Wasted tokens.
+      severity: medium
+      fix: Assume base knowledge. Include only what Claude does NOT know.
+    AP_C2:
+      name: Missing Examples
+      symptom: '## How to use: ''Use the process() function with appropriate parameters'''
+      problem: Too abstract, does not demonstrate real use
+      severity: high
+      fix: Always show, do not tell. Concrete code/output examples.
+    AP_C3:
+      name: Ambiguous Instructions
+      symptom: '''Format the code appropriately'''
+      problem: '''Appropriately'' is subjective'
+      severity: medium
+      fix: 'Specify: 4-space indent, 88 char max, etc.'
+    AP_C4:
+      name: Passive Voice
+      symptom: '''The file should be read before being processed'''
+      problem: Unclear who does what
+      severity: low
+      fix: 'Imperative: ''Read the file before processing'''
+  script_failures:
+    AP_SC1:
+      name: Undocumented Scripts
+      symptom: 200 lines of code with no docstring
+      problem: Claude must read everything to understand when/how to use
+      severity: medium
+      fix: Docstring with USE + WHEN + OUTPUT
+    AP_SC2:
+      name: Monolithic Scripts
+      symptom: all_operations.py with merge + split + rotate + extract + convert
+      problem: Hard to maintain, loads everything to use one function
+      severity: medium
+      fix: One script per atomic operation
+    AP_SC3:
+      name: Hardcoded Values
+      symptom: output_path = '/home/user/documents/output.pdf'
+      problem: Does not work in other environments, exposes secrets
+      severity: high
+      fix: Use arguments, environment variables, or config files
+    AP_SC4:
+      name: Silent Failures
+      symptom: 'try: process(file) except: pass'
+      problem: Errors swallowed, debugging impossible
+      severity: high
+      fix: try/except with specific error handling and stderr messages
+  process_failures:
+    AP_P1:
+      name: No Validation
+      symptom: 'Process: 1. Create SKILL.md 2. Add scripts 3. Done'
+      problem: No quality verification
+      severity: medium
+      fix: Include validation phase with objective criteria
+    AP_P2:
+      name: No Iteration
+      symptom: Skill created once, never reviewed
+      problem: Skills degrade with context changes, do not evolve
+      severity: medium
+      fix: 'Explicit cycle: use → observe → improve → validate'
+    AP_P3:
+      name: Infinite Scope
+      symptom: 'description: ''does everything related to data processing'''
+      problem: Impossible to satisfy, any failure is 'within scope'
+      severity: critical
+      fix: Closed scope with explicit list of what it does and does not do
+  severity_definitions:
+    critical: Breaks the skill — must fix before publishing
+    high: Significant degradation — fix recommended for MCS-2
+    medium: Suboptimal — fix recommended for MCS-3
+    low: Polish — fix improves craftsmanship score
+  consumer_status: aspirational
+  consumer_status_reason: Wave 3 ensina /validate Stage 7 a grep against this catalog and emit AP-IDs in violation reports.
+reasoning_frameworks:
+  first_principles_decomposition:
+    when_to_use: Problem is ambiguous, creator is overwhelmed
+    process:
+    - Identify the final objective ('what should this skill enable Claude to do?')
+    - Decompose into irreducible components
+    - Question each component (necessary? Claude already knows? simpler way?)
+    - Reconstruct from scratch
+  inversion_thinking:
+    when_to_use: Fear of error, want to define quality by negation
+    process:
+    - Define perfect (what would a state-of-art skill look like?)
+    - Define failure (what would guarantee a terrible skill?)
+    - List anti-requirements
+    - Invert anti-requirements into requirements
+  jobs_to_be_done:
+    when_to_use: Understand the user, design for real workflow
+    process:
+    - Identify the job ('When [situation], I want [action], so I can [result]')
+    - Map context (where, before, after)
+    - Identify obstacles (what prevents completing the job today?)
+    - Design to remove obstacles
+  constraint_led_design:
+    when_to_use: Many options, need to converge
+    process:
+    - List constraints (technical, usage, quality)
+    - Prioritize (non-negotiable vs flexible)
+    - Design within non-negotiable constraints
+    - Verify viability
+  comparative_analysis:
+    when_to_use: A similar skill exists somewhere, learn from it
+    process:
+    - Identify exemplars
+    - Analyze patterns (description style, body organization)
+    - Identify differentials (what makes each unique?)
+    - Adapt patterns to your domain
+  stakeholder_mapping:
+    when_to_use: Multiple conflicting requirements
+    process:
+    - List stakeholders (user, Claude, maintainer, system)
+    - Map each stakeholder's needs
+    - Design for each stakeholder explicitly
+    - Resolve conflicts by priority
+  risk_analysis:
+    when_to_use: Complex skill, many failure surfaces
+    process:
+    - Categorize risks (activation, execution, maintenance, scale)
+    - Identify mitigation per category
+    - Build risk-mitigation table
+  recommended_combination:
+    sequence:
+    - first_principles
+    - jobs_to_be_done
+    - constraint_led
+    - comparative
+    - stakeholder
+    - inversion
+    - risk
+    rationale: Decompose problem → understand user → bound the design → learn from exemplars → balance perspectives → invert to find blindspots → audit risks
+  consumer_status: aspirational
+  consumer_status_reason: /think and /create today do not consult these frameworks. Wave 3 may add a framework selector to /think (router by problem shape).
+decision_trees:
+  archetype_selection:
+    question: Which archetype best matches this skill?
+    branches:
+    - condition: Performs precise technical operations?
+      sub:
+      - condition: Requires deterministic scripts?
+        result: EXECUTOR
+      - condition: Variation acceptable?
+        result: GUIDE
+    - condition: Generates other structures?
+      result: META
+    - condition: Defines abstract principles?
+      result: FRAMEWORK
+    - condition: Default
+      result: GUIDE
+  content_location:
+    question: Where does this content belong?
+    branches:
+    - condition: Necessary to decide if skill activates?
+      result: DESCRIPTION
+    - condition: Necessary every time skill activates AND <50 lines?
+      result: BODY
+    - condition: Necessary every time skill activates AND >50 lines?
+      result: REFERENCES + pointer in BODY
+    - condition: Sometimes necessary?
+      result: REFERENCES
+    - condition: Repetitive/deterministic code?
+      result: SCRIPTS
+    - condition: Output artifact?
+      result: ASSETS
+    - condition: Default
+      result: DO_NOT_INCLUDE
+  freedom_level:
+    question: How much variation is acceptable?
+    branches:
+    - condition: Operation can fail if done differently?
+      result: LOW
+    - condition: There is a 'right way' but alternatives work?
+      result: MEDIUM
+    - condition: Multiple approaches equally valid?
+      result: HIGH
+    - condition: Creativity is part of the goal?
+      result: MAXIMUM
+  script_decision:
+    question: Does this operation need a script?
+    branches:
+    - condition: Code rewritten frequently for same operation?
+      result: CREATE_SCRIPT
+    - condition: Operation requires precision/determinism?
+      result: CREATE_SCRIPT
+    - condition: Error has serious consequence?
+      result: CREATE_SCRIPT
+    - condition: Complex operation with multiple identical steps?
+      result: CREATE_SCRIPT
+    - condition: Default
+      result: BODY_INSTRUCTION
+  references_organization:
+    question: How to organize references?
+    branches:
+    - condition: Multiple independent domains?
+      result: By domain (finance.md, sales.md)
+    - condition: Multiple frameworks/variants?
+      result: By variant (aws.md, gcp.md)
+    - condition: Phased workflow?
+      result: By phase (phase1.md, phase2.md)
+    - condition: Depth levels?
+      result: By depth (quickstart.md, advanced.md)
+    - condition: Default
+      result: By type (api.md, examples.md, troubleshooting.md)
+  consumer_status: aspirational
+  consumer_status_reason: Wave 3 ensina /create a executar essas árvores como scripts de routing antes do scaffold.
+stakeholder_mapping:
+  end_user:
+    role: The human who installs the skill from the marketplace and invokes it
+    wants:
+    - complete the task
+    - not read documentation
+    - fast results
+    - errors with actionable messages
+    design_for:
+    - Quick start in body's first 30 lines
+    - Practical examples
+    - Errors with solutions
+    - Clear install command in README
+  claude_consumer:
+    role: Claude itself, which loads the skill into context and follows its instructions
+    wants:
+    - clear activation criteria
+    - actionable instructions
+    - explicit decision trees
+    - limited context window
+    design_for:
+    - Description optimized for trigger matching
+    - Imperative instructions (not passive)
+    - Explicit decision trees, not implicit
+    - Body <500 lines
+  creator_maintainer:
+    role: The original creator who must update and debug the skill over time
+    wants:
+    - easy to update
+    - easy to debug
+    - predictable structure
+    design_for:
+    - Predictable file structure
+    - Zero redundancy
+    - Well-organized references
+    - Versioned dependencies
+  claude_code_system:
+    role: The Claude Code platform that loads, indexes, and routes the skill
+    wants:
+    - concise descriptions
+    - valid frontmatter
+    - clean script interfaces
+    - no global state mutations
+    design_for:
+    - Description <150 words
+    - Body within 500 line limit
+    - Scripts with clear argparse interface
+    - No hardcoded paths
+    - No conflicting command names
+  conflict_resolution:
+    rule: 'When stakeholders conflict, priority order is: claude_code_system > claude_consumer > end_user > creator_maintainer'
+    rationale: System constraints are non-negotiable. Claude's needs determine if the skill works at all. End user value is the purpose. Maintainer convenience is last because it can be earned through good
+      initial design.
+output_patterns:
+  rigid_template:
+    when_to_use: Structured output (API, formal report), consistency critical, automated parsing
+    structure: Always use this exact template, sections obligatory
+    example: 'commit message: <type>(<scope>): <subject>\n\n<body>\n\n<footer>'
+  flexible_template:
+    when_to_use: Output varies by context, creativity allowed, structure is suggestion
+    structure: Suggested sections, adapt based on context
+  input_output_examples:
+    when_to_use: Format transformation, specific style desired, learning by demonstration
+    structure: Show input + expected output for 2-4 cases, extract implicit rules
+  variation_matrix:
+    when_to_use: Multiple possible formats, context determines format
+    structure: Table of (context → format → example link), explicit decision
+  detail_levels:
+    when_to_use: Variable depth, different audience needs
+    structure: TL;DR → Summary → Detailed → Technical, default level 2
+  quality_checklist:
+    when_to_use: Systematic verification, multiple criteria, completeness audit
+    structure: Required + Recommended + Conditional checklists with minimum approval threshold
+  error_output:
+    when_to_use: Operations that may fail, debugging facilitation
+    structure: '[STATUS] [CODE]: message + details + likely cause + suggestion'
+  combinations:
+    template_plus_checklist: Output follows template X, validate against checklist before sending
+    examples_plus_levels: Follow example style, default level 2 detail, expand if complex
+    matrix_plus_error: Use matrix format by context, fall back to error output on failure
+  consumer_status: aspirational
+  consumer_status_reason: /validate Stage 4 D4 (Quality Gate) hoje só conta criteria. Wave 3 enriquece para detectar qual output_pattern a skill usa e valida coerência.
+workflow_patterns:
+  sequential:
+    description: Linear flow with strict dependencies
+    when_to_use: Steps have strict dependency, output of N is input of N+1, order cannot vary
+    template: Phase 1 (input/action/output/validation) → Phase 2 → Phase 3 → End
+    examples:
+    - build pipeline
+    - ETL
+    - legal document
+  branching:
+    description: Conditional paths based on context
+    when_to_use: Context determines path, multiple valid approaches, adaptation needed
+    template: Decision Point → Branch A | Branch B | Branch C → Merge → End
+    examples:
+    - debug by error type
+    - deploy by environment
+  iterative:
+    description: Loop with progressive refinement
+    when_to_use: Refinement, incremental quality, defined stop condition
+    template: 'Action → Verification → (fail: adjust + retry | pass: proceed)'
+    examples:
+    - optimization
+    - error correction
+    - prompt refinement
+  parallel:
+    description: Concurrent independent tasks
+    when_to_use: Independent tasks, parallelization possible, result merge
+    template: Start → (Task A | Task B | Task C in parallel) → Merge → End
+    examples:
+    - parallel tests
+    - multi-aspect analysis
+    - data collection
+  state_machine:
+    description: Behavior depends on current state
+    when_to_use: Well-defined states, event-driven transitions
+    template: State A → event1 → State B → event2 → State C → ...
+    examples:
+    - approval workflow
+    - parsing
+    - communication protocol
+  workflow_elements:
+    gates: Checkpoints with passage criteria — pass/fail/block
+    rollback_points: Trigger + action + post-state
+    timeouts: Limit + fallback action
+  workflow_anti_patterns:
+  - Infinite workflow (no exit condition)
+  - Decision without default branch
+  - Subjective gates ('is the code good?')
+  - Hidden branches (undocumented sub-paths)
+  - Impossible rollback (delete data → process)
+lifecycle:
+  map:
+    role: Extract creator's domain expertise into domain-map.md before skill creation. Skills benefit substantially from /map when creator has deep domain knowledge.
+    optional: true
+    inputs:
+    - creator.yaml (technical_level, expertise domains)
+    - domain topic seed ($ARGUMENTS)
+    outputs:
+    - workspace/domain-map.md (or workspace/{slug}/domain-map.md if product exists)
+    - Recommended product type (skill, by inference if creator describes procedural knowledge)
+    consumer_status: partial
+    consumer_status_reason: /map exists and produces domain-map.md. NÃO consulta lifecycle.map deste codex para coaching tipo-específico. Wave 3 ensina /map a otimizar perguntas para skill se o domínio
+      sugere skill.
+    blocks_when: []
+    next_action: null
+    next_action_reason: read-only skill — /map writes domain-map.md, next action determined by creator
+    type_specific:
+      skip_recommended: false
+      skip_message: If you already know exactly what your skill should do, skip /map and run /create skill directly. /map is most valuable when you have rich expertise that needs structuring.
+  scout:
+    role: Research the marketplace for similar skills, identify gaps, baseline what Claude already knows. Skills benefit substantially from /scout — it prevents building duplicates and identifies real gaps.
+    optional: true
+    inputs:
+    - creator.yaml
+    - domain query ($ARGUMENTS)
+    outputs:
+    - workspace/scout-{slug}.md
+    - STATE.yaml.last_scout updated
+    consumer_status: partial
+    consumer_status_reason: /scout produces scout reports today. NÃO consulta este codex's lifecycle.scout. Wave 3 ensina /scout a calibrar research budget per type (skills get full budget, output-styles
+      get minimal).
+    blocks_when: []
+    next_action: null
+    next_action_reason: read-only research skill — next action determined by scout report recommendation
+    type_specific:
+      skip_recommended: false
+      skip_message: Skipping /scout means filling without market intelligence. Acceptable for personal skills. Risky for marketplace skills targeting MCS-2+.
+  import:
+    role: Bring an existing skill from .claude/skills/{slug}/ into the Engine workspace for validation, packaging, republish.
+    inputs:
+    - 'Source: .claude/skills/{slug}/ (entire directory)'
+    - creator.yaml
+    outputs:
+    - workspace/{slug}/ (full directory copied — references/, agents/, tasks/, scripts/, assets/ all preserved)
+    - 'workspace/{slug}/.meta.yaml (state auto-detected: scaffold | content | validated)'
+    blocks_when:
+    - workspace/{slug}/ already exists (no --force)
+    - Source has no SKILL.md primary file
+    - Source is a marketplace product (has marketplace_url in frontmatter)
+    consumer_status: partial
+    consumer_status_reason: '/import HOJE detecta skill (linha 51 SKILL.md: ''SKILL.md → skill''). É um dos 9 tipos detectados (de 13 totais). Wave 3 deve completar a tabela com hooks, statusline, bundle,
+      minds, output-style.'
+    next_action: /validate {slug}
+    optional: true
+    type_specific:
+      detection_pattern: directory in .claude/skills/ containing SKILL.md as primary file
+      auto_detected_phase_logic:
+      - Primary file <50 lines OR >50% placeholder patterns → scaffold
+      - Real content + at least 1 reference file → content
+      - Passes MCS-1 structural check + README.md with 4 sections → validated
+  create:
+    role: 'Run 6-phase creation cycle: discovery (with archetype selection) → architecture → description engineering → content development → validation → iteration. Output is a fully scaffolded skill with
+      WHY comments.'
+    inputs:
+    - field: creator.yaml
+      purpose: Author metadata, technical_level, freedom_level default
+    - field: type
+      value: skill
+    - field: slug
+      purpose: Validates against ^[a-z0-9][a-z0-9-]{2,39}$
+    - field: scout_report
+      purpose: Optional — pre-loads market intelligence into discovery
+    - field: domain_map
+      purpose: Optional — pre-fills sections from extracted expertise
+    - field: discovery_answers
+      purpose: Archetype + problem + audience + triggers + output format + domain knowledge + tools + anti-patterns + composition
+    outputs:
+    - workspace/{slug}/SKILL.md (scaffold with all 6 required sections, WHY comments, archetype-appropriate template)
+    - workspace/{slug}/README.md (4-section skeleton)
+    - workspace/{slug}/references/domain-knowledge.md (skeleton)
+    - 'workspace/{slug}/.meta.yaml (state: scaffold, archetype recorded)'
+    blocks_when:
+    - slug invalid
+    - workspace/{slug}/ exists without --force
+    - creator.yaml missing AND micro-onboard fails
+    - archetype not selected (Wave 3 will enforce)
+    consumer_status: partial
+    consumer_status_reason: /create reads dna_patterns + frontmatter + discovery_questions + template_files hoje. NÃO consulta archetypes, description_engineering, lifecycle.create.discovery_phase.archetype_selection_required,
+      ou reasoning_frameworks. Wave 3 enriquece /create com archetype selection + reasoning framework offering.
+    next_action: /fill {slug}
+    optional: false
+    type_specific:
+      activates_templates:
+      - templates/skill/SKILL.md.template
+      - templates/skill/README.md.template
+      - templates/skill/references/domain-knowledge.md.template
+      - templates/skill/examples/examples.md.template (if MCS-2+ target)
+      activates_dna_at_scaffold:
+      - D1
+      - D2
+      - D3
+      - D4
+      - D5
+      - D7
+      - D13
+      - D14
+      discovery_phase:
+        questions_source: this file → discovery_questions.minimum_set
+        archetype_selection_required: true
+        archetype_selection_question: Which archetype matches your skill? Executor (technical operations), Guide (process with variation), Framework (abstract principles), or Meta (generates other structures)?
+        reasoning_framework_offered: true
+        reasoning_framework_when: If creator answers 'I'm not sure' to discovery questions
+      read_before_write_ratio: 5:1 (canonical_spec + this codex + creator.yaml + template + scout_report read; 1 SKILL.md scaffold written)
+  fill:
+    role: Walk the 6 SKILL.md sections (Activation Protocol, When To Use/Not, Core Instructions, Output Format, Quality Gate, Anti-Patterns) extracting creator expertise via sparring protocol. Skills get
+      DEEP fill — they are the most expertise-dense type.
+    inputs:
+    - 'workspace/{slug}/.meta.yaml (state: scaffold or content)'
+    - workspace/{slug}/SKILL.md (with WHY comments)
+    - workspace/{slug}/references/* (skeleton files)
+    - creator.yaml (persona)
+    - scout report (if exists — drives research injection)
+    - domain-map.md (if exists — pre-fills sections)
+    - this file (sections_walked, sparring_protocol, anti_patterns_catalog)
+    outputs:
+    - workspace/{slug}/SKILL.md (fully filled, WHY comments preserved)
+    - workspace/{slug}/references/*.md (filled with domain knowledge)
+    - workspace/{slug}/examples/examples.md (3+ contrasting examples)
+    - 'workspace/{slug}/.meta.yaml (state: content, fill_progress updated)'
+    consumer_status: partial
+    consumer_status_reason: /fill reads product-dna + scout report + domain-map hoje. NÃO consulta lifecycle.fill.sections_walked structured form. Wave 3 ensina /fill a usar sections_walked como spec do
+      walker.
+    next_action: /validate {slug}
+    optional: false
+    blocks_when: []
+    type_specific:
+      sections_walked:
+      - name: Activation Protocol
+        why: What context to load before responding — references, anti-patterns, user intent
+        sparring_required: true
+        sparring_minimum: 1
+        deepening_offered: true
+      - name: When To Use / When Not To Use
+        why: Specific triggers (matches description) + explicit boundaries
+        sparring_required: true
+        sparring_minimum: 2
+        deepening_offered: false
+      - name: Core Instructions
+        why: The actual skill logic — decision tree, processing steps, ambiguity handling
+        sparring_required: true
+        sparring_minimum: 3
+        deepening_offered: true
+      - name: Output Format
+        why: Exact format the skill must produce (rigid or flexible per output_patterns)
+        sparring_required: false
+        deepening_offered: false
+      - name: Quality Gate
+        why: Verifiable criteria before delivery
+        sparring_required: true
+        sparring_minimum: 1
+        deepening_offered: false
+        minimum_items: 3
+      - name: Anti-Patterns
+        why: Specific failure modes for this domain (NOT generic advice)
+        sparring_required: true
+        sparring_minimum: 1
+        deepening_offered: true
+        minimum_items: 5
+      fill_protocol_section: Standard section walker + skill-specific coaching from /fill references/fill-protocol.md → skill section if exists
+      fill_protocol_section_status: VERIFIED EXISTS — fill-protocol.md has type-specific block for skill (verified via grep)
+      sparring_protocol: Full 3-challenge sparring per major section (Generic Test, Inversion, Proof). Skills require deep sparring — they are the most commodity-prone type.
+      research_injection_eligible: true
+      research_injection_reason: Skills benefit from web research on domain best practices, library APIs, anti-patterns documented elsewhere.
+  validate:
+    role: 'Run all stages: structural + integrity + DNA Tier 1+2+3 + CLI preflight + anti-commodity + value intelligence. Skills are the only type where ALL 18 DNA patterns can apply (though Tier 3 patterns
+      D9/D10/D12/D18 are typically not applicable to single-skill).'
+    inputs:
+    - workspace/{slug}/SKILL.md + README.md + references/ + examples/
+    - workspace/{slug}/.meta.yaml
+    - this file (dna_patterns, mcs_expectations, quality_rubric, anti_patterns_catalog)
+    - config.yaml + quality-gates.yaml
+    outputs:
+    - 'workspace/{slug}/.meta.yaml (state: validated, scores, intelligence)'
+    - Validation report
+    consumer_status: partial
+    consumer_status_reason: /validate reads dna_patterns + mcs_expectations hoje. NÃO consulta quality_rubric, anti_patterns_catalog, ou lifecycle.validate.per_stage_hooks. Wave 3 enriquece massivamente.
+    optional: false
+    blocks_when: []
+    next_action: /test {slug} (required for MCS-2+) OR /package {slug}
+    type_specific:
+      stages_run:
+        mcs1:
+        - 1
+        - 2
+        - 3
+        - 6
+        mcs2:
+        - 1
+        - 2
+        - 3
+        - 4
+        - 6
+        - 7
+        - 8
+        mcs3:
+        - 1
+        - 2
+        - 3
+        - 4
+        - 5
+        - 6
+        - 7
+        - 8
+      per_stage_hooks:
+        stage_1_structural:
+          check: Glob workspace/{slug}/SKILL.md AND README.md AND references/ exist.
+          blocking: true
+        stage_2_integrity:
+          check: YAML frontmatter parses. name + description present. No placeholder patterns. No broken file references in body.
+          blocking: true
+        stage_3_dna_tier1:
+          required_patterns:
+          - D1
+          - D2
+          - D3
+          - D4
+          - D13
+          - D14
+          recommended_patterns:
+          - D19
+          check_d1: Activation Protocol section present + references/ ref
+          check_d2: Anti-Patterns section with ≥5 items
+          check_d3: references/ exists + primary <500 lines
+          check_d4: Quality Gate section with ≥3 verifiable criteria
+          check_d13: README.md with what/install/usage/requirements
+          check_d14: When-Not-To-Use OR error handling section
+          blocking: true
+        stage_4_dna_tier2:
+          required_patterns:
+          - D5
+          - D7
+          - D16
+          recommended_patterns:
+          - D6
+          - D8
+          - D15
+          - D17
+          check_d5: Question system or argument handling
+          check_d7: Pre-execution checks documented
+          check_d16: No hardcoded paths, no common command names (avoid /help /status /run)
+          blocking: false
+        stage_5_dna_tier3:
+          applicable_patterns:
+          - D11
+          not_applicable_patterns:
+          - D9
+          - D10
+          - D12
+          - D18
+          - D20
+          not_applicable_reason: Single skills do not orchestrate (D9), have no handoffs (D10), no compound memory (D12), no subagents (D18), are not always-loaded (D20)
+          check_d11: Self-challenge or socratic pressure pattern (optional bonus)
+          blocking: false
+        stage_6_cli_preflight:
+          check: myclaude validate {slug} succeeds
+          blocking: true
+        stage_7_anti_commodity:
+          check: Substance score + invisibility audit + quality_rubric application
+          blocking: false
+          coaching_only: true
+          rubric_application: Apply quality_rubric (30 pts) and surface per-dimension scores
+          anti_pattern_grep: Scan for AP-D1 to AP-P3 from anti_patterns_catalog and report violations
+        stage_8_value_intelligence:
+          check: Value score, suggested price range, market position, maturity_level
+          blocking: false
+          runs_at_mcs:
+          - 2
+          recommended_pricing_strategy: 'Per archetype: executor → solid ($5-12), guide → solid, framework → premium ($12-25), meta → premium-rare'
+      read_before_write_ratio: Read-only — updates .meta.yaml only
+      dogfood_check:
+        description: P9 enforcement — /validate skill applied to the 16 SKILL.md files in .claude/skills/ that constitute the Engine pipeline itself
+        method: Run full /validate skill against each Engine skill, surface failures. The Engine that fails its own validator is not trustworthy.
+        consumer_status: aspirational
+        consumer_status_reason: Wave 3 ensina /validate a aceitar --target=engine para rodar contra .claude/skills/ inteiro.
+      next_action_pass: /test {slug} (required for MCS-2+) OR /package {slug}
+      next_action_fail: /validate --fix {slug}
+  test:
+    role: Sandbox-install the skill in worktree isolation, verify activation protocol, run 3 scenarios (happy path, edge case, adversarial), verify must_haves.
+    inputs:
+    - workspace/{slug}/ (validated)
+    - this file (install_target, lifecycle.test.type_specific_steps)
+    outputs:
+    - workspace/{slug}/.meta.yaml (test_result, last_tested, test_scenarios)
+    - Test report with scenario-by-scenario verdicts
+    consumer_status: partial
+    consumer_status_reason: /test runs Step 2b table hardcoded for hooks/statusline/minds. Skill type uses generic 3-scenario flow today. Wave 3 ensina /test a consultar lifecycle.test.type_specific_steps
+      de cada codex.
+    optional: true
+    blocks_when: []
+    next_action: /package {slug}
+    type_specific:
+      required_for_mcs:
+      - 2
+      - 3
+      optional_for_mcs:
+      - 1
+      sandbox_isolation: 'worktree (context: fork)'
+      type_specific_steps:
+      - step: Frontmatter parse
+        check: YAML frontmatter valid. name + description present. allowed-tools (if present) is array.
+      - step: Activation Protocol load
+        check: Read primary file. Verify references/ paths resolve. Verify no broken @-imports.
+      - step: Description trigger test
+        check: Test 5+ positive triggers (does the description match each numbered trigger?). Test 3+ negative triggers (false positive check).
+      - step: Body size verification
+        check: wc -l SKILL.md ≤500. Warn at 350+.
+      scenarios_applicable: true
+      scenarios:
+      - name: Happy Path
+        purpose: Normal expected use
+        input_strategy: Typical request matching primary trigger
+        on_fail: Skill is fundamentally broken — investigate Core Instructions
+      - name: Edge Case
+        purpose: Boundary conditions
+        input_strategy: Minimal input, unusual formatting, missing context
+        on_fail: D14 Graceful Degradation is weak — strengthen When-Not-To-Use
+      - name: Adversarial
+        purpose: Graceful failure on bad input
+        input_strategy: Invalid input, prompt injection attempt, conflicting instructions
+        on_fail: Skill is unsafe for marketplace — fix or block publish
+      must_haves_verification: true
+      must_haves_source: .meta.yaml → must_haves (set during /fill ACCEPTANCE CRITERIA CAPTURE)
+      next_action_pass: /package {slug}
+  package:
+    role: Strip WHY comments, generate triple manifests (vault.yaml + plugin.json + agentskills.yaml), verify install artifacts, stage .publish/.
+    inputs:
+    - 'workspace/{slug}/ (state: validated, test_result: pass for MCS-2+)'
+    - creator.yaml + this file + config.yaml
+    outputs:
+    - workspace/{slug}/.publish/SKILL.md (stripped + attribution injected)
+    - workspace/{slug}/.publish/README.md (badges injected)
+    - workspace/{slug}/.publish/references/* (preserved)
+    - workspace/{slug}/.publish/scripts/* (preserved if any)
+    - workspace/{slug}/.publish/assets/* (preserved if any)
+    - workspace/{slug}/.publish/vault.yaml
+    - workspace/{slug}/.publish/plugin.json (skills field = .claude/skills/{slug}/)
+    - workspace/{slug}/.publish/agentskills.yaml
+    - workspace/{slug}/.publish/CHANGELOG.md + LICENSE.md
+    consumer_status: partial
+    consumer_status_reason: /package reads install_target + frontmatter.required + package_rename. NÃO consulta lifecycle.package.step_6b_verify. Wave 3 ensina /package a usar step_6b_verify como spec por
+      tipo.
+    next_action: /publish {slug}
+    optional: false
+    blocks_when: []
+    type_specific:
+      strips:
+      - '<!-- WHY: ... --> HTML comments'
+      - '# WHY: lines'
+      - .meta.yaml
+      - domain-map.md
+      renames: null
+      renames_reason: Skills do not need rename — SKILL.md is the canonical filename in .claude/skills/{slug}/SKILL.md
+      injects:
+      - field: marketplace_url in frontmatter
+        value: https://myclaude.sh/p/{slug}
+      - field: Attribution comment at file end
+        value: '<!-- Published on MyClaude (myclaude.sh) | Quality: MCS-{level} ({score}%) | Engine: Studio v3 -->'
+      - field: README badges
+      plugin_json_block: "{\n  \"name\": \"{slug}\",\n  \"skills\": \".claude/skills/{slug}/\"\n}\n"
+      plugin_json_reason: Skills use the 'skills' field with directory path. CC loads all .md files in it.
+      agentskills_yaml_block: 'Generate with platforms: [claude-code, cursor, codex, gemini-cli, copilot, *]. Skills are the canonical Agent Skills format.'
+      step_6b_verify:
+      - SKILL.md exists in .publish/
+      - Frontmatter has name + description
+      - No WHY comments remaining (grep verification)
+      - All references/ files present
+      - No secrets in any file (re-run secrets scan)
+      - Body ≤500 lines
+  publish:
+    role: Push to myclaude.sh marketplace + Anthropic plugin marketplace + Agent Skills universal. Skills are the FLAGSHIP type — distribution is across all 3 channels.
+    inputs:
+    - 'workspace/{slug}/.publish/ (state: packaged)'
+    - myclaude CLI auth
+    - creator confirmation
+    outputs:
+    - Live listing at https://myclaude.sh/p/{slug}
+    - Plugin marketplace listing
+    - 'workspace/{slug}/.meta.yaml (state: published)'
+    blocks_when:
+    - state != packaged
+    - test_result != pass (for MCS-2+)
+    - myclaude auth missing
+    - creator declines confirmation
+    consumer_status: fully-wired
+    consumer_status_reason: /publish + distribution channels já mapeados em config.yaml.intelligence.distribution.channels_by_type.skill = ['myclaude', 'awesome-claude-code', 'reddit', 'twitter'].
+    optional: false
+    next_action: null
+    next_action_reason: terminal action — product is live, feedback loop begins via post_publish_actions
+    type_specific:
+      distribution_channels:
+      - channel: myclaude
+        primary: true
+        url_pattern: https://myclaude.sh/p/{slug}
+      - channel: anthropic-plugin
+        primary: true
+        applicable: true
+        plugin_json_block: skills field
+      - channel: agentskills_universal
+        primary: true
+        scope: claude-code, cursor, codex, gemini-cli, copilot, 28+ others
+      confirmation_required: true
+      post_publish_actions:
+      - 'Suggest: ''Use it daily. The best validation is your own use.'''
+      - 'Surface install command: myclaude install {slug}'
+      - 'Schedule check-in (Proactive #14): 7 days post-publish'
+      - 'Suggest distribution: ''Share on awesome-claude-code, reddit, twitter — skills get the most marketplace pull'''
+  status:
+    role: Display this skill in dashboard with archetype-aware UX, maturity level surfacing, intelligence fields.
+    inputs:
+    - workspace/{slug}/.meta.yaml
+    - this file (essence.one_line, archetypes for ux_type_name)
+    - references/ux-vocabulary.md
+    outputs:
+    - Dashboard line for the skill
+    - Maturity level if computed
+    - Portfolio role suggestion
+    consumer_status: aspirational
+    consumer_status_reason: /status today doesn't surface maturity_level (Wave 3 adds it).
+    optional: true
+    blocks_when: []
+    next_action: null
+    next_action_reason: read-only dashboard — no state mutation, no next action
+    type_specific:
+      ux_type_name: Tool
+      ux_type_name_source: references/ux-vocabulary.md → product types table
+      state_emoji_rules: Universal — uses status/SKILL.md state display rules
+      portfolio_role_default: anchor
+      portfolio_role_reason: Skills are the anchor type. Other types compose around them.
+flow: "```mermaid\nflowchart LR\n  THINK[/think optional/] -.->|stuck on framework| MAP[/map/]\n  MAP -.->|expertise extracted| SCOUT[/scout/]\n  SCOUT -.->|domain researched| CREATE[/create skill/]\n \
+  \ IMPORT[/import existing/] -.->|already in .claude/skills/| WORKSPACE\n  CREATE -->|6-phase scaffold| WORKSPACE[(workspace/slug/)]\n  WORKSPACE --> FILL[/fill/]\n  FILL -->|content + sparring| VALIDATE[/validate/]\n\
+  \  VALIDATE -->|fail| VALIDATE\n  VALIDATE -->|pass MCS-1| TEST[/test/]\n  TEST -->|3 scenarios pass| PACKAGE[/package/]\n  VALIDATE -.->|MCS-1 only, optional| PACKAGE\n  PACKAGE -->|packaged| PUBLISH[/publish/]\n\
+  \  PUBLISH -->|live on 3 channels| MARKET[(marketplace + plugins + agentskills)]\n  MARKET -.->|usage data| SCOUT\n\n  STATUS[/status/] -.->|read-only| WORKSPACE\n\n  classDef writeSkill fill:#e1f5ff,stroke:#0277bd\n\
+  \  classDef readSkill fill:#fff8e1,stroke:#f9a825\n  classDef gate fill:#fff4e1,stroke:#ef6c00\n  classDef terminal fill:#e8f5e9,stroke:#2e7d32\n  classDef discovery fill:#f3e5f5,stroke:#6a1b9a\n  class\
+  \ CREATE,FILL,PACKAGE writeSkill\n  class STATUS,VALIDATE,TEST gate\n  class PUBLISH terminal\n  class IMPORT,THINK,MAP,SCOUT discovery\n```\n"
+failure_modes:
+- mode: creator cannot select archetype
+  detection: '/create discovery: creator answers ''I''m not sure if it''s executor or guide'' to archetype question'
+  degradation: Engine offers reasoning_frameworks (first_principles or jobs_to_be_done) to clarify
+  recovery: Run framework, classify the resulting decomposition against archetype matrix, propose dominant archetype
+- mode: description fails activation test
+  detection: /test step 'Description trigger test' — fewer than 80% positive triggers match
+  degradation: Block /package for MCS-2+. Surface specific failed triggers.
+  recovery: Run description_engineering rubric, identify which dimension scored <2, regenerate description with missing layer
+- mode: primary file exceeds 500 lines
+  detection: /validate Stage 3 D3
+  degradation: Score D3 as PARTIAL. Body bloat penalizes maturity level.
+  recovery: Use progressive_disclosure_model patterns (Hub-and-Spoke / Layered Depth / Conditional Branches) to split content into references/. Add pointers in body.
+- mode: orphan references
+  detection: /validate Stage 3 D3 enhanced — file in references/ has no pointer in body
+  degradation: Files exist but Claude never loads them — wasted disk
+  recovery: 'Add pointers OR delete files. Codex enforces: each reference must have body pointer.'
+- mode: anti-pattern AP-D1 (vague description)
+  detection: /validate Stage 7 grep against anti_patterns_catalog
+  degradation: Block MCS-2 — vague description prevents reliable activation
+  recovery: Apply description_engineering.formula
+- mode: missing examples (AP-C2)
+  detection: /validate Stage 4 D15 + Stage 7 anti-pattern grep
+  degradation: Score capped at MCS-1 functional
+  recovery: Add 3+ contrasting examples in examples/examples.md
+- mode: creator tries to add agents/ subdirectory in single skill
+  detection: /validate Stage 1 detects unexpected structure
+  degradation: Suggest converting type to agent or squad
+  recovery: 'Engine asks: ''Single skill (no agents/) or agent/squad (with agents/)?'' — type may need to change'
+- mode: scripts without docstring (AP-SC1)
+  detection: /validate Stage 2 grep on scripts/*.py for docstring pattern
+  degradation: Coaching only — score reduces craftsmanship dimension
+  recovery: Add USE + WHEN + OUTPUT docstring to each script
+- mode: hardcoded paths in scripts (AP-SC3)
+  detection: /validate Stage 2 grep for absolute path patterns
+  degradation: BLOCK publish — security and portability risk
+  recovery: Replace with argparse arguments or environment variables
+- mode: common command name conflict (D16 violation)
+  detection: /validate Stage 3 D16 — name in /help, /status, /run, /start, /stop
+  degradation: BLOCK publish — would conflict with other installed products
+  recovery: Rename to domain-specific slug
+- mode: skill scope is too broad (AP-P3)
+  detection: /validate Stage 7 — description has terms like 'all', 'everything', 'any'
+  degradation: 'Coaching: skill becomes impossible to validate against acceptance criteria'
+  recovery: Narrow scope, possibly split into 2 skills
+- mode: skill duplicates existing marketplace product
+  detection: /scout marketplace scan finds 90%+ feature overlap
+  degradation: 'Coaching: ''A similar skill exists at {url}. What will yours do differently?'''
+  recovery: Differentiation statement OR pivot to complementary positioning
+invariants:
+- Primary file is SKILL.md (uppercase, no exceptions)
+- Install target is .claude/skills/{slug}/ (directory, not flat file)
+- Description is the ONLY mechanism of activation (body never read before trigger)
+- Description is always loaded by CC catalog (~50 tokens per skill)
+- Body loaded only when skill activates
+- References/scripts/assets loaded on demand
+- Primary SKILL.md ≤500 lines (Anthropic-canonical hard ceiling)
+- Each reference in references/ must have a pointer in body (no orphans)
+- Maximum 1 level of reference nesting
+- README.md required (no exceptions)
+- Skill belongs to ONE archetype (executor | guide | framework | meta) — hybrids have a dominant
+- No common command names (/help, /status, /run, /start, /stop are reserved)
+- No hardcoded absolute paths anywhere
+- Distributed via vault.yaml + plugin.json (skills field) + agentskills.yaml — all 3 channels
+- Tier 3 patterns D9/D10/D12/D18 are typically NOT applicable to single skills (those are for squads/systems)
+security_profile:
+  aegis_applicable: true
+  reason: Skills can declare allowed-tools that include Bash, Read, Write, Edit. Skills with scripts/ execute code. Skills are the most security-relevant of the non-hooks types.
+  attack_surfaces:
+  - scripts/ contents (executed via Bash if skill instructs)
+  - allowed-tools frontmatter (over-broad permissions)
+  - references/ content (loaded into Claude context — prompt injection vector)
+  - '@-imports in SKILL.md body (file system reach)'
+  shell_execution: via scripts/ if skill is EXECUTOR or META archetype
+  file_io: via Bash/Read/Write tools if allowed in frontmatter
+  network_calls: only if skill explicitly invokes WebFetch/WebSearch
+  tool_invocation: controlled via allowed-tools and denied-tools frontmatter
+  installation_trust_level: trusted_after_audit
+  installation_trust_reason: Skills install to .claude/skills/{slug}/. Scripts execute under user permissions. Marketplace skills should be audited via /aegis before install.
+  recommended_audit_checks:
+  - Scripts/ files for shell injection patterns (;, &&, ||, backticks, $())
+  - Scripts/ for eval, source, base64-decode patterns
+  - Scripts/ for curl|sh, wget|sh remote execution
+  - allowed-tools list — flag if includes Bash without justification
+  - References/ for prompt injection patterns
+  consumer_status: aspirational
+  consumer_status_reason: /aegis exists as separate skill but does not consult product-dna.skill.security_profile. Wave 3 ensina /aegis a consultar este bloco como audit checklist.
+marketplace_taxonomy:
+  default_category: skill
+  default_price: 0
+  default_license: MIT
+  pricing_rationale: Skills price based on archetype. Executor and Guide are commodity-prone (free or signal). Framework and Meta justify premium because they encode rare expertise.
+  bundle_eligible: true
+  bundle_eligible_reason: Skills compose well — bundles of related skills (e.g., a 'PDF toolkit' bundle of 5 skills) are a natural marketplace offering.
+  composition_eligible_with:
+  - agent
+  - squad
+  - workflow
+  - system
+  - minds
+  - hooks
+  - claude-md
+  composition_eligible_reason: Skills are the most composable type. They pair with agents (skill executes, agent advises), workflows (workflow orchestrates skills), systems (systems contain skills), minds
+    (minds suggest, skills execute).
+  consumer_status: aspirational
+  consumer_status_reason: /package today reads vault_defaults from config.yaml. Wave 3 ensina /package a consultar product-dna.{type}.marketplace_taxonomy first, with vault_defaults as fallback.
+  natural_tags:
+    scope: by_archetype
+    by_archetype:
+      executor:
+      - automation
+      - tool
+      - script
+      - processor
+      - converter
+      guide:
+      - workflow
+      - process
+      - methodology
+      - best-practice
+      framework:
+      - design-system
+      - principles
+      - architecture
+      - patterns
+      meta:
+      - generator
+      - scaffolder
+      - builder
+      - meta
+  pricing_strategy:
+    scope: by_archetype
+    by_archetype:
+      executor:
+        default: solid
+        recommended_range_usd:
+        - 5
+        - 12
+      guide:
+        default: solid
+        recommended_range_usd:
+        - 5
+        - 12
+      framework:
+        default: premium
+        recommended_range_usd:
+        - 12
+        - 25
+      meta:
+        default: premium
+        recommended_range_usd:
+        - 12
+        - 50
 dna_patterns:
   tier1:
-    D1:  { required: true,  name: "Activation Protocol",    check: "grep activation/protocol section + references/ ref" }
-    D2:  { required: true,  name: "Anti-Pattern Guard",     check: "grep anti-pattern section with >=5 items" }
-    D3:  { required: true,  name: "Progressive Disclosure",  check: "references/ exists + primary <500 lines" }
-    D4:  { required: true,  name: "Quality Gate",            check: "grep quality gate with >=3 criteria" }
-    D13: { required: true,  name: "Self-Documentation",      check: "README.md with what/install/usage/requirements" }
-    D14: { required: true,  name: "Graceful Degradation",    check: "grep 'when not to use' or error handling" }
-    D19: { required: false, name: "Attention-Aware Authoring", check: "critical rules in last 30% of file" }
+    D1:
+      required: true
+      applicable: true
+      name: Activation Protocol
+      check: grep activation/protocol section + references/ ref
+    D2:
+      required: true
+      applicable: true
+      name: Anti-Pattern Guard
+      check: grep anti-pattern section with >=5 items
+    D3:
+      required: true
+      applicable: true
+      name: Progressive Disclosure
+      check: references/ exists + primary <500 lines
+    D4:
+      required: true
+      applicable: true
+      name: Quality Gate
+      check: grep quality gate with >=3 verifiable criteria
+    D13:
+      required: true
+      applicable: true
+      name: Self-Documentation
+      check: README.md with what/install/usage/requirements
+    D14:
+      required: true
+      applicable: true
+      name: Graceful Degradation
+      check: grep 'when not to use' or error handling
+    D19:
+      required: false
+      applicable: true
+      name: Attention-Aware Authoring
+      check: critical rules in last 30% of file
   tier2:
-    D5:  { required: true,  name: "Question System",         check: "grep question/input table or 'if missing, ask'" }
-    D6:  { required: false, name: "Confidence Signaling",    check: "grep confidence levels or certainty markers" }
-    D7:  { required: true,  name: "Pre-Execution Gate",      check: "grep precondition checks" }
-    D8:  { required: false, name: "State Persistence",       check: "state file or persistence section" }
-    D15: { required: false, name: "Testability",             check: "test scenarios or expected outputs" }
-    D16: { required: true,  name: "Composability",           check: "no hardcoded paths, no common command names" }
-    D17: { required: false, name: "Hook Integration",        check: "hooks section in frontmatter or docs" }
+    D5:
+      required: true
+      applicable: true
+      name: Question System
+      check: grep question/input table or 'if missing, ask'
+    D6:
+      required: false
+      applicable: true
+      name: Confidence Signaling
+      check: grep confidence levels or certainty markers
+    D7:
+      required: true
+      applicable: true
+      name: Pre-Execution Gate
+      check: grep precondition checks
+    D8:
+      required: false
+      applicable: true
+      name: State Persistence
+      check: state file or persistence section
+    D15:
+      required: false
+      applicable: true
+      name: Testability
+      check: test scenarios or expected outputs
+    D16:
+      required: true
+      applicable: true
+      name: Composability
+      check: no hardcoded paths, no common command names
+    D17:
+      required: false
+      applicable: true
+      name: Hook Integration
+      check: hooks section in frontmatter or docs
+    D20:
+      required: false
+      applicable: false
+      name: Cache-Friendly Design
+      reason: Skills are not always-loaded — claude-md is the only type with D20 required.
   tier3:
-    D9:  { required: false, name: "Orchestrate Don't Execute", applicable: false }
-    D10: { required: false, name: "Handoff Spec",              applicable: false }
-    D11: { required: false, name: "Socratic Pressure",         check: "self-challenge pattern" }
-    D12: { required: false, name: "Compound Memory",           applicable: false }
-    D18: { required: false, name: "Subagent Isolation",        applicable: false }
-    D20: { applicable: false }
-
-# MCS scoring expectations
+    D9:
+      required: false
+      applicable: false
+      name: Orchestrate Don't Execute
+      reason: Single skills do not orchestrate — squads and systems do.
+    D10:
+      required: false
+      applicable: false
+      name: Handoff Specification
+      reason: Single skills do not have handoffs — squads and systems do.
+    D11:
+      required: false
+      applicable: true
+      name: Socratic Pressure
+      check: self-challenge or falsification pattern (optional bonus for skills)
+    D12:
+      required: false
+      applicable: false
+      name: Compound Memory
+      reason: Cross-session memory is for agents/squads — skills are stateless within invocation.
+    D18:
+      required: false
+      applicable: false
+      name: Subagent Isolation
+      reason: Single skills do not spawn subagents — squads and systems do.
 mcs_expectations:
-  mcs1: "All Tier 1 PASS. Score >= 75%."
-  mcs2: "Tier 1+2 required PASS. Score >= 85%."
-  mcs3: "Not typical for skills (no D9/D10/D12/D18). Score >= 92% if applicable patterns covered."
-
-# Template file mapping
-# NOTE: If a .template file doesn't exist yet, /create generates the target
-# from defaults (README skeleton, empty references/). S3 sprint adds rich templates.
-template_files:
-  - source: "SKILL.md.template"
-    target: "SKILL.md"
-    dna_injected: [D1, D2, D4, D5, D7, D14]
-  - source: "README.md.template"
-    target: "README.md"
-    dna_injected: [D13]
-  - source: "references/domain-knowledge.md.template"
-    target: "references/domain-knowledge.md"
-    dna_injected: [D3]
-
-# Frontmatter fields for SKILL.md (Anthropic Agent Skills spec)
+  mcs1:
+    dna_required:
+    - D1
+    - D2
+    - D3
+    - D4
+    - D13
+    - D14
+    score_min: 75
+    blocks_publish: true
+    natural_ceiling: false
+  mcs2:
+    dna_required:
+    - D1
+    - D2
+    - D3
+    - D4
+    - D5
+    - D7
+    - D13
+    - D14
+    - D16
+    dna_recommended:
+    - D6
+    - D8
+    - D15
+    - D17
+    - D19
+    score_min: 85
+    blocks_publish: false
+    natural_ceiling: false
+  mcs3:
+    dna_required:
+    - D1
+    - D2
+    - D3
+    - D4
+    - D5
+    - D7
+    - D11
+    - D13
+    - D14
+    - D16
+    dna_recommended:
+    - D6
+    - D8
+    - D15
+    - D17
+    - D19
+    score_min: 92
+    blocks_publish: false
+    natural_ceiling: true
+    ceiling_reason: 'Single skills cannot satisfy D9/D10/D12/D18 (squad/system patterns). MCS-3 for skills means: all applicable patterns + rubric ≥27/30 + maturity level ≥4.'
+    applicable: true
 frontmatter:
   required:
-    - name          # skill slug
-    - description   # when Claude should use this skill
+  - name
+  - description
+  recommended:
+  - argument-hint
   optional:
-    - "allowed-tools"    # restrict tool access
-    - "argument-hint"    # help text for arguments
-    - arguments          # named arguments (string or string[])
-    - paths              # conditional activation paths (gitignore-style globs)
-    - hooks              # skill-scoped hooks (run only when this skill is active)
-    - model              # force specific model (claude-opus-4-6, claude-sonnet-4-6, claude-haiku-4-5)
-    - effort             # force reasoning effort (high, medium, low, or number)
-    - context            # fork for full isolation
-    - shell              # shell configuration object
-    - version            # semver version string
-    - "when_to_use"      # contextual activation hint (alternative to description)
-    - "user-invocable"   # false for background skills (default: true)
-    - "disable-model-invocation"  # true = only explicit /slug triggers (default: false)
-
-# Token economics [SOURCE: loadSkillsDir.ts:100-105]
+  - allowed-tools
+  - denied-tools
+  - paths
+  - hooks
+  - model
+  - effort
+  - context
+  - shell
+  - version
+  - when_to_use
+  - user-invocable
+  - disable-model-invocation
+  - arguments
+  - memory
+  - skills
+package_rename: null
+package_rename_reason: Skills do not need rename. SKILL.md is the canonical filename in .claude/skills/{slug}/SKILL.md.
+template_files:
+- source: SKILL.md.template
+  target: SKILL.md
+  dna_injected:
+  - D1
+  - D2
+  - D4
+  - D5
+  - D7
+  - D14
+  why_comments: true
+- source: README.md.template
+  target: README.md
+  dna_injected:
+  - D13
+  why_comments: true
+- source: references/domain-knowledge.md.template
+  target: references/domain-knowledge.md
+  dna_injected:
+  - D3
+  why_comments: true
+- source: examples/examples.md.template
+  target: examples/examples.md
+  dna_injected:
+  - D15
+  why_comments: true
+  optional: true
+  optional_for: MCS-1
+  required_for: MCS-2+
 token_economics:
-  catalog_cost: "name + description + whenToUse → roughTokenCountEstimation (chars ÷ 4). ~50 tokens per skill."
-  invocation_cost: "Full SKILL.md loaded only when user invokes /skill-name"
-  ambient_cost: "Zero — skills are loaded on demand, not auto-loaded"
-  optimization: "Short focused description = lower catalog cost. Long reference content in references/ = zero cost until invoked."
-  budget_example: "12 skills × 50 tokens each = ~600 tokens always in catalog"
+  catalog_cost_tokens: 50
+  catalog_cost_source: loadSkillsDir.ts:100-105 — name + description + whenToUse → roughTokenCountEstimation (chars / 4)
+  catalog_cost_reason: name + description loaded in catalog as part of every session's skill registry
+  invocation_cost: load_on_demand
+  invocation_cost_reason: Full SKILL.md loaded only when user invokes /skill-name OR Claude auto-invokes via description match
+  ambient_cost: zero
+  ambient_cost_reason: Skills are not auto-loaded — they activate via trigger
+  optimization_notes: 'Short focused description = lower catalog cost. Long reference content
 
-# Compact instructions applicability
+    in references/ = zero cost until invoked. Scripts and assets do not
+
+    consume tokens unless explicitly loaded by Claude.
+
+    '
+  budget_example: 12 skills × 50 tokens each = ~600 tokens always in catalog
 compact_instructions:
   applicable: true
-  location: "SKILL.md → ## Compact Instructions section [SOURCE: compact/prompt.ts:133-143]"
-  preserves: "creator intent, MCS scores, acceptance criteria, question system state, error states"
-
-# Paths scoping — context efficiency feature
-# When a skill has `paths:` in frontmatter, CC only loads its description when
-# the user is working with files matching those patterns. This saves context window.
-paths_scoping:
-  description: "Optional glob patterns to scope skill activation to specific file types"
-  example: "paths: ['src/**/*.ts', 'tests/**/*.test.ts']"
-  default: "**/* (activates everywhere — no paths key in frontmatter)"
-  benefit: "Saves context window — skill description only loaded when working on matching files"
-  when_to_use: "Domain-specific skills (e.g., a SQL review skill should only activate on *.sql files)"
-
-# Goal-backward acceptance criteria (filled during /fill, verified during /validate)
-acceptance_criteria:
-  description: "Machine-verifiable criteria that prove the product achieves its stated goal"
-  schema:
-    truths: "Observable behaviors from user perspective (e.g., 'Running /my-skill produces a report')"
-    artifacts: "Files that must exist with substantive content (e.g., 'references/patterns.md >50 lines')"
-    key_links: "Critical connections between files (e.g., 'SKILL.md references references/ >=2 times')"
-  filled_by: "/fill ACCEPTANCE CRITERIA CAPTURE step"
-  verified_by: "/validate Stage 2 (Integrity)"
-
-# Discovery questions for /create skill
+  location: 'SKILL.md → ## Compact Instructions section'
+  source_reference: compact/prompt.ts:133-143
+  preserves:
+  - creator intent
+  - MCS scores
+  - acceptance criteria
+  - question system state
+  - error states
+  - current archetype + freedom level
 discovery_questions:
-  - "What specific problem does this skill solve?"
-  - "Who is the target user (developer type, experience level)?"
-  - "What domain knowledge does the skill need to work well?"
-  - "What inputs does the skill expect (files, arguments, context)?"
-  - "What output does it produce (files, analysis, recommendations)?"
-  - "What are the top 3 things this skill should NEVER do?"
-  - "What existing tools/approaches does this compete with?"
+  source_of_truth: this file (canonical for skill)
+  legacy_location: '.claude/skills/create/references/discovery-questions.md → ## Skills section'
+  legacy_status: PARTIAL — discovery-questions.md has a Skills section but does NOT include archetype selection or reasoning framework offering. Wave 4 should align discovery-questions.md with this codex
+    OR deprecate it in favor of per-type codex blocks.
+  minimum_set:
+  - What specific problem does this skill solve? (One sentence — not 'helps with X')
+  - 'Which archetype best matches: Executor (technical operations), Guide (process with variation), Framework (abstract principles), or Meta (generates other structures)?'
+  - What triggers should activate this skill? (specific patterns or keywords users would say)
+  - Who is the target user? (developer type, expertise level, role)
+  - What domain knowledge does the skill need? (what goes in references/)
+  - What output format should the skill produce? (markdown, JSON, structured text, code, other)
+  - What are the top 5 things this skill should NEVER do?
+  depth_set:
+  - What inputs does the skill expect? (files, arguments, context, conversation state)
+  - What tools or integrations does it need? (Read, Write, Bash, WebFetch, etc.)
+  - Can this skill be part of a larger workflow? If so, what are its inputs/outputs as a component?
+  - What existing tools/approaches does this compete with? What will yours do differently?
+  - How should the skill handle ambiguous input? (ask one clarifying question / try anyway / refuse)
+  - What is the ONE thing about this skill that no other skill on the marketplace would have?
+  - When would a buyer SWITCH AWAY from this skill?
+  archetype_specific_questions:
+    executor:
+    - What scripts will the skill provide? (one per atomic operation)
+    - What edge cases must each script handle?
+    - What are the dependencies (libraries, system tools)?
+    guide:
+    - What is the decision tree for the main process?
+    - What contextual variations exist? How do they branch?
+    - What heuristics adjust the process per context?
+    framework:
+    - What are the 3-5 central principles?
+    - 'For each principle: what is the violation marker? what tension does it have with other values?'
+    - What anti-patterns are critical to document?
+    meta:
+    - What does the skill generate?
+    - What is the validation criterion for the generated output?
+    - What is the iteration cycle (how does the generator improve)?
+  reasoning_framework_offering:
+    when: If creator answers 'I'm not sure' or vague to 2+ minimum_set questions
+    offering: Would you like to think through this with one of 7 reasoning frameworks? (first principles, inversion, jobs-to-be-done, constraint-led, comparative, stakeholder mapping, risk analysis)
+    routing: Based on which question stuck, route to the appropriate framework
+  per_subtype: null
+  per_subtype_reason: Skills do not have subtypes — they have ARCHETYPES which are queried in minimum_set
+paths_scoping:
+  description: Optional glob patterns to scope skill activation to specific file types
+  example: 'paths: [''src/**/*.ts'', ''tests/**/*.test.ts'']'
+  default: '**/* (activates everywhere — no paths key in frontmatter)'
+  benefit: Saves context window — skill description only loaded when working on matching files
+  when_to_use: Domain-specific skills (e.g., a SQL review skill should only activate on *.sql files)
+  source_reference: claudemd.ts:254-268
+acceptance_criteria:
+  description: Machine-verifiable criteria that prove the product achieves its stated goal
+  filled_by: /fill ACCEPTANCE CRITERIA CAPTURE step
+  verified_by: /validate Stage 2 (Integrity) AND /test must_haves verification
+  schema:
+    truths:
+      description: Observable behaviors from user perspective
+      example: Running /my-skill on a TypeScript file produces a security report
+    artifacts:
+      description: Files that must exist with substantive content
+      example: references/patterns.md >50 lines
+    key_links:
+      description: Critical connections between files
+      example: SKILL.md references references/ >=2 times
+state_machine_hooks:
+  source_file: quality-gates.yaml
+  source_section: states
+  scope: universal
+  type_specific_branches: []
+  regression_rules: Universal — file edit after validation regresses to content
+  publish_prerequisites_addendum:
+  - test_result == pass (for MCS-2+ skills)
+  publish_prerequisites_addendum_reason: Skills at MCS-2+ require behavioral verification beyond structural validation
+validation_pipeline_refs:
+  stage_1: .claude/skills/validate/references/validation-stages/stage-1-structural.md
+  stage_2: .claude/skills/validate/references/validation-stages/stage-2-integrity.md
+  stage_3: .claude/skills/validate/references/validation-stages/stage-3-dna-tier1.md
+  stage_4: .claude/skills/validate/references/validation-stages/stage-4-dna-tier2.md
+  stage_5: .claude/skills/validate/references/validation-stages/stage-5-dna-tier3.md
+  stage_6: .claude/skills/validate/references/validation-stages/stage-6-cli-preflight.md
+  stage_7: .claude/skills/validate/references/validation-stages/stage-7-anti-commodity.md
+  stage_8: .claude/skills/validate/references/validation-stages/stage-8-value-intelligence.md
+  index: .claude/skills/validate/references/validation-stages/_index.md
+lifecycle_shared_refs:
+  ux_experience:
+    path: references/ux-experience-system.md
+    consumed_by:
+    - /create
+    - /fill
+    - /validate
+    - /package
+    - /test
+    - /help
+    - /status
+    sections_relevant_to_type:
+    - §1 Context Assembly
+    - §2.1 Experience Level Scaling
+    - §2.2 Archetype-Aware Insights
+    - §2.3 Moment Awareness (first scaffold, validation, package, publish)
+    - §4.1 Milestone Moments
+    invisibility_audit_status: PRE-EXISTING DEBT — Wave 4 scope
+  ux_vocabulary:
+    path: references/ux-vocabulary.md
+    consumed_by:
+    - /create
+    - /fill
+    - /validate
+    - /package
+    - /test
+    - /help
+    - /status
+    purpose: Translate 'skill' to user-facing 'Tool', translate MCS levels to Verified/Premium/Elite tiers
+    invisibility_audit_status: PRE-EXISTING DEBT — Wave 4 scope
+  engine_voice:
+    path: references/quality/engine-voice.md
+    consumed_by:
+    - /create
+    - /fill
+    - /validate
+    - /package
+    - /test
+    - /help
+    - /status
+    purpose: Brand DNA, sfumato constraints, voice markers
+    invisibility_audit_status: Acceptable — engine-voice IS the engine speaking
+  intelligence_layer:
+    path: references/intelligence-layer.md
+    consumed_by:
+    - /validate
+    - /package
+    - /scout
+    purpose: Value scoring, pricing strategy, portfolio analysis
+    invisibility_audit_status: PRE-EXISTING DEBT — Wave 4 scope
+  product_spec:
+    path: references/product-specs/skill-spec.md
+    consumed_by:
+    - /create
+    - /validate
+    purpose: Canonical Anthropic Agent Skills spec — file structure, frontmatter, activation, MCS requirements
+    invisibility_audit_status: Clean (verified)
+  fill_protocol:
+    path: .claude/skills/fill/references/fill-protocol.md
+    consumed_by:
+    - /fill
+    purpose: Section walker protocol, sparring protocol, deepening menu, type-specific coaching
+    invisibility_audit_status: Clean
+schema_consumer_status:
+  fully_wired_sections:
+  - type, primary_file, install_target, template (read by /create, /validate, /package, /test, /import)
+  - dna_patterns (read by /validate Stage 3, 4, 5)
+  - mcs_expectations (read by /validate scoring)
+  - frontmatter (read by /create scaffold + /package Step 1.5 verify)
+  - template_files (read by /create scaffold)
+  - discovery_questions.minimum_set (read by /create — partially via discovery-questions.md)
+  - lifecycle.publish.distribution_channels (read via config.yaml.intelligence.distribution.channels_by_type)
+  partially_wired_sections:
+  - lifecycle.create (skill reads product-dna but not lifecycle.create.discovery_phase.archetype_selection_required)
+  - lifecycle.fill (skill reads product-dna but not lifecycle.fill.sections_walked structured form)
+  - lifecycle.validate (skill reads dna_patterns but not per_stage_hooks structured form)
+  - lifecycle.test (skill reads install_target but not type_specific_steps structured form)
+  - lifecycle.package (skill reads install_target/package_rename but not step_6b_verify structured form)
+  - lifecycle.import (skill detects type but tabela has skill — 9 of 13 types covered)
+  - lifecycle.map (skill exists but doesn't consult per-type lifecycle hints)
+  - lifecycle.scout (skill exists but doesn't consult per-type lifecycle hints)
+  aspirational_sections:
+  - essence (no consumer)
+  - architectural_principles (no consumer; consumed by Wave 3 dogfood checks)
+  - operational_modes (no consumer)
+  - freedom_levels (no consumer)
+  - archetypes (CRITICAL — no current consumer; Wave 3 ensina /create a perguntar archetype)
+  - description_engineering (no consumer; Wave 3 ensina /validate Stage 3 D1 a aplicar a rubric)
+  - progressive_disclosure_model (partially via D3 check — Wave 3 enriquece com nesting/orphan/distribution checks)
+  - maturity_model (no consumer; Wave 3 ensina /validate Stage 8 a computar maturity_level)
+  - quality_rubric (no consumer; Wave 3 ensina /validate Stage 7 a aplicar a rubric)
+  - anti_patterns_catalog (no consumer; Wave 3 ensina /validate Stage 7 a grep against AP-IDs)
+  - reasoning_frameworks (no consumer; Wave 3 may add to /think router)
+  - decision_trees (no consumer; Wave 3 ensina /create a executar)
+  - stakeholder_mapping (no consumer)
+  - output_patterns (no consumer; Wave 3 ensina /validate Stage 4 D4 a detect pattern)
+  - workflow_patterns (no consumer)
+  - flow (rendered nowhere yet)
+  - failure_modes (consumed by Wave 3 /validate Stage 7 advisory)
+  - invariants (consumed by Wave 3 /validate as schema bump triggers)
+  - security_profile (consumed by Wave 3 /aegis routing)
+  - marketplace_taxonomy (consumed by Wave 3 /package vault.yaml gen)
+  - lifecycle_shared_refs (consumed by Wave 3 skills as load manifests)
+  - schema_consumer_status (this section — consumed by humans + S118 executor)
+  blocking_gaps_for_this_type:
+  - id: GAP-1
+    where: .claude/skills/import/SKILL.md detection table
+    issue: 9 types listed including skill (skill is OK) but missing hooks, statusline, bundle, minds, output-style
+    wave_to_fix: 3
+    severity: minor for skill (skill is detected) but blocks /import for 5 of 13 types
+  - id: GAP-2
+    where: config.yaml.intelligence.distribution.channels_by_type.skill
+    issue: skill IS in channels_by_type table (verified) — fully wired
+    wave_to_fix: null
+    severity: none
+  - id: GAP-3
+    where: '.claude/skills/create/references/discovery-questions.md → ## Skills section'
+    issue: Section exists but does NOT include archetype selection or reasoning framework offering — codex is more complete
+    wave_to_fix: 4
+    severity: PARTIAL — codex covers it, alignment needed
+  - id: GAP-4
+    where: .claude/skills/validate/references/validation-stages/stage-3-dna-tier1.md
+    issue: D1 check is grep-based ('grep activation/protocol section + references/ ref'). Does NOT apply description_engineering rubric or check description quality dimensions.
+    wave_to_fix: 3
+    severity: MAJOR — current /validate accepts vague descriptions that fail real activation

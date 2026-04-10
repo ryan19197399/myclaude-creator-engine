@@ -1,92 +1,2181 @@
-# product-dna/squad.yaml — DNA requirements for Squads
-# Read by /create, /validate, /package when type=squad
+# product-dna/squad.yaml — Codex for Squads
+# Read by /create, /fill, /validate, /test, /package, /publish (and /import, /map,
+# /status when they read product-dna) when type=squad.
+#
+# This file is the SINGLE SOURCE OF TRUTH for everything the Engine knows about the
+# Squad product type. A squad is a coherent BUNDLE of agent and skill files
+# distributed as one product and installed as multiple coordinated artifacts into
+# .claude/agents/ and .claude/skills/. A squad is NOT a native Claude Code
+# primitive — it is a myClaude CONVENTION layered on top of native primitives
+# (subagents, skills, hooks, the Task tool) that enables coordinated multi-agent
+# work. The codex makes this convention explicit.
+#
+# Schema version: 3.0.0
+# Ground truth: every claim about Claude Code native behavior carries a
+# [SOURCE: file.ts:line] reference verified in S118. See
+# references/claude-code-ground-truth.md.
+#
+# HERITAGE: squad extends agent.yaml. Everything in agent.yaml's architectural
+# principles, frontmatter schema, token economics, and quality rubric applies
+# to each individual agent that composes a squad. This codex adds the COORDINATION
+# layer — routing, handoff, install manifest, orchestration archetype enforcement.
+
+# ===========================================================================
+# IDENTITY
+# ===========================================================================
 
 type: squad
 primary_file: SQUAD.md
-install_target: ".claude/skills/{slug}/"
-template: "templates/squad/"
+# Squad install is MULTI-TARGET. install_target points to the workspace directory
+# that holds the full bundle; the actual install is driven by install_manifest
+# below. The bundle contains:
+#   - SQUAD.md (manifest + orchestrator persona)
+#   - routing.yaml (declarative routing consumed by the orchestrator)
+#   - agents/{role}.md (sub-agent files, installed to .claude/agents/ with namespace)
+#   - skills/{role}/SKILL.md (optional sub-skills, namespaced via path)
+# See install_manifest for the canonical multi-target copy logic.
+install_target: .claude/squads/{slug}/
+template: templates/squad/
+canonical_spec: references/product-specs/squad-spec.md
+
+essence:
+  one_line: A coherent bundle of agents coordinated by an orchestrator through a declarative routing table.
+  amplifies: "Multi-agent coordination with physical D9 enforcement \u2014 the orchestrator routes via the Task tool using tool boundary restrictions (Agent, Read, Grep only; no Write or Edit) so it CANNOT execute specialist work itself, and the specialists each carry their own constitution and memory."
+  philosophy: "A squad is the unit of coordinated delegation. Where an individual agent is trust-once, a squad is trust-a-team. The orchestrator's job is routing and synthesis, the specialists' job is execution within their scope, and the routing table makes the decisions auditable. Squads are NOT a Claude Code native primitive \u2014 they are a myClaude convention that declares a multi-file install manifest consumed by `myclaude install`, producing a set of coordinated native artifacts."
+  refuses:
+  - "Existing as a single monolithic file \u2014 a squad with one AGENT.md is either an agent or an over-sold skill. Squads require at least one orchestrator + one specialist."
+  - "Orchestrators that execute specialist work \u2014 tool boundary enforcement (D9) is physical, not rhetorical. The orchestrator's `tools:` whitelist contains Agent, Read, Glob, Grep, and Bash (read-only) and EXCLUDES Write, Edit, NotebookEdit."
+  - "Implicit routing \u2014 if routing logic lives only in orchestrator prose, it cannot be audited, validated, or replayed. The routing.yaml file is mandatory."
+  - "Handoff as free text \u2014 when the orchestrator calls Task to spawn a specialist, the prompt MUST follow the handoff format declared in handoff_format_spec below. Free-text handoffs compound ambiguity."
+  - "Recursive squads without budget \u2014 a squad that spawns another squad is permitted, but the recursion depth and spawn budget must be declared in routing.yaml."
+  trade_offs:
+    gains:
+    - "Physical D9 enforcement via orchestrator tool boundary \u2014 an orchestrator agent that cannot Write or Edit CANNOT execute specialist work, regardless of prompt pressure. [SOURCE: loadAgentsDir.ts:677-681 disallowedTools]"
+    - "D10 handoff as structured contract \u2014 the handoff_format_spec declares an XML envelope that every orchestrator spawn must emit, making handoffs diffable, loggable, and replayable."
+    - "D18 subagent isolation via native fork \u2014 each specialist spawned via the Task tool runs in its own forked context window, file state cache, and permission rules. [SOURCE: runAgent.ts:694-714]"
+    - "Native parallelism via multiple Task calls in one assistant turn \u2014 the orchestrator can spawn N specialists in parallel by emitting multiple Agent tool uses in a single message. [SOURCE: AgentTool/prompt.ts:271 — 'a single message with multiple tool use content blocks']"
+    - "Distributable as a single bundle \u2014 `myclaude install squad-slug` reads install_manifest and does the multi-target copy; `myclaude uninstall` reverses it exactly using the manifest as the audit trail."
+    - "Plugin.json declares the full artifact set \u2014 the squad ships a plugin.json with both `agents:` and `skills:` fields so the buyer's Claude Code discovery picks up all pieces simultaneously."
+    - "Namespaced via filesystem path \u2014 sub-agents install with {slug}__{role} naming OR via {slug}/{role} subdirectory, preventing collision with other installed agents. [SOURCE: loadSkillsDir.ts:523-543 native namespace via pathSep]"
+    sacrifices:
+    - "Higher forge cost \u2014 a state-of-art squad requires designing the orchestrator persona, each specialist's persona and tool boundary, the routing table, the handoff format, and the install manifest."
+    - "Install complexity \u2014 multi-target install means the buyer must trust the install_manifest. A squad that does not declare its install_manifest is untrustworthy at scale."
+    - "Coordination overhead \u2014 each Task spawn costs a full agent boot (system prompt, initial messages, MCP init). Squads that spawn 10 specialists serially are token-expensive."
+    - "Return shapes must be disciplined \u2014 the orchestrator can only synthesize what specialists return. Specialists without output contracts produce squads that fail integration."
+    worth_it_when: "The task requires multiple distinct expertise areas that should NOT share context, benefits from parallelism, or needs auditable routing decisions for compliance/review."
+
+# ===========================================================================
+# ARCHITECTURAL PRINCIPLES — specialized for squads
+# ===========================================================================
+
+architectural_principles:
+  P1_purpose_before_shape:
+    specialization: "A squad's purpose is multi-agent coordination for a specific delegated workflow. Before scaffolding, the creator must answer: (1) what workflow does this squad coordinate, (2) what are the distinct expertise areas (specialists), (3) what is the routing logic (sequential / parallel / conditional / iterative), (4) what does the orchestrator synthesize and return. Shape (orchestrator + N specialists + routing.yaml + install_manifest) is answered after purpose."
+    enforced_by:
+    - discovery_questions.minimum_set
+    - lifecycle.create.type_specific.discovery_phase
+    blocks_forge_when: "Creator cannot name the distinct specialists OR cannot describe the routing logic in one sentence."
+  P2_constraint_before_feature:
+    specialization: "For squads, the constraint is the orchestrator's tool boundary. The orchestrator's `tools:` whitelist MUST contain Agent (to spawn specialists) and MUST exclude Write, Edit, NotebookEdit. This physical boundary is D9 enforcement \u2014 the orchestrator cannot execute specialist work even under prompt pressure. Anti-patterns are extended with squad-specific failure modes (AP-SQ1 to AP-SQ5 below)."
+    enforced_by:
+    - dna_patterns.tier1.D2
+    - dna_patterns.tier3.D9
+    - anti_patterns_catalog
+    - invariants
+    blocks_forge_when: "Orchestrator frontmatter does not include Agent in tools OR includes Write/Edit/NotebookEdit."
+  P3_composition_over_monolith:
+    specialization: "A squad IS composition by definition. Minimum 1 orchestrator + 1 specialist = 2 files. The routing.yaml declaratively composes routes. The install_manifest declaratively composes targets. No single file exceeds 500 lines (each orchestrator and each specialist individually follows D3)."
+    enforced_by:
+    - dna_patterns.tier1.D3
+    - install_manifest
+    - routing_table_schema
+    - invariants
+    blocks_forge_when: "Squad has fewer than 2 agent files (an orchestrator and at least one specialist) OR any single agent file exceeds 500 lines."
+  P4_contract_before_narrative:
+    specialization: "The squad's contract is the install_manifest (what gets installed where) + routing.yaml (which routes exist) + handoff_format_spec (what handoff payloads look like) + each agent's individual frontmatter. Prose in SQUAD.md explains the contract but never replaces it."
+    enforced_by:
+    - install_manifest
+    - routing_table_schema
+    - handoff_format_spec
+    - frontmatter.required
+    blocks_forge_when: "routing.yaml missing OR install_manifest missing OR any specialist has no frontmatter name/description."
+  P5_failure_mode_before_happy_path:
+    specialization: "Squads declare failure modes at three levels: (a) individual agent failure handling (inherited from agent.yaml P5); (b) routing failure handling (what happens when no route matches); (c) synthesis failure handling (what the orchestrator returns when specialists disagree or return errors). The routing.yaml declares a fallback route; the orchestrator body declares synthesis failure convention."
+    enforced_by:
+    - dna_patterns.tier1.D14
+    - failure_modes
+    - routing_table_schema
+    - invariants
+    blocks_forge_when: "routing.yaml has no fallback OR orchestrator body has no synthesis failure convention."
+  P6_state_at_the_edge:
+    specialization: "Squad state has THREE native channels: (1) each individual agent's `memory:` scope \u2014 inherited from agent.yaml; (2) the routing.yaml itself \u2014 state of the routing logic lives in declarative YAML on disk, not in orchestrator prose; (3) optional shared squad state file at `.claude/squads/{slug}/state.yaml` which the orchestrator reads and writes via its Read/Write tools (note: orchestrator's Write tool is DENIED in the recommended pattern, so shared state is either written via a specialist or via a hook). Implicit cross-agent memory is forbidden."
+    enforced_by:
+    - dna_patterns.tier2.D8
+    - dna_patterns.tier3.D12
+    - routing_table_schema
+    - invariants
+    blocks_forge_when: "Squad describes cross-agent memory without declaring a state file OR without a hook/specialist that writes the state."
+  P7_read_before_write:
+    specialization: "/create reads creator.yaml + scout report + this codex + templates/squad/ + canonical_spec + claude-code-ground-truth.md + agent.yaml (for inheritance) BEFORE generating any scaffold (7 reads). This is the highest read-before-write ratio in the family-skill group because squads inherit from both agent AND skill. /validate reads the full squad bundle + routing.yaml + install_manifest BEFORE scoring."
+    enforced_by:
+    - lifecycle.create.type_specific.read_before_write_ratio
+    - lifecycle.create.type_specific.ground_truth_required
+    - invariants
+    blocks_forge_when: "Squad scaffolded without reading agent.yaml for sub-agent inheritance OR without reading claude-code-ground-truth.md."
+  P8_invisibility_of_mechanism:
+    specialization: "User-facing strings in published squads (orchestrator description, each specialist description, README) MUST NOT reference Engine internals, myClaude conventions (install_manifest, handoff_format_spec are internal to the codex), archetype taxonomy names (ORCHESTRATOR as label is internal), or substrate vocabulary. The buyer sees a coherent team of named agents; the coordination plumbing stays invisible."
+    enforced_by:
+    - lifecycle.validate.type_specific.per_stage_hooks.stage_7_anti_commodity
+    blocks_forge_when: "grep on user-facing strings finds substrate vocabulary OR internal archetype names as marketing."
+  P9_recursive_integrity:
+    specialization: "The /validate squad pipeline must pass when applied to the Engine's own squad-shaped tools (if any ship as squads) and when applied to reference squads in templates/squad/. A squad codex that demands MCS-3 from its creators while its own exemplars score MCS-1 is dishonest."
+    enforced_by:
+    - lifecycle.validate.type_specific.dogfood_check
+    - quality_rubric
+    consumer_status: aspirational
+    consumer_status_reason: "/validate does not yet run dogfood checks against Engine-shipped squads or reference squad exemplars — the dogfood_check field declared below under lifecycle.validate.type_specific names the consumer contract so the capability is wireable once the codex validator reads this hook."
+    blocks_forge_when: "Codex cannot pass its own validator when applied to itself."
+
+# ===========================================================================
+# OPERATIONAL CALIBRATION
+# ===========================================================================
+
+operational_modes:
+  supports:
+  - structure
+  - discovery
+  default: discovery
+  rationale: "Squads default to DISCOVERY mode because multi-agent coordination benefits from /scout (marketplace + built-in squad survey) and /map (decomposing the workflow into specialist areas). A creator with a fully clear squad design can enter structure mode via /create squad directly."
+  discovery_entry_via:
+    skill: /scout
+    fallback: /map
+    rationale: "/scout identifies existing squads and specialist agents that could be composed. /map decomposes the creator's workflow expertise into specialist roles."
+freedom_levels:
+  valid:
+  - 1
+  - 2
+  - 3
+  - 4
+  default: 2
+  rationale: "Squads work at freedom levels 1-4. Level 5 is NOT recommended because autonomous squad generation produces incoherent specialist rosters. The creator needs to decide the specialist decomposition deliberately."
+  per_level_behavior:
+    1: "Engine walks every specialist role, every routing decision, every handoff format question. Used for first squad."
+    2: "Engine proposes specialist decomposition from discovery; creator confirms. DEFAULT."
+    3: "Engine generates full squad from discovery + scout + domain-map; creator audits."
+    4: "Engine generates squad end-to-end from creator.yaml + scout report + existing agent inventory; creator reviews and edits."
+  consumer_status: aspirational
+  consumer_status_reason: "/create and /fill do not yet consult freedom_level at the squad-specific level — the field is declared so the two skills can route by autonomy level once their squad branches are extended to read it."
+
+# ===========================================================================
+# INTENT TOPOLOGY — derived shape (delivery + nature fixed; depth N/A at squad level)
+# ===========================================================================
+# Axis source: references/intent-topology.md §2. Every squad is task-spawned
+# (the coordinator agent is spawned via the Task tool; the sub-agents spawn
+# via handoffs from the coordinator) and every squad is fundamentally an
+# orchestrator — its value is routing work to specialists. Cognitive_depth
+# applies to the sub-agents individually, not to the squad as a whole.
+# Declaration mode: derived.
+
+intent_topology:
+  declaration_mode: derived
+  declaration_mode_reason: "Squad has fixed (delivery_mechanism, operational_nature). Every squad is invoked via Task tool and operates as an orchestrator — the coordinator routes to specialists. Declaring full enums would be tautological. cognitive_depth is not declared at the squad level because depth is a property of the SUB-AGENTS, not of the coordination pattern."
+  runtime_shape_note: "delivery_mechanism=invoked_task_spawn, operational_nature=orchestrator, cognitive_depth=per-sub-agent. See references/runtime-host-dag.md §2 row 4 (invoked_task_spawn + any → [agent_spawn]) and references/composition-anatomy.md §3 for how squad composition relates to sub-agent depths."
+  delivery_mechanism_fixed: invoked_task_spawn
+  operational_nature_fixed: orchestrator
+  cognitive_depth_applicable: per_sub_agent
+  cognitive_depth_applicable_reason: "A squad itself has no cognitive depth — it is a coordination pattern. Individual sub-agents within the squad each carry their own cognitive_depth per the agent codex intent_topology. The squad's MCS quality depends on orchestration discipline (handoff specification D10, orchestrate-don't-execute D9) not on depth."
+  runtime_host_derived: "[agent_spawn]"
+  locale_adaptive_clause_required: true
+  locale_adaptive_clause_source: references/locale-adaptive-clause.md
+  locale_adaptive_clause_required_reason: "Every forged squad carries a runtime contract that propagates to the coordinator agent and all sub-agents: mirror the invoker's language in user-facing output while preserving handoff markers and orchestration protocol in the source language. A squad forged in PT-BR is installable by a French user: the coordination logic travels; the user-facing voice mirrors. Injected by /create during W2.6 into templates/squad/SQUAD.md.template and propagated to each sub-agent template."
+  locale_adaptive_clause_consumer_status: aspirational
+  consumer_status: aspirational
+  consumer_status_reason: "This block is consumed by the standard routing table consumer, the Stage 0 intent coherence consumer, and the drift-check enum paths — the three consumers share the canonical enums declared here. The derived-mode rationale above names which enums are fixed and which are delegated to the per-sub-agent level."
+
+# ===========================================================================
+# ARCHETYPES — canonical squad shapes
+# ===========================================================================
+# Squad archetypes are COORDINATION PATTERNS. Each archetype determines the
+# routing logic, the expected specialist count, and the orchestrator persona.
+
+archetypes:
+  selection_required: true
+  selection_phase: lifecycle.create.type_specific.discovery_phase
+  selection_question: "Which coordination archetype best matches your squad?"
+  hybrid_policy: "Identify the DOMINANT archetype. Use secondary for enrichment. Never declare two equal archetypes."
+  sequential_pipeline:
+    when_to_use: "Work flows through specialists in strict order. Each specialist consumes the previous one's output. Classic ETL or multi-stage review pattern."
+    routing_mode: sequential
+    specialist_count_typical: 3-5
+    orchestrator_pattern: "Read routing.yaml → call Task(specialist_1) → receive result → call Task(specialist_2, input: result_1) → ... → synthesize final report"
+    examples_by_domain:
+    - "PR review squad (reviewer → security-auditor → synthesizer)"
+    - "Migration squad (analyzer → planner → implementer → verifier)"
+    - "Research squad (scout → fact-checker → writer)"
+    validation_checklist:
+    - "routing.yaml mode is sequential with explicit step order"
+    - "Each specialist's output becomes the next specialist's input (declared in routing.yaml)"
+    - "Orchestrator body explains the sequence contract"
+    - "Failure in any step halts the pipeline unless continue_on_fail is declared"
+    typical_dna_emphasis:
+    - D1
+    - D2
+    - D4
+    - D9
+    - D10
+    - D14
+  parallel_convergent:
+    when_to_use: "Work fans out to specialists that run independently then converges to a synthesis step. Classic multi-perspective review."
+    routing_mode: parallel
+    specialist_count_typical: 3-6
+    orchestrator_pattern: "Read routing.yaml → emit N parallel Task calls in a single assistant message → receive N results → synthesize"
+    examples_by_domain:
+    - "Multi-perspective design review (architect + security + performance + ux in parallel → synthesizer)"
+    - "Parallel file investigation (split files across specialists)"
+    - "Research with multiple angles"
+    validation_checklist:
+    - "routing.yaml mode is parallel with specialist list"
+    - "Orchestrator body instructs single-message parallel Task spawn [SOURCE: AgentTool/prompt.ts:271]"
+    - "Synthesis specialist or orchestrator synthesis convention declared"
+    - "Partial failure handling declared (what happens if 2 of 4 specialists fail)"
+    typical_dna_emphasis:
+    - D1
+    - D2
+    - D4
+    - D9
+    - D10
+    - D11
+    - D14
+    - D18
+  conditional_router:
+    when_to_use: "Work is routed to ONE of several specialists based on input classification. Only one specialist runs per invocation."
+    routing_mode: conditional
+    specialist_count_typical: 2-8
+    orchestrator_pattern: "Read routing.yaml → classify input → select matching route → call Task(selected_specialist) → return"
+    examples_by_domain:
+    - "Debug router (by error type → specific debugger)"
+    - "Deploy router (by platform → platform-specific deployer)"
+    - "Language router (by file extension → language-specific specialist)"
+    validation_checklist:
+    - "routing.yaml has conditional rules with natural-language triggers"
+    - "Orchestrator has classification logic described in body"
+    - "Default/fallback route declared for unclassifiable input"
+    - "Specialists are mutually exclusive (only one runs per invocation)"
+    typical_dna_emphasis:
+    - D1
+    - D2
+    - D4
+    - D5
+    - D9
+    - D10
+    - D14
+  iterative_refinement:
+    when_to_use: "Work loops through specialists until a quality gate is met or a max-iterations budget is exhausted. Refinement pattern."
+    routing_mode: iterative
+    specialist_count_typical: 2-4 with gate
+    orchestrator_pattern: "Read routing.yaml → loop: call Task(executor) → call Task(verifier) → if verifier PASS break, else continue → max N iterations → synthesize"
+    examples_by_domain:
+    - "Refactor-then-verify loop"
+    - "Optimize-until-target-met loop"
+    - "Write-then-review-then-revise loop"
+    validation_checklist:
+    - "routing.yaml declares max_iterations"
+    - "Gate specialist is a read-only ADVISER or verification agent"
+    - "Orchestrator body declares break condition and synthesis of final iteration"
+    - "Each iteration's state is preserved for the next (via state file OR via assistant history)"
+    typical_dna_emphasis:
+    - D1
+    - D2
+    - D4
+    - D9
+    - D10
+    - D11
+    - D12
+    - D14
+  hierarchical_delegation:
+    when_to_use: "Top-level orchestrator delegates to mid-level orchestrators that each manage their own specialist teams. Nested squads."
+    routing_mode: hierarchical
+    specialist_count_typical: 2 mid-orchestrators + 3-5 specialists each
+    orchestrator_pattern: "Top orchestrator → delegates to mid-orchestrator(s) → each mid-orchestrator runs its own squad → synthesize at top"
+    examples_by_domain:
+    - "Enterprise code review (security squad + architecture squad + code-style squad each with own specialists)"
+    - "Full-stack migration (backend squad + frontend squad + infra squad)"
+    validation_checklist:
+    - "routing.yaml declares nested routes with depth budget"
+    - "Each mid-orchestrator has its own routing.yaml in its subdirectory"
+    - "Recursion depth is capped (max_depth declared)"
+    - "Synthesis at every level"
+    typical_dna_emphasis:
+    - D1
+    - D2
+    - D4
+    - D9
+    - D10
+    - D11
+    - D12
+    - D14
+    - D18
+  hybrids:
+    sequential_with_parallel_step:
+      description: "Sequential pipeline where ONE step fans out to parallel specialists."
+      when: "The pipeline has one step that benefits from parallel specialists (e.g., analyzer step runs 3 analysts in parallel)."
+      example: "PR review with sequential stages, parallel during the multi-perspective review stage."
+    conditional_with_sequential_branches:
+      description: "Classifier routes to one of several sequential sub-pipelines."
+      when: "Different input classes need different pipelines."
+      example: "Language router where each language has its own sequential build+test pipeline."
+  consumer_status: aspirational
+  consumer_status_reason: "/create does not yet ask for squad archetype first. The discovery walker currently walks generic type questions before routing archetype selection — the archetype_first: true flag declared under lifecycle.create.type_specific.discovery_phase names the intended ordering so the walker can be extended to honor it."
+
+# ===========================================================================
+# ROUTING TABLE SCHEMA — declarative routing consumed by orchestrator
+# ===========================================================================
+# routing.yaml is the SOUL of a squad. It declares specialists, routes, handoff
+# format, and failure handling in a file that can be diffed, replayed, and
+# visualized. The orchestrator reads this file at boot and uses it to decide
+# spawns.
+
+routing_table_schema:
+  file_path: routing.yaml
+  file_location: "Workspace: workspace/{slug}/routing.yaml. Installed: `.claude/squads/{slug}/routing.yaml`."
+  installed_by: install_manifest (routing.yaml is copied verbatim to install target)
+  consumed_by: The orchestrator reads routing.yaml in its activation protocol (first turn) before emitting any Task calls.
+  schema:
+    name: string (squad display name)
+    version: string (semver)
+    archetype: "one of: sequential_pipeline, parallel_convergent, conditional_router, iterative_refinement, hierarchical_delegation"
+    mode: "one of: sequential, parallel, conditional, iterative, hierarchical"
+    max_iterations: "integer — required if mode is iterative"
+    max_depth: "integer — required if mode is hierarchical"
+    specialists:
+      type: list
+      item_schema:
+        id: "string — the agent's agentType as installed (e.g., 'my-squad__reviewer')"
+        role: "string — short human role name ('Reviewer')"
+        description: "one-sentence purpose"
+        tools_summary: "what the specialist can do, at a glance"
+    routes:
+      type: list
+      item_schema:
+        trigger: "natural-language or structured condition describing when this route fires"
+        sequence: "list of specialist ids in the order they should be spawned"
+        synthesis: "how the orchestrator combines specialist returns (prose explanation)"
+        fallback: "what happens if any specialist in the sequence fails"
+    fallback_required: true
+    fallback_schema:
+      trigger: "default / no-match / on-failure"
+      action: "what to do when no route matches OR when a route's sequence fails"
+  example: |
+    name: code-review-squad
+    version: 1.0.0
+    archetype: sequential_pipeline
+    mode: sequential
+    specialists:
+      - id: code-review-squad__reviewer
+        role: Reviewer
+        description: "General-purpose code review covering correctness and readability"
+        tools_summary: "read-only — searches code, identifies issues"
+      - id: code-review-squad__security-auditor
+        role: Security Auditor
+        description: "Specialized security review focusing on OWASP and common CVEs"
+        tools_summary: "read-only — runs audit scripts"
+      - id: code-review-squad__synthesizer
+        role: Synthesizer
+        description: "Combines review and audit into a prioritized report"
+        tools_summary: "read-only — aggregates findings"
+    routes:
+      - trigger: "any PR review request"
+        sequence: [code-review-squad__reviewer, code-review-squad__security-auditor, code-review-squad__synthesizer]
+        synthesis: "The synthesizer's output is the final report. The orchestrator returns it verbatim to the parent context."
+        fallback: "If reviewer fails, halt and return the error. If security-auditor fails, continue with reviewer output only and mark synthesis as PARTIAL."
+    fallback:
+      trigger: "no-match"
+      action: "Return 'No matching route — please clarify your request.'"
+  orchestrator_responsibilities:
+  - "Read routing.yaml in activation protocol"
+  - "Match the input against route triggers"
+  - "For the matching route, spawn specialists in declared sequence (or in parallel for mode: parallel)"
+  - "Pass each specialist's return as context to the next (for sequential)"
+  - "Synthesize according to the route's synthesis declaration"
+  - "Handle failures per the route's fallback declaration"
+  - "Return a final report to the parent context"
+  validation_checks:
+  - "routing.yaml is valid YAML"
+  - "Every route.sequence specialist id is present in specialists list"
+  - "Every specialist id matches an agent file in the install_manifest"
+  - "mode is consistent with archetype"
+  - "fallback is present"
+  - "If mode is iterative, max_iterations is set"
+  - "If mode is hierarchical, max_depth is set"
+  consumer_status: aspirational
+  consumer_status_reason: "/validate does not yet parse routing.yaml nor run the schema checks declared above. /create does not yet scaffold routing.yaml from discovery answers plus archetype selection — the field is declared here so both consumers have a single canonical schema to read once their squad branches are extended."
+
+# ===========================================================================
+# HANDOFF FORMAT SPEC — the XML envelope for orchestrator → specialist spawns
+# ===========================================================================
+# Every Task call the orchestrator emits to spawn a specialist MUST follow this
+# format. This makes handoffs diffable, loggable, and replayable — D10 made
+# physical through a prompt format contract.
+
+handoff_format_spec:
+  rationale: "A handoff payload is the text the orchestrator passes to Task(subagent_type: specialist, prompt: ...). Structuring it with an XML envelope means every handoff carries the same fields: task description, context from previous specialists, output contract, budget. The orchestrator body is TAUGHT this format in its activation protocol."
+  canonical_form: |
+    <handoff>
+      <from>{orchestrator_slug}</from>
+      <to>{specialist_slug}</to>
+      <sequence_step>{current_step}/{total_steps}</sequence_step>
+      <task>
+        {one-sentence task description specific to this specialist's scope}
+      </task>
+      <context_from_previous>
+        {summary of previous specialist returns, or "null" for first in sequence}
+      </context_from_previous>
+      <output_contract>
+        {exactly what shape the specialist should return — labeled fields, verdict line, etc.}
+      </output_contract>
+      <budget_tokens>{approximate limit, e.g., 8000}</budget_tokens>
+      <scope_boundary>
+        {what this specialist should NOT touch — prevents scope bleed}
+      </scope_boundary>
+    </handoff>
+  example: |
+    <handoff>
+      <from>code-review-squad-orchestrator</from>
+      <to>code-review-squad__security-auditor</to>
+      <sequence_step>2/3</sequence_step>
+      <task>
+        Audit the changes introduced in PR #1234 for security issues (OWASP Top 10, injection, auth, secrets).
+      </task>
+      <context_from_previous>
+        The reviewer found 3 readability issues and 1 potential null dereference in src/auth.ts:45. Full reviewer report attached at .claude/squads/code-review-squad/transcripts/reviewer-output.md.
+      </context_from_previous>
+      <output_contract>
+        Return labeled fields:
+          Scope: "<echo of task>"
+          Findings: "<list of security issues found, each with severity and file:line>"
+          Blockers: "<list of issues that must fix before merge>"
+          VERDICT: "SAFE | UNSAFE | NEEDS-REVIEW"
+      </output_contract>
+      <budget_tokens>8000</budget_tokens>
+      <scope_boundary>
+        Do not review code style, readability, or functional correctness — those are the reviewer's scope.
+      </scope_boundary>
+    </handoff>
+  enforcement: "The orchestrator's body includes a section 'Handoff format — every Task call MUST use this envelope' that quotes the canonical form verbatim. /validate Stage 3 checks that this section is present."
+  parseability_note: "The envelope is prose-readable AND machine-parseable. A future myClaude release could parse handoff transcripts for auditability. Today it is pure convention that the LLM follows."
+  consumer_status: aspirational
+  consumer_status_reason: "/validate does not yet verify orchestrator body contains the handoff format section declared above. /test does not yet replay handoff transcripts. Both consumers are named here so the canonical_form becomes the single source of truth once the checks are wired."
+
+# ===========================================================================
+# INSTALL MANIFEST — multi-target install contract
+# ===========================================================================
+# A squad is a multi-file product. The install_manifest declares exactly what
+# gets copied where. `myclaude install` reads it; `myclaude uninstall` reverses
+# it. This is the mechanism that makes squads distributable as a coherent bundle
+# without requiring a custom Claude Code loader.
+
+install_manifest:
+  rationale: "Claude Code has no native concept of 'install a squad'. It has .claude/agents/ and .claude/skills/ loaders. myClaude layers a multi-target install contract ON TOP of these loaders so that one `myclaude install squad-slug` command produces all the coordinated native artifacts."
+  schema:
+    version: "integer — manifest schema version (current: 1)"
+    targets:
+      type: list
+      item_schema:
+        source: "relative path inside the squad bundle (e.g., agents/reviewer.md)"
+        target: "destination path using {slug} placeholder and one of the supported roots (~/.claude/, project .claude/)"
+        kind: "one of: copy, merge, append"
+        kind_details:
+          copy: "Plain file copy. Overwrites if exists with --force."
+          merge: "For JSON files (plugin.json, settings.json). myClaude merges the source into the existing file, preserving unrelated keys."
+          append: "For text files (CLAUDE.md). Appends source content wrapped in `<!-- squad:{slug}:start -->...<!-- squad:{slug}:end -->` markers for idempotent removal."
+    post_install_hint: "string — optional message shown after install (e.g., invocation instructions)"
+    pre_uninstall_checks: "optional list of checks before uninstall (e.g., 'squad has not been invoked in the last 7 days')"
+  canonical_example: |
+    version: 1
+    targets:
+      - source: SQUAD.md
+        target: "~/.claude/squads/{slug}/SQUAD.md"
+        kind: copy
+      - source: routing.yaml
+        target: "~/.claude/squads/{slug}/routing.yaml"
+        kind: copy
+      - source: orchestrator.md
+        target: "~/.claude/agents/{slug}-orchestrator.md"
+        kind: copy
+      - source: agents/reviewer.md
+        target: "~/.claude/agents/{slug}__reviewer.md"
+        kind: copy
+      - source: agents/security-auditor.md
+        target: "~/.claude/agents/{slug}__security-auditor.md"
+        kind: copy
+      - source: agents/synthesizer.md
+        target: "~/.claude/agents/{slug}__synthesizer.md"
+        kind: copy
+    post_install_hint: |
+      Squad installed. Invoke via:
+        Task(subagent_type: "{slug}-orchestrator", prompt: "<your request>")
+      Or via slash command if a wrapper command was installed.
+  namespace_strategy:
+    default: "double-underscore prefix — {slug}__{role} — because Claude Code's loadAgentsDir does NOT yet recognize subdirectory namespaces for .claude/agents/ (verified: loadMarkdownFilesForSubdir traverses but the discovered agentType comes from the `name:` frontmatter field). The prefix guarantees unique names."
+    alternative: "subdirectory — {slug}/{role} — for .claude/skills/ where native path namespace IS supported via buildNamespace [SOURCE: loadSkillsDir.ts:523-543]. Skills inside a squad bundle SHOULD use subdirectory namespace and get {slug}:{role} names naturally."
+  idempotency_rules:
+  - "Install is idempotent: re-running it with the same manifest produces no changes (or overwrites with --force)."
+  - "Uninstall is idempotent: re-running it after first uninstall is a no-op."
+  - "append operations use START/END markers; uninstall removes content between markers exactly."
+  - "merge operations preserve unrelated keys; uninstall removes only keys the install added, tracked via a .manifest-lock file written at install time."
+  manifest_lock:
+    description: "On install, myClaude writes `.claude/squads/{slug}/.manifest-lock.yaml` listing every file created, every append marker position, every merged key. uninstall reads this lock and reverses exactly."
+    schema:
+      installed_files: "list of absolute paths created"
+      appended_sections: "list of {file, start_marker, end_marker}"
+      merged_keys: "list of {file, key_path}"
+      install_timestamp: ISO 8601
+      manifest_version: integer
+  forward_compat_note: "If Anthropic ships native squad support in a future Claude Code release, install_manifest becomes a no-op and squads install natively. The bundle structure matches the expected native layout by convention."
+  consumer_status: aspirational
+  consumer_status_reason: "The myClaude CLI does not yet consume install_manifest — multi-target install is documentation-only today. Squads install via manual file placement, and the manifest serves as the canonical declaration the CLI will read once its squad-install command is extended."
+
+# ===========================================================================
+# LIFECYCLE — 10 skills × universal contract + squad-specific type_specific
+# ===========================================================================
+
+lifecycle:
+  map:
+    role: "Extract creator's multi-agent workflow expertise into domain-map.md. For squads, /map helps decompose a workflow into distinct specialist roles."
+    optional: true
+    inputs:
+    - creator.yaml
+    - domain topic seed ($ARGUMENTS)
+    outputs:
+    - workspace/domain-map.md
+    consumer_status: aspirational
+    consumer_status_reason: "/map does not yet consult squad-specific decomposition prompts."
+    blocks_when: []
+    next_action: null
+    next_action_reason: "read-only skill"
+    type_specific:
+      skip_recommended: false
+      skip_message: "For squads, /map is valuable when the creator has workflow expertise but has not yet decomposed it into distinct specialist roles."
+      squad_specific_prompts:
+      - "What workflow does your squad coordinate? Describe it as a sequence of decisions and actions."
+      - "What distinct expertise areas does the workflow touch? (e.g., security, performance, style, correctness)"
+      - "Which expertise areas are INDEPENDENT (can run in parallel) vs. DEPENDENT (need each other's output)?"
+      - "Where does the workflow make decisions based on context? (conditional routing)"
+      - "Does the workflow iterate until a quality gate is met?"
+  scout:
+    role: "Research existing squads in the marketplace and existing individual agents that could be composed. For squads, /scout prevents reinventing specialists that already exist."
+    optional: true
+    inputs:
+    - creator.yaml
+    - domain query ($ARGUMENTS)
+    outputs:
+    - workspace/scout-{slug}.md
+    - STATE.yaml.last_scout updated
+    consumer_status: aspirational
+    consumer_status_reason: "/scout does not yet calibrate for squad-specific composability research."
+    blocks_when: []
+    next_action: null
+    next_action_reason: "read-only research skill"
+    type_specific:
+      skip_recommended: false
+      skip_message: "Skipping /scout for squads is risky — you may reinvent specialists that exist as marketplace agents."
+      scout_calibration_for_squads:
+      - "Scan myclaude.sh agent category for specialists in the squad's domain"
+      - "Scan myclaude.sh squad category for similar coordination patterns"
+      - "Check Claude Code built-in agents for composable primitives (Explore, Plan, verification)"
+      - "Identify composable gaps — what specialists should be forged vs. reused"
+  import:
+    role: "Bring an existing squad directory from ~/.claude/squads/{slug}/ into the Engine workspace for validation, packaging, republish."
+    inputs:
+    - "Source: ~/.claude/squads/{slug}/ directory (entire bundle)"
+    - creator.yaml
+    outputs:
+    - workspace/{slug}/ (full directory imported preserving SQUAD.md + routing.yaml + agents/ + skills/)
+    - "workspace/{slug}/.meta.yaml (state auto-detected)"
+    blocks_when:
+    - workspace/{slug}/ already exists (no --force)
+    - "Source has no SQUAD.md"
+    - "Source has no routing.yaml"
+    consumer_status: blocked
+    consumer_status_reason: "/import SKILL.md detection table does not currently include squad as a distinct type — a directory with SQUAD.md + routing.yaml + agents/ subdirectory is not recognized as a squad. The detection_pattern below names the shape the extended /import must match once its detection table is extended."
+    next_action: "/validate {slug}"
+    optional: true
+    type_specific:
+      detection_pattern: "directory in ~/.claude/squads/ containing SQUAD.md + routing.yaml + at least one agents/*.md file"
+      rename_on_import: null
+      rename_on_import_reason: "Squads use the same filename convention in workspace and install — no rename needed."
+      auto_detected_phase: content
+  create:
+    role: "Run the 6-phase creation cycle for squads: discovery (archetype selection first, then specialist decomposition) → architecture (routing table + handoff format + install manifest) → description engineering (orchestrator + each specialist) → content development (all agent bodies + routing.yaml) → validation → iteration."
+    inputs:
+    - field: creator.yaml
+      purpose: "Author metadata, technical_level, freedom_level default"
+    - field: type
+      value: squad
+    - field: slug
+      purpose: "Validates against ^[a-z0-9][a-z0-9-]{2,39}$"
+    - field: archetype
+      purpose: "MUST be selected before other questions"
+    - field: specialist_roster
+      purpose: "List of specialists with roles derived from discovery"
+    - field: routing_logic
+      purpose: "Sequential / parallel / conditional / iterative / hierarchical"
+    - field: scout_report
+      purpose: Optional
+    - field: domain_map
+      purpose: Optional
+    - field: discovery_answers
+      purpose: "Full squad design"
+    outputs:
+    - workspace/{slug}/SQUAD.md (scaffold with manifest sections)
+    - workspace/{slug}/README.md (4-section skeleton)
+    - workspace/{slug}/routing.yaml (scaffold with specialists + routes)
+    - workspace/{slug}/install-manifest.yaml (scaffold with targets)
+    - "workspace/{slug}/orchestrator.md (orchestrator agent file scaffolded as ORCHESTRATOR archetype per agent.yaml)"
+    - "workspace/{slug}/agents/{role}.md for each declared specialist (each scaffolded as per their individual archetype)"
+    - "workspace/{slug}/.meta.yaml (state: scaffold, archetype recorded)"
+    blocks_when:
+    - slug invalid
+    - "workspace/{slug}/ exists without --force"
+    - creator.yaml missing AND micro-onboard fails
+    - archetype not selected
+    - specialist_roster has fewer than 2 entries (orchestrator + at least 1 specialist)
+    consumer_status: partial
+    consumer_status_reason: "/create reads product-dna.squad today and scaffolds SQUAD.md + README.md + references/ + agents/. It does not yet scaffold routing.yaml, install-manifest.yaml, or orchestrator.md with tool boundary enforcement — the activates_templates list below names the full set the scaffold must produce once its squad branch is extended."
+    next_action: "/fill {slug}"
+    optional: false
+    type_specific:
+      activates_templates:
+      - templates/squad/SQUAD.md.template
+      - templates/squad/README.md.template
+      - templates/squad/routing.yaml.template
+      - templates/squad/install-manifest.yaml.template
+      - templates/squad/orchestrator.md.template
+      - templates/squad/agents/specialist.md.template
+      activates_dna_at_scaffold:
+      - D1
+      - D2
+      - D3
+      - D4
+      - D9
+      - D10
+      - D13
+      - D14
+      - D18
+      discovery_phase:
+        questions_source: "this file → discovery_questions.minimum_set"
+        archetype_selection_required: true
+        archetype_first: true
+        archetype_first_reason: "Archetype determines routing mode, specialist count, orchestrator pattern, and install_manifest structure. Asking later is retrofitting."
+        specialist_decomposition_phase: "After archetype is selected, the creator declares the specialist roster (names + roles + expected tool boundaries per agent archetype)."
+        orchestrator_tool_boundary_enforced: "Scaffold sets orchestrator.md frontmatter tools: [Agent, Read, Glob, Grep] and disallowedTools: [Write, Edit, NotebookEdit] before prompting the creator for anything else."
+      read_before_write_ratio: "7:1 (canonical_spec + this codex + claude-code-ground-truth.md + agent.yaml + creator.yaml + templates + scout_report read; 1 SQUAD.md + N specialist files written)"
+      ground_truth_required: true
+      inherits_from: agent.yaml (each specialist is an agent and follows agent.yaml's archetypes, frontmatter, rubric)
+  fill:
+    role: "Walk each specialist's AGENT.md sections (per agent.yaml.lifecycle.fill.sections_walked) PLUS the orchestrator's routing table section PLUS the routing.yaml content PLUS the install-manifest.yaml targets. Squads have the deepest fill of all types."
+    inputs:
+    - "workspace/{slug}/.meta.yaml (state: scaffold or content)"
+    - workspace/{slug}/SQUAD.md
+    - workspace/{slug}/routing.yaml
+    - workspace/{slug}/install-manifest.yaml
+    - workspace/{slug}/orchestrator.md
+    - workspace/{slug}/agents/*.md
+    - creator.yaml
+    - scout report
+    - domain-map.md
+    - this file (sections_walked)
+    - agent.yaml (per-specialist section walker)
+    outputs:
+    - All files filled
+    - "workspace/{slug}/.meta.yaml (state: content, fill_progress updated)"
+    consumer_status: partial
+    consumer_status_reason: "/fill does not yet walk multiple agent files in sequence within one squad. The sections_walked list below names the full walker sequence that the extended /fill squad branch must honor once iteration across specialists is wired."
+    next_action: "/validate {slug}"
+    optional: false
+    blocks_when: []
+    type_specific:
+      sections_walked:
+      - name: "Squad Identity (SQUAD.md)"
+        why: "Overall squad purpose, the workflow it coordinates, the name of each specialist"
+        sparring_required: true
+        sparring_minimum: 1
+      - name: "Routing Table (routing.yaml)"
+        why: "Specialists list, routes with triggers, synthesis, fallback"
+        sparring_required: true
+        sparring_minimum: 2
+      - name: "Handoff Format Declaration (SQUAD.md section)"
+        why: "The XML envelope the orchestrator uses for every Task call"
+        sparring_required: false
+      - name: "Install Manifest (install-manifest.yaml)"
+        why: "Multi-target copy declaration"
+        sparring_required: true
+        sparring_minimum: 1
+      - name: "Orchestrator Persona (orchestrator.md)"
+        why: "Per agent.yaml fill protocol, but orchestrator archetype specifically"
+        sparring_required: true
+        sparring_minimum: 1
+      - name: "Each Specialist (agents/{role}.md)"
+        why: "Per agent.yaml fill protocol per specialist; iterate over all specialists"
+        sparring_required: true
+        sparring_minimum: 1
+      sparring_protocol: "Deep sparring on routing logic and handoff format. These are where squads fail silently in production."
+      research_injection_eligible: true
+  validate:
+    role: "Run structural + integrity + DNA Tier 1+2+3 + CLI preflight + anti-commodity + value intelligence. Squads are the ONLY type where D9/D10/D18 are all required at Tier 3."
+    inputs:
+    - workspace/{slug}/ (all files)
+    - "workspace/{slug}/.meta.yaml"
+    - this file
+    - agent.yaml (inherited checks per specialist)
+    - claude-code-ground-truth.md
+    - config.yaml
+    - quality-gates.yaml
+    outputs:
+    - "workspace/{slug}/.meta.yaml (state: validated, scores, intelligence)"
+    - Validation report
+    consumer_status: partial
+    consumer_status_reason: "/validate reads dna_patterns per type but does not yet enforce squad-specific checks — routing.yaml schema validation, install_manifest schema validation, and handoff_format_spec presence in orchestrator body are declared above but not yet consumed. The per_stage_hooks block below names each check the extended validator must run once its squad branch is wired."
+    optional: false
+    blocks_when: []
+    next_action: "/test {slug} (required for MCS-2+) OR /package {slug}"
+    type_specific:
+      stages_run:
+        mcs1:
+        - 1
+        - 2
+        - 3
+        - 6
+        mcs2:
+        - 1
+        - 2
+        - 3
+        - 4
+        - 5
+        - 6
+        - 7
+        - 8
+        mcs3:
+        - 1
+        - 2
+        - 3
+        - 4
+        - 5
+        - 6
+        - 7
+        - 8
+      per_stage_hooks:
+        stage_1_structural:
+          check: "Glob workspace/{slug}/SQUAD.md + routing.yaml + install-manifest.yaml + orchestrator.md + at least 1 agents/*.md exist"
+          blocking: true
+        stage_2_integrity:
+          check: "YAML frontmatter on every agent file parses. routing.yaml parses. install-manifest.yaml parses. No placeholder patterns."
+          blocking: true
+        stage_3_dna_tier1:
+          required_patterns:
+          - D1
+          - D2
+          - D3
+          - D4
+          - D13
+          - D14
+          recommended_patterns:
+          - D19
+          check_d1: "Every agent file has identity + activation protocol"
+          check_d2: "Every agent file has anti-patterns with >=5 items"
+          check_d3: "Each agent file <500 lines; references/ exist when needed"
+          check_d4: "Orchestrator has synthesis quality gate; each specialist has its own quality gate"
+          check_d13: "README.md with what/install/usage/requirements"
+          check_d14: "Routing has fallback; each specialist has when-not-to-use"
+          blocking: true
+        stage_4_dna_tier2:
+          required_patterns:
+          - D5
+          - D7
+          - D16
+          recommended_patterns:
+          - D6
+          - D8
+          - D15
+          - D17
+          check_d5: "Orchestrator classifies input against route triggers"
+          check_d7: "Orchestrator reads routing.yaml in activation protocol"
+          check_d16: "No hardcoded paths; install_manifest uses relative + {slug} placeholders"
+          blocking: false
+        stage_5_dna_tier3:
+          required_patterns:
+          - D9
+          - D10
+          - D18
+          recommended_patterns:
+          - D11
+          - D12
+          check_d9: "Orchestrator frontmatter tools includes Agent AND excludes Write, Edit, NotebookEdit (verified via agentToolUtils.ts filter logic)"
+          check_d10: "Orchestrator body contains handoff format declaration matching handoff_format_spec.canonical_form"
+          check_d18: "Each specialist is a distinct agent file; the orchestrator spawns them via Task which forks context natively [SOURCE: runAgent.ts:694-714]"
+          check_d11: "For iterative_refinement archetype, the gate specialist is a read-only ADVISER with socratic pressure pattern"
+          check_d12: "If squad uses state file, memory scope declared or hook writes state"
+          blocking: true
+        stage_6_cli_preflight:
+          check: "myclaude validate {slug} succeeds"
+          blocking: true
+        stage_7_anti_commodity:
+          check: "Substance score + invisibility audit + quality_rubric application + anti_patterns grep (AP-A1..A6 inherited + AP-SQ1..5 squad-specific)"
+          blocking: false
+          coaching_only: true
+          routing_table_check: "routing.yaml is declarative, not prose-in-orchestrator"
+          install_manifest_check: "install_manifest.yaml exists and targets list is complete"
+          invisibility_check: "grep user-facing strings for substrate vocabulary"
+        stage_8_value_intelligence:
+          check: "Value score, suggested price range, market position"
+          blocking: false
+          runs_at_mcs:
+          - 2
+          - 3
+          recommended_pricing_strategy: "Per archetype: sequential_pipeline → premium ($15-35), parallel_convergent → premium ($15-40), conditional_router → solid ($8-20), iterative_refinement → premium ($15-35), hierarchical_delegation → premium-rare ($25-75)"
+      read_before_write_ratio: "Read-only skill — updates .meta.yaml only"
+      dogfood_check:
+        description: "P9 enforcement — /validate squad applied to reference squads in templates/squad/ AND to any squad-shaped Engine tools"
+        method: "Run full /validate squad against dogfood targets, surface failures"
+        consumer_status: aspirational
+        consumer_status_reason: "/validate does not yet accept a --target=reference-squads argument. The dogfood_check declared here names the P9 enforcement contract so the argument becomes wireable once the validator CLI is extended."
+      next_action_pass: "/test {slug} (required for MCS-2+) OR /package {slug}"
+      next_action_fail: "/validate --fix {slug}"
+  test:
+    role: "Sandbox-install the squad bundle in worktree isolation, verify install_manifest multi-target copy works, verify routing.yaml parses, simulate orchestrator spawning each specialist via Task, verify handoff format, run 3 scenarios."
+    inputs:
+    - "workspace/{slug}/ (validated)"
+    - this file
+    outputs:
+    - "workspace/{slug}/.meta.yaml (test_result, last_tested, test_scenarios)"
+    - Test report
+    consumer_status: partial
+    consumer_status_reason: "/test hardcoded table does not yet cover squad testing — the type_specific_steps declared below name the install-manifest simulation, routing parse, spawn simulation, and uninstall reversibility checks the extended /test squad branch must consult once the hardcoded table is replaced by type-driven step lookup."
+    optional: true
+    blocks_when: []
+    next_action: "/package {slug}"
+    type_specific:
+      required_for_mcs:
+      - 2
+      - 3
+      optional_for_mcs:
+      - 1
+      sandbox_isolation: "worktree"
+      type_specific_steps:
+      - step: "Install manifest simulation"
+        check: "Dry-run the install_manifest against the sandbox .claude/ — verify every target path is valid, no collisions with existing agents, all source files exist"
+      - step: "Routing table parse"
+        check: "routing.yaml parses. Every specialist id in routes exists in specialists list. Every specialist id matches an installed agent file. fallback is present."
+      - step: "Each agent frontmatter parse"
+        check: "Per agent.yaml.lifecycle.test.type_specific_steps for every agent in the squad"
+      - step: "Orchestrator tool boundary verification"
+        check: "Orchestrator tools includes Agent AND excludes Write/Edit/NotebookEdit"
+      - step: "Handoff format declaration presence"
+        check: "Orchestrator body contains a section matching handoff_format_spec.canonical_form"
+      - step: "Spawn simulation"
+        check: "Using mock, spawn the orchestrator with a test input. Verify it reads routing.yaml. Verify it emits at least one Task call with a handoff-formatted prompt."
+      - step: "Manifest uninstall simulation"
+        check: "Dry-run the uninstall using .manifest-lock — verify every installed file is removed, every appended section is cleanly excised, every merged key is reverted"
+      scenarios_applicable: true
+      scenarios:
+      - name: Happy Path
+        purpose: "Normal invocation with a request matching the primary route"
+        input_strategy: "Request that clearly matches route trigger"
+        on_fail: "Routing or specialist spawn is fundamentally broken"
+      - name: Edge Case
+        purpose: "Fallback route fires (no direct match)"
+        input_strategy: "Ambiguous request"
+        on_fail: "Fallback handling is weak — strengthen routing.yaml"
+      - name: Adversarial
+        purpose: "Specialist failure mid-sequence"
+        input_strategy: "Inject a failing specialist mock"
+        on_fail: "Squad does not degrade gracefully — fix synthesis failure convention"
+      must_haves_verification: true
+      next_action_pass: "/package {slug}"
+  package:
+    role: "Strip WHY comments from ALL files in the bundle, rename orchestrator.md appropriately if needed, generate vault.yaml + plugin.json (with agents field listing every installed agent) + agentskills.yaml (with squad entry if supported), verify install_manifest integrity, stage .publish/."
+    inputs:
+    - "workspace/{slug}/ (validated, test_result: pass for MCS-2+)"
+    - creator.yaml
+    - this file
+    - config.yaml
+    outputs:
+    - workspace/{slug}/.publish/SQUAD.md (stripped)
+    - workspace/{slug}/.publish/routing.yaml (copied)
+    - workspace/{slug}/.publish/install-manifest.yaml (copied)
+    - workspace/{slug}/.publish/orchestrator.md (stripped)
+    - workspace/{slug}/.publish/agents/*.md (all stripped)
+    - workspace/{slug}/.publish/README.md (badges injected)
+    - workspace/{slug}/.publish/vault.yaml
+    - workspace/{slug}/.publish/plugin.json (with full agents field list)
+    - workspace/{slug}/.publish/agentskills.yaml
+    - workspace/{slug}/.publish/CHANGELOG.md + LICENSE.md
+    consumer_status: partial
+    consumer_status_reason: "/package does not yet generate plugin.json with multi-agent lists for squads — current generation ships a single-agent plugin.json regardless of type. The plugin_json_block template declared below names the canonical multi-agent shape the extended /package squad branch must emit once plugin.json generation is type-driven."
+    next_action: "/publish {slug}"
+    optional: false
+    blocks_when: []
+    type_specific:
+      strips:
+      - "<!-- WHY: ... --> HTML comments in ALL files"
+      - "# WHY: lines in ALL files"
+      - .meta.yaml
+      - domain-map.md
+      renames: null
+      renames_reason: "Squads use the same filenames in workspace and install."
+      injects:
+      - field: marketplace_url
+        value: "https://myclaude.sh/p/{slug}"
+      - field: Attribution comment at end of SQUAD.md
+        value: "<!-- Published on MyClaude (myclaude.sh) | Quality: MCS-{level} ({score}%) | Engine: Studio v3 -->"
+      - field: README badges
+      plugin_json_block: "{\n  \"name\": \"{slug}\",\n  \"agents\": [\".claude/agents/{slug}-orchestrator.md\", \".claude/agents/{slug}__reviewer.md\", \".claude/agents/{slug}__security-auditor.md\", \".claude/agents/{slug}__synthesizer.md\"]\n}\n"
+      plugin_json_reason: "Squads ship a plugin.json that lists EVERY installed agent file path so Claude Code loads them all on plugin install."
+      agentskills_yaml_block: "Generate with platforms: [claude-code]. Squads are Claude Code specific (multi-agent coordination requires the Agent tool)."
+      step_6b_verify:
+      - All squad files present in .publish/
+      - routing.yaml references in plugin.json match installed agent files
+      - No WHY comments remaining
+      - install-manifest.yaml targets all have source files present
+      - All agent files pass individual agent step_6b_verify per agent.yaml
+      - Body of each agent <=500 lines
+  publish:
+    role: "Push to myclaude.sh + Anthropic plugin marketplace. Squads are distributed via vault.yaml + plugin.json (multi-agent list)."
+    inputs:
+    - "workspace/{slug}/.publish/ (state: packaged)"
+    - myclaude CLI auth
+    - creator confirmation
+    outputs:
+    - Live listing at https://myclaude.sh/p/{slug}
+    - Plugin marketplace listing
+    - "workspace/{slug}/.meta.yaml (state: published)"
+    blocks_when:
+    - state != packaged
+    - "test_result != pass (for MCS-2+)"
+    - myclaude auth missing
+    - creator declines confirmation
+    consumer_status: partial
+    consumer_status_reason: "/publish distribution channel routing does not yet differentiate squad from agent for plugin.json generation."
+    optional: false
+    next_action: null
+    next_action_reason: "terminal action"
+    type_specific:
+      distribution_channels:
+      - channel: myclaude
+        primary: true
+        url_pattern: "https://myclaude.sh/p/{slug}"
+      - channel: anthropic-plugin
+        primary: true
+        plugin_json_block: "agents field with multi-path list"
+      - channel: agentskills_universal
+        primary: false
+        applicable: false
+        reason: "Multi-agent coordination is Claude Code specific."
+      confirmation_required: true
+      post_publish_actions:
+      - "Suggest: 'Use the squad in your own daily work. Squads reveal routing bugs only through real spawns.'"
+      - "Surface install command: myclaude install {slug}"
+      - "Schedule check-in 7 days post-publish"
+  status:
+    role: "Display the squad in dashboard with archetype badge, specialist count, invocation count."
+    inputs:
+    - "workspace/{slug}/.meta.yaml"
+    - this file
+    - references/ux-vocabulary.md
+    outputs:
+    - Dashboard line
+    - Squad badge
+    consumer_status: aspirational
+    consumer_status_reason: "/status does not yet surface squad archetypes"
+    optional: true
+    blocks_when: []
+    next_action: null
+    next_action_reason: "read-only dashboard"
+    type_specific:
+      ux_type_name: Squad
+      ux_type_name_source: "references/ux-vocabulary.md"
+      state_emoji_rules: Universal
+      portfolio_role_default: team
+      portfolio_role_reason: "Squads are teams in the creator's portfolio — they coordinate multiple agents toward one workflow."
+
+# ===========================================================================
+# FLOW
+# ===========================================================================
+
+flow: "```mermaid\nflowchart LR\n  THINK[/think optional/] -.->|squad unclear| MAP[/map/]\n  MAP -.->|workflow decomposed| SCOUT[/scout/]\n  SCOUT -.->|existing specialists identified| CREATE[/create squad/]\n\
+  \  IMPORT[/import existing/] -.-> WORKSPACE\n  CREATE -->|archetype + specialists + routing| WORKSPACE[(workspace/slug/)]\n  WORKSPACE --> FILL[/fill/]\n  FILL -->|all agents + routing.yaml + install-manifest|\
+  \ VALIDATE[/validate/]\n  VALIDATE -->|fail| VALIDATE\n  VALIDATE -->|pass| TEST[/test/]\n  TEST -->|install sim + routing + spawn sim| PACKAGE[/package/]\n  PACKAGE -->|stripped + plugin.json with agents\
+  \ list| PUBLISH[/publish/]\n  PUBLISH -->|live| MARKET[(marketplace + plugin marketplace)]\n  MARKET -.->|spawn feedback| SCOUT\n\n  STATUS[/status/] -.-> WORKSPACE\n\n  classDef writeSkill fill:#e1f5ff,stroke:#0277bd\n\
+  \  classDef gate fill:#fff4e1,stroke:#ef6c00\n  classDef terminal fill:#e8f5e9,stroke:#2e7d32\n  classDef discovery fill:#f3e5f5,stroke:#6a1b9a\n  class CREATE,FILL,PACKAGE writeSkill\n  class STATUS,VALIDATE,TEST\
+  \ gate\n  class PUBLISH terminal\n  class IMPORT,THINK,MAP,SCOUT discovery\n```\n"
+
+# ===========================================================================
+# FAILURE VOCABULARY
+# ===========================================================================
+
+failure_modes:
+- mode: "orchestrator executes specialist work"
+  detection: "/validate Stage 5 D9 — orchestrator frontmatter tools includes Write or Edit"
+  degradation: "BLOCK MCS-2 — physical D9 enforcement is missing"
+  recovery: "Remove Write/Edit from orchestrator tools; add to disallowedTools"
+- mode: "routing.yaml missing"
+  detection: "/validate Stage 1 structural"
+  degradation: "BLOCK — squad is incomplete without routing"
+  recovery: "Scaffold routing.yaml from archetype + specialist list"
+- mode: "install_manifest missing"
+  detection: "/validate Stage 1 structural"
+  degradation: "BLOCK — squad cannot be installed without manifest"
+  recovery: "Scaffold install-manifest.yaml from archetype"
+- mode: "no fallback route in routing.yaml"
+  detection: "/validate Stage 5 check_d9"
+  degradation: "BLOCK MCS-2 — squad crashes on unclassifiable input"
+  recovery: "Add fallback route to routing.yaml"
+- mode: "handoff format declaration missing"
+  detection: "/validate Stage 5 check_d10"
+  degradation: "BLOCK MCS-2 — handoffs will be free-text"
+  recovery: "Add handoff format section to orchestrator body per handoff_format_spec.canonical_form"
+- mode: "specialist count below 2"
+  detection: "/validate Stage 1 structural"
+  degradation: "Not a squad — should be an agent"
+  recovery: "Convert to type=agent OR add at least one specialist"
+- mode: "specialist id in routing.yaml does not match any installed agent"
+  detection: "/validate Stage 2 integrity"
+  degradation: "BLOCK — orchestrator will fail to spawn the specialist"
+  recovery: "Align specialist ids between routing.yaml and install_manifest"
+- mode: "orchestrator preloads specialist skills instead of spawning agents"
+  detection: "/validate Stage 5 — orchestrator has skills: preload of specialist knowledge"
+  degradation: "Coaching — this collapses D18 isolation. Orchestrator is doing execution via preloaded knowledge."
+  recovery: "Remove skills: preload. Use Task spawn for specialist work."
+- mode: "recursive squad without depth budget"
+  detection: "/validate Stage 5 — routing.yaml has hierarchical mode but no max_depth"
+  degradation: "BLOCK — recursion could runaway"
+  recovery: "Declare max_depth in routing.yaml"
+- mode: "install manifest has collision with existing agent names"
+  detection: "/test install simulation"
+  degradation: "BLOCK — install would overwrite user's existing agents"
+  recovery: "Use namespace prefix {slug}__{role}"
+- mode: "routing.yaml references plugin.json agents that are not in install_manifest"
+  detection: "/validate Stage 2 integrity cross-check"
+  degradation: "BLOCK — plugin will not install all referenced agents"
+  recovery: "Sync install_manifest.targets with plugin.json.agents list"
+
+# ===========================================================================
+# INVARIANTS
+# ===========================================================================
+
+invariants:
+- "Primary file is SQUAD.md"
+- "Squad install target is multi-file — {slug}/ directory holding SQUAD.md, routing.yaml, install-manifest.yaml, orchestrator.md, agents/*.md, optional skills/"
+- "Minimum file count: 4 (SQUAD.md + routing.yaml + install-manifest.yaml + orchestrator.md) + 1 specialist = 5 files"
+- "Minimum specialist count: 1 (plus the orchestrator = 2 agent files total)"
+- "Orchestrator frontmatter MUST include Agent in tools AND exclude Write, Edit, NotebookEdit"
+- "Each specialist follows agent.yaml invariants independently"
+- "routing.yaml MUST declare fallback"
+- "install-manifest.yaml MUST declare every file that gets installed"
+- "Each agent file <=500 lines individually (per agent.yaml invariant)"
+- "plugin.json agents field MUST list every installed agent file path"
+- "No common command names for any specialist in the squad"
+- "No hardcoded absolute paths anywhere in the bundle"
+- "All Tier 3 patterns D9/D10/D18 are REQUIRED for squads"
+- "handoff format declaration in orchestrator body matches handoff_format_spec.canonical_form"
+- "namespace_strategy applied consistently (all specialists use same prefix pattern OR all use subdirectory)"
+
+# ===========================================================================
+# GOVERNANCE
+# ===========================================================================
+
+security_profile:
+  aegis_applicable: true
+  reason: "Squads compose multiple agents, each with its own attack surface. The orchestrator reads routing.yaml (prompt injection vector), installs multiple files (filesystem), and can spawn specialists with their own tools and MCP servers. Squads are the most security-relevant type after hooks."
+  attack_surfaces:
+  - "Each specialist's individual attack surfaces (per agent.yaml.security_profile)"
+  - "routing.yaml content — loaded into orchestrator context, can be prompt-injection vector"
+  - "install_manifest targets — can specify unintended paths"
+  - "plugin.json merge into shared settings"
+  - "Handoff payloads — XML envelopes can smuggle instructions between agents"
+  - "Recursive spawns (hierarchical archetype) — depth budget is security boundary"
+  shell_execution: "via any specialist that allows Bash"
+  file_io: "via any specialist that allows Read/Write/Edit"
+  network_calls: "via any specialist with WebFetch or mcpServers"
+  tool_invocation: "controlled per specialist"
+  installation_trust_level: "audit_required"
+  installation_trust_reason: "Squads install multiple files to user's .claude/ directory. Every agent and the routing logic must be audited via /aegis before install. Squads should NEVER auto-install from untrusted sources."
+  recommended_audit_checks:
+  - "Audit each specialist file per agent.yaml.security_profile.recommended_audit_checks"
+  - "Audit routing.yaml for prompt injection patterns in triggers and synthesis fields"
+  - "Audit install_manifest targets — flag any target path outside ~/.claude/ or project .claude/"
+  - "Audit install_manifest for merge kind — flag merges into settings.json that change hook configuration"
+  - "Audit plugin.json agents list for consistency with install_manifest"
+  - "Audit handoff_format_spec usage in orchestrator body — flag free-text handoffs"
+  consumer_status: aspirational
+  consumer_status_reason: "/aegis does not yet audit squads as a distinct type — the recommended_audit_checks list above names the squad-specific attack surfaces (routing.yaml prompt injection, install_manifest target paths, plugin.json merges, handoff XML envelopes, recursive spawn depth) that the extended /aegis squad branch must scan once squad type detection is wired."
+
+marketplace_taxonomy:
+  default_category: squad
+  default_price: 15
+  default_license: MIT
+  pricing_rationale: "Squads justify premium pricing because they encode multi-agent coordination that is 5-10x more work to design than a single agent. Simple squads start at $15, complex hierarchical squads can reach $75."
+  bundle_eligible: true
+  bundle_eligible_reason: "Squads compose with claude-md (shared constitution), hooks (lifecycle reactions), and other squads (hierarchical)."
+  composition_eligible_with:
+  - agent
+  - skill
+  - hooks
+  - claude-md
+  - system
+  - squad
+  composition_eligible_reason: "Squads compose with everything except output-style (voice only) and bundle (composition type)."
+  consumer_status: aspirational
+  consumer_status_reason: "/package today reads vault_defaults from config.yaml without consulting type-specific overrides. The marketplace_taxonomy block above declares squad-specific defaults (default_category, default_price, bundle_eligible, pricing_strategy by archetype, natural_tags by archetype) that the extended /package squad branch must consult before falling back to config.yaml defaults."
+  natural_tags:
+    scope: by_archetype
+    by_archetype:
+      sequential_pipeline:
+      - pipeline
+      - sequential
+      - review
+      - multi-stage
+      parallel_convergent:
+      - parallel
+      - multi-perspective
+      - convergent
+      - synthesis
+      conditional_router:
+      - router
+      - classifier
+      - conditional
+      - dispatch
+      iterative_refinement:
+      - iterative
+      - refinement
+      - loop
+      - quality-gate
+      hierarchical_delegation:
+      - hierarchical
+      - nested
+      - enterprise
+      - delegation
+  pricing_strategy:
+    scope: by_archetype
+    by_archetype:
+      sequential_pipeline:
+        default: premium
+        recommended_range_usd:
+        - 15
+        - 35
+      parallel_convergent:
+        default: premium
+        recommended_range_usd:
+        - 15
+        - 40
+      conditional_router:
+        default: solid
+        recommended_range_usd:
+        - 8
+        - 20
+      iterative_refinement:
+        default: premium
+        recommended_range_usd:
+        - 15
+        - 35
+      hierarchical_delegation:
+        default: premium-rare
+        recommended_range_usd:
+        - 25
+        - 75
+
+# ===========================================================================
+# DNA PATTERNS
+# ===========================================================================
 
 dna_patterns:
   tier1:
-    D1:  { required: true,  name: "Activation Protocol",    check: "grep activation/protocol in SQUAD.md" }
-    D2:  { required: true,  name: "Anti-Pattern Guard",     check: "grep anti-pattern section >=5 items" }
-    D3:  { required: true,  name: "Progressive Disclosure",  check: "references/ exists + SQUAD.md <500 lines" }
-    D4:  { required: true,  name: "Quality Gate",            check: "grep quality gate >=3 criteria" }
-    D13: { required: true,  name: "Self-Documentation",      check: "README.md complete" }
-    D14: { required: true,  name: "Graceful Degradation",    check: "error/fallback section" }
-    D19: { required: false, name: "Attention-Aware Authoring", check: "critical rules in last 30% of file" }
+    D1:
+      required: true
+      applicable: true
+      name: Activation Protocol
+      check: "Orchestrator has activation protocol; each specialist has activation protocol"
+    D2:
+      required: true
+      applicable: true
+      name: Anti-Pattern Guard
+      check: "Orchestrator + every specialist each have anti-patterns section >=5 items"
+    D3:
+      required: true
+      applicable: true
+      name: Progressive Disclosure
+      check: "SQUAD.md + each agent file <500 lines; references/ used when needed"
+    D4:
+      required: true
+      applicable: true
+      name: Quality Gate
+      check: "Orchestrator has synthesis quality gate; each specialist has its own quality gate"
+    D13:
+      required: true
+      applicable: true
+      name: Self-Documentation
+      check: "README.md with what/install/usage/requirements; install instructions reference myclaude install"
+    D14:
+      required: true
+      applicable: true
+      name: Graceful Degradation
+      check: "routing.yaml has fallback; orchestrator has synthesis failure handling; each specialist has when-not-to-use"
+    D19:
+      required: false
+      applicable: true
+      name: Attention-Aware Authoring
+      check: "Critical rules in last 30% of orchestrator body"
   tier2:
-    D5:  { required: true,  name: "Question System",         check: "input classification or triage" }
-    D6:  { required: true,  name: "Confidence Signaling",    check: "confidence levels in output" }
-    D7:  { required: true,  name: "Pre-Execution Gate",      check: "precondition checks before routing" }
-    D8:  { required: true,  name: "State Persistence",       check: "state tracking across agent handoffs" }
-    D15: { required: true,  name: "Testability",             check: "test scenarios with expected agent routing" }
-    D16: { required: true,  name: "Composability",           check: "no hardcoded paths, relative refs" }
-    D17: { required: false, name: "Hook Integration",        check: "hooks section" }
+    D5:
+      required: true
+      applicable: true
+      name: Question System
+      check: "Orchestrator classifies input against route triggers (question-shaped classification)"
+    D6:
+      required: false
+      applicable: true
+      name: Confidence Signaling
+      check: "Synthesis step signals confidence in final report (recommended for conditional_router archetype)"
+    D7:
+      required: true
+      applicable: true
+      name: Pre-Execution Gate
+      check: "Orchestrator reads routing.yaml before any Task spawn"
+    D8:
+      required: false
+      applicable: true
+      name: State Persistence
+      check: "If squad uses shared state, state file declared"
+    D15:
+      required: true
+      applicable: true
+      name: Testability
+      check: "examples/ directory with scenario tests for the squad"
+    D16:
+      required: true
+      applicable: true
+      name: Composability
+      check: "No hardcoded paths; install_manifest uses {slug} placeholders; no common command name conflicts"
+    D17:
+      required: false
+      applicable: true
+      name: Hook Integration
+      check: "If squad needs lifecycle reactions (state write, notification), hooks declared in install_manifest"
+    D20:
+      required: false
+      applicable: false
+      name: Cache-Friendly Design
+      reason: "Squads are not always-loaded. D20 is claude-md only."
   tier3:
-    D9:  { required: true,  name: "Orchestrate Don't Execute", check: "SQUAD.md has routing table, no domain instructions" }
-    D10: { required: true,  name: "Handoff Spec",              check: "handoff template between agents" }
-    D11: { required: true,  name: "Socratic Pressure",         check: "self-challenge at handoffs" }
-    D12: { required: true,  name: "Compound Memory",           check: "memory config with project scope" }
-    D18: { required: true,  name: "Subagent Isolation",        check: "context:fork in agent definitions" }
-    D20: { applicable: false }
+    D9:
+      required: true
+      applicable: true
+      name: "Orchestrate Don't Execute"
+      check: "Orchestrator frontmatter tools includes Agent AND excludes Write, Edit, NotebookEdit. This is physical D9 enforcement via tool boundary."
+    D10:
+      required: true
+      applicable: true
+      name: Handoff Specification
+      check: "Orchestrator body contains handoff format declaration matching handoff_format_spec.canonical_form"
+    D11:
+      required: false
+      applicable: true
+      name: Socratic Pressure
+      check: "For iterative_refinement archetype, the gate specialist is a read-only ADVISER with self-challenge pattern"
+    D12:
+      required: false
+      applicable: true
+      name: Compound Memory
+      check: "If squad uses cross-invocation memory, memory scope declared on orchestrator or via state file"
+    D18:
+      required: true
+      applicable: true
+      name: Subagent Isolation
+      check: "Each specialist is a distinct agent file. Native context fork via Task spawn [SOURCE: runAgent.ts:694-714] provides physical isolation."
 
 mcs_expectations:
-  mcs1: "All Tier 1 PASS. Score >= 75%."
-  mcs2: "Tier 1+2 all required PASS. Score >= 85%."
-  mcs3: "ALL 18 patterns required. Score >= 92%. PRO only for validation."
+  mcs1:
+    dna_required:
+    - D1
+    - D2
+    - D3
+    - D4
+    - D13
+    - D14
+    score_min: 75
+    blocks_publish: true
+    natural_ceiling: false
+  mcs2:
+    dna_required:
+    - D1
+    - D2
+    - D3
+    - D4
+    - D5
+    - D7
+    - D9
+    - D10
+    - D13
+    - D14
+    - D15
+    - D16
+    - D18
+    dna_recommended:
+    - D6
+    - D8
+    - D11
+    - D12
+    - D17
+    - D19
+    score_min: 85
+    blocks_publish: false
+    natural_ceiling: false
+  mcs3:
+    dna_required:
+    - D1
+    - D2
+    - D3
+    - D4
+    - D5
+    - D7
+    - D9
+    - D10
+    - D11
+    - D13
+    - D14
+    - D15
+    - D16
+    - D18
+    dna_recommended:
+    - D6
+    - D8
+    - D12
+    - D17
+    - D19
+    score_min: 92
+    blocks_publish: false
+    natural_ceiling: true
+    ceiling_reason: "Squads are the type where ALL 18 DNA patterns are applicable (D20 is claude-md only). MCS-3 for squads means: all patterns present + rubric >=27/30 + maturity >=4 + dogfood check passes + install_manifest uninstall test passes."
+    applicable: true
 
-template_files:
-  - source: "SQUAD.md.template"
-    target: "SQUAD.md"
-    dna_injected: [D1, D2, D4, D5, D7, D9, D10, D14]
-  - source: "README.md.template"
-    target: "README.md"
-    dna_injected: [D13]
-  - source: "references/domain-knowledge.md.template"
-    target: "references/domain-knowledge.md"
-    dna_injected: [D3]
-  - source: "agents/specialist.md.template"
-    target: "agents/"
-    dna_injected: [D8, D11, D12, D18]
+# ===========================================================================
+# FRONTMATTER (for the orchestrator agent file specifically)
+# ===========================================================================
+# Note: frontmatter here describes the orchestrator.md file's frontmatter.
+# Each specialist's frontmatter follows agent.yaml.frontmatter.
+# The SQUAD.md file has no frontmatter — it is a manifest document.
 
 frontmatter:
   required:
-    - name            # Squad invocation name [SOURCE: loadSkillsDir.ts]
-    - description     # Catalog display, token counted [SOURCE: loadSkillsDir.ts:100-105]
+  - name
+  - description
   recommended:
-    - tools           # Minimal tool list for squad orchestrator
-    - model           # Force model for orchestrator (opus recommended) [SOURCE: AgentTool.ts]
-    - "argument-hint" # Usage hint for /help
+  - tools
+  - model
   optional:
-    - "allowed-tools" # Restrict tool access [SOURCE: loadSkillsDir.ts]
-    - "denied-tools"  # Block specific tools [SOURCE: loadSkillsDir.ts]
-    - memory          # user|project|local [SOURCE: AgentTool internals]
-    - permissionMode  # default|plan|dontAsk
-    - maxTurns        # Limit orchestrator iterations [SOURCE: AgentTool.ts]
-    - effort          # Reasoning effort [SOURCE: frontmatterParser.ts]
-    - skills          # Preloaded skill knowledge
-    - hooks           # Squad-scoped hooks [SOURCE: schemas/hooks.ts]
-    - whenToUse       # Auto-trigger conditions, token counted [SOURCE: loadSkillsDir.ts]
+  - disallowedTools
+  - maxTurns
+  - effort
+  - hooks
+  - permissionMode
+  - memory
+  - criticalSystemReminder_EXPERIMENTAL
+  orchestrator_required_tools_include:
+  - Agent
+  orchestrator_forbidden_tools:
+  - Write
+  - Edit
+  - NotebookEdit
+  orchestrator_recommended_model: opus
+  orchestrator_recommended_model_reason: "Synthesis benefits from model depth; opus is the recommended default for orchestrator reasoning quality."
+  field_source_refs:
+    name: loadAgentsDir.ts:404-409
+    description: loadAgentsDir.ts:411-414
+    tools: loadAgentsDir.ts:660
+    disallowedTools: loadAgentsDir.ts:677-681
+    model: loadAgentsDir.ts:568-573
+    maxTurns: loadAgentsDir.ts:647-654
+    hooks: loadAgentsDir.ts:424-440
 
-# Token economics [SOURCE: loadSkillsDir.ts:100-105]
+package_rename:
+  from: orchestrator.md
+  to: "{slug}-orchestrator.md"
+  applies_at: package time
+  reason: "The orchestrator file in the workspace is named orchestrator.md for editorial clarity. At package time it is renamed so its installed filename matches its agentType in the plugin.json agents list."
+
+template_files:
+- source: SQUAD.md.template
+  target: SQUAD.md
+  dna_injected:
+  - D1
+  - D2
+  - D4
+  - D9
+  - D10
+  - D13
+  why_comments: true
+- source: routing.yaml.template
+  target: routing.yaml
+  dna_injected:
+  - D5
+  - D7
+  - D14
+  why_comments: false
+- source: install-manifest.yaml.template
+  target: install-manifest.yaml
+  dna_injected:
+  - D16
+  why_comments: false
+- source: orchestrator.md.template
+  target: orchestrator.md
+  dna_injected:
+  - D1
+  - D9
+  - D10
+  - D14
+  why_comments: true
+- source: agents/specialist.md.template
+  target: "agents/{role}.md"
+  dna_injected:
+  - D1
+  - D2
+  - D4
+  - D14
+  - D18
+  why_comments: true
+  iteration: per_specialist
+- source: README.md.template
+  target: README.md
+  dna_injected:
+  - D13
+  why_comments: true
+- source: examples/examples.md.template
+  target: examples/examples.md
+  dna_injected:
+  - D15
+  why_comments: true
+  optional: true
+  required_for: MCS-2+
+
+# ===========================================================================
+# TOKEN ECONOMICS
+# ===========================================================================
+
 token_economics:
-  catalog_cost: "name + description + whenToUse → ~50-100 tokens in catalog"
-  invocation_cost: "Full SQUAD.md + agent definitions loaded on invoke"
-  ambient_cost: "Zero — squads are skill-type, loaded on demand"
-  optimization: "Keep SQUAD.md as routing table. Agent details in agents/ directory."
+  catalog_cost_tokens: 250
+  catalog_cost_reason: "Squads have multiple agents each with name + description in catalog (~50 tokens × N agents). A 5-agent squad costs ~250 tokens always in the catalog."
+  catalog_cost_source: loadSkillsDir.ts:100-105
+  invocation_cost: "per_specialist_spawn"
+  invocation_cost_reason: "Each specialist spawn is a full agent boot. Sequential 3-specialist squad costs 3 full agent contexts. Parallel 5-specialist squad costs 5 concurrent agent contexts."
+  ambient_cost: zero
+  ambient_cost_reason: "Squads are not auto-loaded; they activate via orchestrator invocation."
+  optimization_notes: |
+    Keep specialist count to the minimum that satisfies the workflow. Use
+    parallel_convergent when specialists are independent to benefit from
+    single-turn multi-Task-call [SOURCE: AgentTool/prompt.ts:271]. Prefer
+    conditional_router over parallel_convergent when only one specialist
+    actually needs to run per invocation — parallel wastes budget.
+  budget_example: "5-agent sequential squad × 1 invocation = 5 × ~(8K-15K) tokens per specialist spawn + orchestrator synthesis"
 
-# Compact instructions applicability
 compact_instructions:
   applicable: true
   location: "SQUAD.md → ## Compact Instructions section"
-  preserves: "agent roster, workflow state, coordination state, capability index"
+  source_reference: compact/prompt.ts:133-143
+  preserves:
+  - squad identity and archetype
+  - specialist roster
+  - active routing decisions
+  - handoff state across steps
+  - synthesis state
 
 discovery_questions:
-  - "What complex task requires multiple agents working together?"
-  - "How many agents are needed and what role does each play?"
-  - "What is the orchestration pattern (sequential, parallel, iterative)?"
-  - "How should agents hand off context to each other?"
-  - "What quality checks happen between agent transitions?"
-  - "What happens when one agent fails — how does the squad recover?"
-  - "Does the squad need a persistent decision log?"
+  source_of_truth: this file
+  minimum_set:
+  - "Which squad archetype fits your workflow? sequential_pipeline, parallel_convergent, conditional_router, iterative_refinement, or hierarchical_delegation?"
+  - "What workflow does your squad coordinate? (One sentence)"
+  - "What are the distinct expertise areas? (List each specialist role)"
+  - "What is the routing logic? (When does each specialist fire?)"
+  - "What does the orchestrator synthesize and return?"
+  - "What happens when a specialist fails mid-sequence?"
+  - "Does the squad use shared state? If yes, where is it stored?"
+  depth_set:
+  - "What distinguishes this squad from simply calling agents sequentially by hand?"
+  - "Which specialists could be replaced by existing marketplace agents vs. forged new?"
+  - "What is the maximum spawn depth if the archetype is hierarchical?"
+  - "What is the quality gate for iterative_refinement?"
+  - "Does any specialist need persistent memory across invocations?"
+  - "What MCP servers do the specialists collectively need?"
+  - "Should the squad install hooks for lifecycle reactions (e.g., auto-run on PR open)?"
+
+state_machine_hooks:
+  source_file: quality-gates.yaml
+  source_section: states
+  scope: universal
+  type_specific_branches: []
+  regression_rules: "Universal — file edit after validation regresses to content"
+  publish_prerequisites_addendum:
+  - "test_result == pass (for MCS-2+ squads)"
+  - "install_manifest uninstall test passes"
+  publish_prerequisites_addendum_reason: "Squads at MCS-2+ require full spawn simulation AND a passing uninstall test to guarantee reversibility"
+
+validation_pipeline_refs:
+  stage_1: .claude/skills/validate/references/validation-stages/stage-1-structural.md
+  stage_2: .claude/skills/validate/references/validation-stages/stage-2-integrity.md
+  stage_3: .claude/skills/validate/references/validation-stages/stage-3-dna-tier1.md
+  stage_4: .claude/skills/validate/references/validation-stages/stage-4-dna-tier2.md
+  stage_5: .claude/skills/validate/references/validation-stages/stage-5-dna-tier3.md
+  stage_6: .claude/skills/validate/references/validation-stages/stage-6-cli-preflight.md
+  stage_7: .claude/skills/validate/references/validation-stages/stage-7-anti-commodity.md
+  stage_8: .claude/skills/validate/references/validation-stages/stage-8-value-intelligence.md
+  index: .claude/skills/validate/references/validation-stages/_index.md
+
+lifecycle_shared_refs:
+  ux_experience:
+    path: references/ux-experience-system.md
+    consumed_by:
+    - /create
+    - /fill
+    - /validate
+    - /package
+    - /test
+    - /help
+    - /status
+    sections_relevant_to_type:
+    - §1 Context Assembly
+    - §2.1 Experience Level Scaling
+    - §2.2 Archetype-Aware Insights
+    - §2.3 Moment Awareness
+    invisibility_audit_status: "PRE-EXISTING DEBT — unaudited, scheduled for later sweep"
+  ux_vocabulary:
+    path: references/ux-vocabulary.md
+    consumed_by:
+    - /create
+    - /fill
+    - /validate
+    - /package
+    - /test
+    - /help
+    - /status
+    purpose: "Translate 'squad' to user-facing 'Squad', translate archetype names"
+    invisibility_audit_status: "PRE-EXISTING DEBT — unaudited, scheduled for later sweep"
+  engine_voice:
+    path: references/quality/engine-voice.md
+    consumed_by:
+    - /create
+    - /fill
+    - /validate
+    - /package
+    - /test
+    - /help
+    - /status
+    purpose: "Brand DNA, voice markers"
+    invisibility_audit_status: "Acceptable"
+  intelligence_layer:
+    path: references/intelligence-layer.md
+    consumed_by:
+    - /validate
+    - /package
+    - /scout
+    purpose: "Value scoring, pricing strategy, portfolio analysis"
+    invisibility_audit_status: "PRE-EXISTING DEBT — unaudited, scheduled for later sweep"
+  product_spec:
+    path: references/product-specs/squad-spec.md
+    consumed_by:
+    - /create
+    - /validate
+    purpose: "Canonical squad spec — file structure, routing schema, install manifest"
+    invisibility_audit_status: "unverified in S118"
+  claude_code_ground_truth:
+    path: references/claude-code-ground-truth.md
+    consumed_by:
+    - /create
+    - /fill
+    - /validate
+    purpose: "Verified capability register — all claims about native Claude Code behavior verified against source"
+    invisibility_audit_status: "Clean — internal Engine documentation"
+  agent_codex:
+    path: product-dna/agent.yaml
+    consumed_by:
+    - /create
+    - /fill
+    - /validate
+    purpose: "Inheritance — each specialist in a squad is an agent and follows agent.yaml's archetypes, rubric, anti-patterns, and lifecycle"
+    invisibility_audit_status: "N/A — internal inheritance"
+
+schema_consumer_status:
+  fully_wired_sections:
+  - "type, primary_file, install_target, template"
+  - dna_patterns
+  - mcs_expectations
+  - frontmatter (partially — applies to orchestrator file)
+  - template_files
+  - "discovery_questions.minimum_set (partial)"
+  partially_wired_sections:
+  - lifecycle.create (scaffold does not yet generate routing.yaml or install-manifest.yaml)
+  - lifecycle.fill (no multi-file fill walker)
+  - lifecycle.validate (per_stage_hooks not consumed)
+  - lifecycle.test (multi-agent spawn simulation not implemented)
+  - lifecycle.package (plugin.json multi-agent generation not implemented)
+  aspirational_sections:
+  - essence
+  - architectural_principles
+  - operational_modes
+  - freedom_levels
+  - archetypes (the 5 coordination patterns)
+  - routing_table_schema
+  - handoff_format_spec
+  - install_manifest
+  - quality_rubric (inherited from agent.yaml, squad-specific additions aspirational)
+  - anti_patterns_catalog
+  - reasoning_frameworks
+  - failure_modes
+  - invariants
+  - security_profile
+  - marketplace_taxonomy
+  - lifecycle_shared_refs.claude_code_ground_truth
+  - lifecycle_shared_refs.agent_codex
+  blocking_gaps_for_this_type:
+  - id: GAP-1
+    where: .claude/skills/import/SKILL.md detection table
+    issue: "squad is not in the detection table. A directory with SQUAD.md + routing.yaml + agents/ subdirectory is not recognized as a squad type."
+    wave_to_fix: 3
+    severity: MAJOR — blocks /import for squads
+  - id: GAP-2
+    where: myclaude CLI (external)
+    issue: "install_manifest is not consumed by the CLI. Multi-target install is documentation-only today."
+    wave_to_fix: 3
+    severity: MAJOR — squad distribution relies on manual install until CLI ships install_manifest support
+  - id: GAP-3
+    where: .claude/skills/validate/references/validation-stages/stage-5-dna-tier3.md
+    issue: "D9/D10/D18 checks are prose-based grep. Do not physically verify orchestrator tool boundary, handoff format match, or subagent isolation."
+    wave_to_fix: 3
+    severity: MAJOR — squads can pass current /validate with rhetorical D9
+  - id: GAP-4
+    where: .claude/skills/package/SKILL.md
+    issue: "plugin.json generation does not yet support multi-agent lists. Squads package with single-agent plugin.json."
+    wave_to_fix: 3
+    severity: MAJOR — breaks squad install via plugin marketplace
+  - id: GAP-5
+    where: .claude/skills/create/references/discovery-questions.md
+    issue: "Squads section existence and completeness unverified in S118"
+    wave_to_fix: 4
+    severity: unknown
+
+# ===========================================================================
+# QUALITY RUBRIC — squad-specific 30-point breakdown
+# ===========================================================================
+
+quality_rubric:
+  total_points: 30
+  scope: "squad craft quality — complementary to MCS"
+  inherited_from: "Individual agent quality per agent.yaml.quality_rubric applies to each specialist"
+  dimensions:
+    orchestration:
+      max_points: 12
+      criteria:
+        tool_boundary:
+          0: "orchestrator has Write/Edit in tools"
+          1: "orchestrator has some restrictions but not complete"
+          2: "orchestrator has physical D9 enforcement (Agent in tools; Write/Edit in disallowedTools)"
+        routing_table:
+          0: "no routing.yaml"
+          1: "routing.yaml exists but incomplete"
+          2: "routing.yaml complete with fallback, triggers, synthesis, failure handling"
+        handoff_format:
+          0: "no handoff format declaration"
+          1: "handoff mentioned in prose"
+          2: "handoff format section matches canonical_form"
+        synthesis_convention:
+          0: "no synthesis declaration"
+          1: "synthesis described loosely"
+          2: "synthesis declared in routing.yaml and orchestrator body with failure handling"
+        archetype_fidelity:
+          0: "archetype unclear or contradicted"
+          1: "archetype declared but routing mode differs"
+          2: "archetype declared + routing mode matches + specialist count within typical"
+        install_manifest:
+          0: "no install_manifest.yaml"
+          1: "install_manifest exists but incomplete"
+          2: "install_manifest complete, idempotent, uninstall-testable"
+    specialists:
+      max_points: 12
+      criteria:
+        specialist_archetype_fidelity:
+          0: "specialists have no declared archetype or contradicted archetypes"
+          1: "specialists have archetypes but tool boundaries diverge"
+          2: "each specialist's archetype matches agent.yaml patterns"
+        individual_quality:
+          0: "any specialist would score <15 on agent.yaml rubric"
+          1: "specialists average 15-19"
+          2: "specialists average 20+"
+        no_duplication:
+          0: "multiple specialists overlap heavily in scope"
+          1: "some overlap"
+          2: "each specialist has distinct scope"
+        count_appropriate:
+          0: "too few (<2) or too many (>10)"
+          1: "slightly off"
+          2: "count fits archetype typical range"
+    composition:
+      max_points: 6
+      criteria:
+        namespace_consistency:
+          0: "mixed namespace strategies"
+          1: "some consistency"
+          2: "all specialists use same namespace strategy"
+        install_reversibility:
+          0: "uninstall leaves traces"
+          1: "partial reversibility"
+          2: "uninstall is exact reverse of install"
+        test_coverage:
+          0: "no example scenarios"
+          1: "1-2 scenarios"
+          2: "happy + edge + adversarial scenarios"
+  scoring_thresholds:
+    state_of_art:
+      range: 27-30
+      verdict: "Production-ready and reference-grade"
+    excellent:
+      range: 23-26
+      verdict: "Production-ready"
+    good:
+      range: 19-22
+      verdict: "Minor adjustments recommended"
+    functional:
+      range: 15-18
+      verdict: "Improvements needed before production"
+    deficient:
+      range: 11-14
+      verdict: "Significant refactor needed"
+    critical:
+      range: 0-10
+      verdict: "Rewrite from scratch"
+  consumer_status: aspirational
+  consumer_status_reason: "/validate Stage 7 does not yet apply this squad-specific 30-point rubric. The dimensions and scoring thresholds above name the canonical rubric the extended Stage 7 squad branch must consume once type-specific rubric lookup is wired."
+
+# ===========================================================================
+# ANTI-PATTERNS CATALOG — squad-specific (extends agent.yaml)
+# ===========================================================================
+
+anti_patterns_catalog:
+  scope: "Squad-specific failure modes. Agent anti-patterns (AP-A1..A6) apply to each specialist. Skill anti-patterns (AP-D1..P3) inherited via agent.yaml."
+  orchestration_failures:
+    AP_SQ1:
+      name: "Executing Orchestrator"
+      symptom: "Orchestrator frontmatter has Write or Edit in tools"
+      problem: "Orchestrator can execute specialist work, violating D9"
+      severity: critical
+      fix: "Remove Write/Edit from tools, add to disallowedTools"
+    AP_SQ2:
+      name: "Prose Routing"
+      symptom: "Routing logic lives in orchestrator body prose, no routing.yaml"
+      problem: "Routing cannot be audited, diffed, or replayed. Also violates P4 contract-before-narrative."
+      severity: high
+      fix: "Extract routing logic to routing.yaml; orchestrator body becomes a reader"
+    AP_SQ3:
+      name: "Free-Text Handoff"
+      symptom: "Orchestrator body instructs Task calls without declaring handoff format"
+      problem: "Handoffs are ambiguous, cannot be parsed, cannot be replayed"
+      severity: high
+      fix: "Add handoff format section per handoff_format_spec.canonical_form"
+    AP_SQ4:
+      name: "Missing Install Manifest"
+      symptom: "Squad has no install-manifest.yaml"
+      problem: "Squad cannot be installed reversibly; distribution is ad-hoc"
+      severity: critical
+      fix: "Create install-manifest.yaml listing all targets"
+    AP_SQ5:
+      name: "Single-Agent Squad"
+      symptom: "Squad has only 1 agent file (just the orchestrator, no specialists)"
+      problem: "Not actually a squad — should be an agent"
+      severity: critical
+      fix: "Add specialists OR convert to type=agent"
+  namespace_failures:
+    AP_SQ6:
+      name: "Global Namespace Collision"
+      symptom: "Specialist agent files named without squad-slug prefix (e.g., reviewer.md instead of my-squad__reviewer.md)"
+      problem: "Installation collides with existing agents in user's .claude/agents/ directory"
+      severity: high
+      fix: "Apply namespace_strategy consistently — prefix or subdirectory"
+  inherited_from_agent: "AP-A1 through AP-A6 from product-dna/agent.yaml apply to each specialist"
+  inherited_from_skill: "AP-D1 through AP-P3 from product-dna/skill.yaml apply to each agent in the squad"
+  severity_definitions:
+    critical: "Breaks the squad's trust contract — must fix before publish"
+    high: "Significant degradation — fix recommended for MCS-2"
+    medium: "Suboptimal — fix for MCS-3"
+    low: "Polish"
+  consumer_status: aspirational
+  consumer_status_reason: "/validate Stage 7 does not yet grep against this squad-specific anti-patterns catalog nor against the inherited AP-A1..A6 from agent.yaml and AP-D1..P3 from skill.yaml. The orchestration_failures + namespace_failures blocks above name the canonical patterns the extended Stage 7 squad branch must scan once type-specific anti-pattern lookup is wired."
+
+# ===========================================================================
+# REASONING FRAMEWORKS — inherited by reference
+# ===========================================================================
+
+reasoning_frameworks:
+  inherited_from: product-dna/skill.yaml.reasoning_frameworks
+  squad_specific_notes:
+    jobs_to_be_done: "Critical for squad design — the 'job' is the coordinated workflow, the 'user' is the parent context"
+    stakeholder_mapping: "Squad stakeholders include the parent LLM, each specialist, the runtime, the end user who installs the bundle, and the creator who maintains the coordination"
+    first_principles_decomposition: "Use to decompose the workflow into the minimum set of distinct specialist expertise"
+  consumer_status: aspirational
+
+# ===========================================================================
+# DECISION TREES
+# ===========================================================================
+
+decision_trees:
+  archetype_selection:
+    question: "Which squad coordination archetype?"
+    branches:
+    - condition: "Workflow has strict sequential order with each step consuming previous output?"
+      result: sequential_pipeline
+    - condition: "Work fans out to independent specialists then converges?"
+      result: parallel_convergent
+    - condition: "Input classification routes to exactly ONE specialist?"
+      result: conditional_router
+    - condition: "Work loops until a quality gate is met?"
+      result: iterative_refinement
+    - condition: "Top-level routing delegates to sub-orchestrators with their own squads?"
+      result: hierarchical_delegation
+    - condition: "Default"
+      result: sequential_pipeline
+  specialist_count:
+    question: "How many specialists should the squad have?"
+    branches:
+    - condition: "Archetype is conditional_router?"
+      result: 2-8 mutually exclusive specialists
+    - condition: "Archetype is sequential_pipeline?"
+      result: 3-5 sequential specialists
+    - condition: "Archetype is parallel_convergent?"
+      result: 3-6 parallel specialists + 1 synthesizer
+    - condition: "Archetype is iterative_refinement?"
+      result: "2-4 specialists (executor + verifier at minimum)"
+    - condition: "Archetype is hierarchical_delegation?"
+      result: "2 sub-orchestrators + 3-5 specialists each"
+  namespace_strategy:
+    question: "How should specialist agent files be namespaced at install?"
+    branches:
+    - condition: "Default (safest across Claude Code versions)"
+      result: "{slug}__{role} prefix (double underscore)"
+    - condition: "Squad ships only skills (no agents)?"
+      result: "{slug}/{role} subdirectory — native namespace via pathSep"
+    - condition: "Default"
+      result: "{slug}__{role} prefix"
+  consumer_status: aspirational
+
+# ===========================================================================
+# STAKEHOLDER MAPPING — squad-specific
+# ===========================================================================
+
+stakeholder_mapping:
+  parent_context:
+    role: "The Claude Code session that invokes the squad orchestrator via Task tool"
+    wants:
+    - clear description on the orchestrator for spawn decision
+    - predictable synthesis return
+    - routing visibility (which specialist ran)
+    design_for:
+    - Orchestrator description follows agent.yaml.description_engineering formula
+    - Synthesis returns a structured final report
+    - Orchestrator surfaces "routed to X" in its output
+  each_specialist:
+    role: "Individual agents spawned by the orchestrator via Task"
+    wants:
+    - clear handoff payload (task, context_from_previous, output_contract)
+    - scoped tool boundary
+    - predictable failure convention
+    design_for:
+    - Handoff format is canonical
+    - Each specialist follows agent.yaml.stakeholder_mapping for its own role
+  claude_code_runtime:
+    role: "The platform that loads all squad files, runs plugin install, parses each agent"
+    wants:
+    - valid frontmatter on every agent file
+    - valid plugin.json with consistent agents list
+    - no conflicting agent names in global .claude/agents/
+    design_for:
+    - install_manifest targets are audited for conflicts
+    - plugin.json agents list matches install_manifest exactly
+    - namespace_strategy is consistent
+  end_user:
+    role: "Human who runs myclaude install squad-slug and whose Claude Code spawns the orchestrator"
+    wants:
+    - one install command
+    - clean uninstall
+    - squad appears in /agents list as coordinated tool
+    design_for:
+    - install_manifest is idempotent and reversible
+    - .manifest-lock provides audit trail
+    - README explains how to invoke the squad
+  creator_maintainer:
+    role: "The original squad architect"
+    wants:
+    - easy to update individual specialists without breaking coordination
+    - routing.yaml is diffable
+    - install_manifest changes are safe
+    design_for:
+    - routing.yaml is the single source of routing truth
+    - install_manifest changes are versioned
+    - each specialist can be updated independently as long as its agentType doesn't change
+  conflict_resolution:
+    rule: "claude_code_runtime > parent_context > each_specialist > end_user > creator_maintainer"
+    rationale: "Runtime constraints are non-negotiable. Parent context decides whether squad spawns. Specialists must be trusted. End user installs the bundle. Maintainer is last."
+
+# ===========================================================================
+# OUTPUT PATTERNS — squad-specific synthesis shapes
+# ===========================================================================
+
+output_patterns:
+  synthesis_report:
+    when_to_use: "sequential_pipeline, parallel_convergent, iterative_refinement"
+    structure: "Orchestrator returns a synthesized final report combining all specialist outputs into a single labeled-fields format"
+  routed_passthrough:
+    when_to_use: "conditional_router"
+    structure: "Orchestrator returns the selected specialist's output verbatim with a 'Routed to: {specialist}' header"
+  hierarchical_rollup:
+    when_to_use: "hierarchical_delegation"
+    structure: "Each sub-orchestrator returns its own synthesis; top orchestrator combines them with per-squad attribution"
+  consumer_status: aspirational
+  consumer_status_reason: "/validate Stage 4 does not yet verify that the orchestrator body teaches a synthesis pattern matching its declared archetype. The three output_patterns above (synthesis_report, routed_passthrough, hierarchical_rollup) are the canonical shapes the extended Stage 4 squad branch must cross-reference against the orchestrator body's synthesis section once archetype-to-pattern mapping is wired."
+
+# ===========================================================================
+# MIND-FORGE SQUAD SCHEMA EXTENSIONS
+# ===========================================================================
+# This block declares the multi-mind composition contract that layers on
+# top of the existing 5 coordination archetypes (sequential_pipeline,
+# parallel_convergent, conditional_router, iterative_refinement,
+# hierarchical_delegation). The existing archetypes are unchanged — the
+# additions below wire an orchestrator-led composition discipline, a
+# plural-field handoff contract, and an ontological diversity gate that
+# any archetype can honor when its specialists are minds.
+#
+# Every field below has an explicit consumer among the Engine skills
+# (/validate, /create, /fill) scheduled for downstream wiring. The
+# discipline is aspirational today and mechanical when wired.
+
+mind_forge_squad_schema:
+  source_architecture: references/engine-mind-forge-architecture.md
+  applies_to: "squads composing multiple minds as coordinated specialists — layered on top of the existing 5 coordination archetypes"
+  consumer_status: aspirational
+  consumer_status_reason: "The operational contract for multi-mind composition. Downstream consumers (/validate composition_gates check, /validate handoff_contract_template check, /validate diversity_check on 4-zone ontology, /create squad discovery walker extensions) are scheduled across the materialization roadmap declared in references/engine-mind-forge-architecture.md §11."
+
+  # ------------------------------------------------------------------------
+  # B1 — Composition gates (load-bearing; partial fill for GAP-COMPOSITION-1)
+  # Source: engine-mind-forge-architecture.md §5.8 (L8)
+  # ------------------------------------------------------------------------
+  B1_composition_gates:
+    rationale: "Productive-tension-mandatory composition with orchestrator-led hierarchy. Forces structured disagreement, prevents echo-chamber consensus, makes multi-voice analysis operationally meaningful. The producer/judge separation is the load-bearing discipline — the orchestrator routes and validates but never produces, so production and judgment are physically distinct at the role boundary."
+    size_bounds:
+      min: 3  # below 3 minds, no productive tension can be guaranteed
+      max: 5  # above 5 minds, cacophony risk dominates
+      soft_ideal: [3, 4]
+      rationale: "below 3 there is no structural opportunity for productive disagreement; above 5 coordination overhead exceeds synthesis benefit"
+    productive_tension_gate:
+      rule: "composer MUST verify ≥1 productive-tension edge exists across the selected team"
+      evidence_source: "registry productive_tension: field per mind entry in product-dna/minds.yaml mind_forge_schema.A9_library_indexing"
+      enforcement: "blocker — squad cannot ship without evidence of at least one productive-tension edge"
+    echo_alert:
+      rule: "if all minds' outputs agree above similarity_threshold, halt and escalate"
+      similarity_threshold: 0.85
+      escalation: "flag as 'possible training-data echo' and request human review"
+      rationale: "total agreement is suspect, not celebration — echo chambers masquerade as convergence"
+    disagreement_first_synthesis:
+      rule: "final squad output MUST list dissenting positions BEFORE consensus"
+      structure:
+        section_1: dissenting_views  # who disagreed, on what, why
+        section_2: convergent_positions  # where minds agreed
+        section_3: synthesis_with_declared_trade_offs  # final recommendation with named losses
+    confidence_cap:
+      rule: "collective squad confidence ≤ max(individual mind confidences)"
+      rationale: "squads do not manufacture certainty that no individual mind possesses — a team of five uncertain minds cannot produce a certain verdict"
+    orchestrator_role:
+      production_allowed: false
+      allowed_actions: [routing, triage, final_validation, convergence_synthesis]
+      forbidden_actions: [content_production, self_grading]
+      rationale: "Clause II Separation of Production and Judgment operationalized at the squad composition level"
+
+  # ------------------------------------------------------------------------
+  # B2 — Handoff contract template (LAW-MF-4 binding; fills GAP-COMPOSITION-1)
+  # Source: engine-mind-forge-architecture.md §4.4 (LAW-MF-4), §5.10 (L10)
+  # ------------------------------------------------------------------------
+  B2_handoff_contract_template:
+    rationale: "LAW-MF-4 binding — plural-field admission payload with loop-not-degrade fallback. Every multi-mind team handoff MUST be guarded by a plural-field admission payload with ≥5 independent fields mixing numeric thresholds and structural flags. Producer self-converges before handing off; receiver holds input-side veto; fallback direction is loop, never silent degradation. FILLS GAP-COMPOSITION-1 declared in references/composition-anatomy.md."
+    applies_to: "every squad with ≥2 producers — mandatory contract shape"
+    fills_gap: GAP-COMPOSITION-1
+    fills_gap_source: references/composition-anatomy.md
+    schema:
+      numeric_fields:
+        description: "at least 3 distinct numeric admission thresholds required"
+        per_field:
+          field_name: string
+          threshold: number
+          description: "what this field counts and why"
+      structural_flags:
+        description: "at least 2 distinct structural flags required"
+        per_field:
+          field_name: string
+          allowed_states: "list of permitted values"
+          description: "what structural property this flag represents"
+      provenance_tags:
+        description: "every unit of transferred content carries provenance"
+        per_field:
+          field_name: string
+          marker_vocabulary: [source, inferred, speculative]
+          description: "how the receiver distinguishes grounded from inferred"
+    minimum_total_fields: 5
+    maximum_total_fields: 12
+    producer_discipline:
+      self_convergence_before_handoff:
+        rule: "producer runs a self-validation checklist BEFORE offering the payload to the receiver"
+        check_type: "convergence — not quality verdict"
+        rationale: "the producer detects its own incompleteness; quality judgment is external per Clause II"
+      final_validation: forbidden  # producer never final-validates its own output
+    receiver_discipline:
+      input_veto:
+        rule: "receiver holds input-side veto and bounces incomplete payloads"
+        bounce_direction: producer  # never silently degrade, never accept with warning
+      acceptance_criteria: "all schema fields populated AND all thresholds met AND zero unmarked inferences"
+    fallback_direction:
+      on_admission_failure: loop_to_producer
+      rule: "admission failure sends work BACK to the producer with specific remediation guidance"
+      documentation: "stall states are detectable (bounced N times); human intervention at N≥3"
+    no_side_channels:
+      rule: "all inter-agent state passes through the payload; no direct agent-to-agent communication outside the contract"
+      enforcement: "violations detected by producer-receiver coupling audit"
+    example_minimum_payload:
+      description: "concrete template for a team with extraction + build specialists"
+      numeric_fields:
+        - citation_count: "≥15"
+        - signature_phrase_count: "≥5"
+        - source_tier_1_proportion: "≥0.60"
+      structural_flags:
+        - all_inferences_marked: true
+        - provenance_markers_present: true
+      provenance_tags:
+        - extracted_unit_markers: [SOURCE, INFERRED]
+
+  # ------------------------------------------------------------------------
+  # B3 — Orchestrator-led team template
+  # Source: engine-mind-forge-architecture.md §5.8 (L8)
+  # ------------------------------------------------------------------------
+  B3_orchestrator_led_team_template:
+    rationale: "Three-role strictly-disjoint hierarchy — orchestrator routes but never produces, producers produce but never final-validate, optional auditor validates but never produces or fixes. Role disjunction enforces Clause II Separation of Production and Judgment at the structural level, not the rhetorical level. Triple-tier validation (producer self-converges, receiver vetoes, orchestrator judges) guarantees three distinct perspectives, no gate skippable."
+    extends: "the existing squad archetypes (sequential_pipeline, parallel_convergent, conditional_router, iterative_refinement, hierarchical_delegation) — any archetype can adopt this role template"
+    roles:
+      - name: orchestrator
+        count: 1
+        production_allowed: false
+        allowed_actions: [routing, triage, convergence, final_validation]
+        forbidden_actions: [content_production, self_grading]
+      - name: producer
+        count_range: [2, 4]  # within size_bounds [3, 5] minus orchestrator
+        production_allowed: true
+        allowed_actions: [produce_content, self_converge_before_handoff]
+        forbidden_actions: [final_validation_of_own_output, cross_validation_of_peer_output]
+      - name: auditor
+        count: [0, 1]  # optional
+        production_allowed: false
+        allowed_actions: [validation, failure_classification, escalation]
+        forbidden_actions: [content_production, content_fixing]
+    role_disjunction:
+      rule: "no agent occupies two roles simultaneously within a single squad invocation"
+      rationale: "Clause II Separation of Production and Judgment enforced at the role boundary"
+    triple_tier_validation:
+      tier_1_producer_self_converge: "producer checks completeness before handoff"
+      tier_2_receiver_input_veto: "receiver refuses incomplete payload"
+      tier_3_orchestrator_final: "orchestrator runs squad-level validation rubric"
+      meaning: "3 gates, 3 distinct perspectives, no gate can be skipped"
+
+  # ------------------------------------------------------------------------
+  # B4 — Rework routing matrix
+  # Source: engine-mind-forge-architecture.md §6 (L2 ADOPT tier)
+  # ------------------------------------------------------------------------
+  B4_rework_routing:
+    rationale: "Mechanical restart routing — every validation failure maps to a specific restart address, not a vague try-again. Cascading rule ensures restart from the earliest failing phase, not just the reported weak layer. Spot-check vs full-rework discrimination allocates effort proportional to the actual failure mode."
+    weak_layer_to_phase_matrix:
+      - weak_layer: linguistic_surface
+        restart_phase: extraction_phase_1_discover
+        rationale: "surface vocabulary gaps are source-ingestion failures"
+      - weak_layer: cognitive_core
+        restart_phase: extraction_phase_2_mine
+        rationale: "cognitive pattern gaps are source-mining failures"
+      - weak_layer: personality_engine
+        restart_phase: extraction_phase_3_pattern
+        rationale: "personality gaps are pattern-extraction failures"
+      - weak_layer: values_or_obsessions
+        restart_phase: extraction_phase_2_mine_deep
+        rationale: "value/obsession gaps require deeper source mining"
+      - weak_layer: paradoxes
+        restart_phase: full_re_extraction
+        rationale: "paradox failures mean fundamental misreading of source"
+    cascading_rule:
+      rule: "if phase N is the restart address, phases N+1, N+2, ... are also implicitly invalid"
+      implication: "restart from earliest failing phase, not just the reported weak layer"
+    spot_check_vs_full_rework:
+      spot_check:
+        trigger: "single-category weakness in 0.70-0.84 range"
+        effort_budget_hours: [4, 8]
+        scope: "targeted re-extraction on the specific deficient category"
+      full_rework:
+        trigger: "3+ categories below 0.70"
+        effort_budget_hours: [44, 88]
+        scope: "full pipeline from extraction phase 1"
+
+  # ------------------------------------------------------------------------
+  # B5 — Diversity check via 4-zone ontological taxonomy
+  # Source: engine-mind-forge-architecture.md §5.9 (L9)
+  # Cross-reference: product-dna/minds.yaml mind_forge_schema.A9_library_indexing.ontology_map
+  # ------------------------------------------------------------------------
+  B5_diversity_check:
+    rationale: "Diversity gate using the 4-zone ontological taxonomy from the mind library. Squads must span ≥2 ontological zones to prevent mono-zone squads that look diverse by surface but share foundation. Links squad composition to mind library ontology through a mechanical check."
+    source: "4-zone ontological taxonomy defined in product-dna/minds.yaml mind_forge_schema.A9_library_indexing.ontology_map"
+    rule: "squad composition MUST span ≥2 ontological zones"
+    purpose: "prevent mono-zone squads that appear diverse on the surface but share cognitive foundation"
+    composition_algorithm:
+      step_1: "extract ontology_map from each candidate mind entry"
+      step_2: "compute zone coverage across the proposed squad"
+      step_3: "if zone_coverage < 2: reject the composition and request substitution"
+      step_4: "if B1 productive_tension_gate also passes: squad is valid"
+    edge_cases:
+      single_domain_squad:
+        allowed: true
+        condition: "single-domain squads permitted only when all members span different zones of that domain"
+      homogeneous_foundation:
+        forbidden: "squads where all members share the Foundation zone are mono-cultural — structural similarity masquerades as coordination"
+
+  # ------------------------------------------------------------------------
+  # B6 — Workflow variants (optional axis extension)
+  # Source: engine-mind-forge-architecture.md §5.4 (L4 variants) applied
+  # at the squad coordination layer
+  # ------------------------------------------------------------------------
+  B6_workflow_variants:
+    rationale: "Optional 2-axis workflow dispatch for squads whose coordination pattern genuinely varies by input class. Axis 1 distinguishes building a new mind from updating an existing one (effort profile differs by an order of magnitude). Axis 2 distinguishes open-source reference material from closed-source reference material (provenance verification effort differs). Each cell declares token budget and primary phase emphasis. Not every squad needs this — opt in only when the coordination pattern is genuinely bimodal."
+    applies_when: "squad must serve multiple workflow classes where each class has a different budget envelope or phase emphasis"
+    optional: true
+    dispatch_axes:
+      build_mode:
+        values: [new_build, incremental_update]
+        meaning: "new_build forges a mind from scratch; incremental_update refines an existing mind with new reference material"
+      source_access:
+        values: [open_source, closed_source]
+        meaning: "open_source = reference material is publicly available and verifiable; closed_source = reference material is private and requires explicit provenance verification"
+    cells:
+      new_build_open_source:
+        description: "forge a new mind from openly available reference material"
+        token_budget: [80000, 120000]
+        primary_phase_emphasis: [discover, extract]
+      new_build_closed_source:
+        description: "forge a new mind from privately held reference material"
+        token_budget: [100000, 140000]
+        primary_phase_emphasis: [discover_deep, verify_provenance, extract]
+      update_open_source:
+        description: "refine an existing mind with new openly available reference material"
+        token_budget: [30000, 60000]
+        primary_phase_emphasis: [diff_sources, selective_re_execution, regression_test]
+      update_closed_source:
+        description: "refine an existing mind with new privately held reference material"
+        token_budget: [40000, 70000]
+        primary_phase_emphasis: [diff_sources, verify_provenance, selective_re_execution]
+    auto_detection_rule:
+      inputs: [existing_mind_artifact_present, reference_material_open_source]
+      output: "pipeline cell with appropriate token budget and phase emphasis"

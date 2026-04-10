@@ -1,94 +1,2562 @@
-# product-dna/agent.yaml — DNA requirements for Agents
-# Read by /create, /validate, /package when type=agent
+# product-dna/agent.yaml — Codex for Agents
+# Read by /create, /fill, /validate, /test, /package, /publish (and /import, /map,
+# /status when they read product-dna) when type=agent.
+#
+# This file is the SINGLE SOURCE OF TRUTH for everything the Engine knows about the
+# Agent product type. Agents are the FIRST family-skill type after skill itself —
+# they specialize skill.yaml by adding persona, tool boundary enforcement, memory
+# scopes, MCP server composition, and subagent-specific frontmatter fields.
+#
+# Schema version: 3.0.0 (Sprint 8 Wave 2 — codex)
+# Ground truth: every claim about Claude Code native behavior carries a
+# [SOURCE: file.ts:line] reference verified in S118 against
+# D:\repos-reverse-engineering\claude-code-main\src\.
+# See references/claude-code-ground-truth.md for the full verified capability register.
+
+# ===========================================================================
+# IDENTITY (preserved and corrected from v2.2 — install_target fixed)
+# ===========================================================================
 
 type: agent
 primary_file: AGENT.md
-install_target: ".claude/skills/{slug}/"
-template: "templates/agent/"
+# CORRECTED from v2.2. v2.2 said ".claude/skills/{slug}/" which is WRONG — agents
+# install as single files in .claude/agents/ per loadAgentsDir.ts:308 which calls
+# loadMarkdownFilesForSubdir('agents', cwd). The workspace uses AGENT.md for
+# clarity, but the installed file is renamed to {slug}.md during /package.
+install_target: .claude/agents/{slug}.md
+template: templates/agent/
+canonical_spec: references/product-specs/agent-spec.md
+# Workspace file is AGENT.md, installed file is {slug}.md.
+# WHY: Claude Code loadAgentsDir discovers agent files by scanning
+# .claude/agents/*.md. The workspace uses AGENT.md for editorial clarity and so
+# that multiple agents in a squad directory don't collide. At /package time the
+# file is renamed to match the slug. [SOURCE: loadAgentsDir.ts:308, 657]
+package_rename: '{slug}.md'
+
+# ===========================================================================
+# ESSENCE — what this type IS
+# ===========================================================================
+
+essence:
+  one_line: A delegatable persona with tool boundaries, memory, and its own context window.
+  amplifies: Parallelizable specialized judgment — the parent invokes the agent via the Task tool, the agent runs in a forked context with its own tool pool and system prompt, and returns a concise report.
+  philosophy: 'Agents are the unit of trust-once-delegation. A well-forged agent is invoked without supervision: the parent trusts the return value because the agent''s persona, tool surface, and constitution were declared at forge time and are physically enforced at runtime. Agents are NOT skills with personality. They are the native primitive for "spawn a teammate, let them work, trust the output".'
+  refuses:
+  - Persistent conversation across invocations — agents are spawned per Task call and return a single final message; use memory scopes or state files for cross-invocation continuity.
+  - "Running without tool boundaries \u2014 an agent that declares `tools: ['*']` without a specific reason is forged wrong; the tool surface IS the persona's limits."
+  - Being a workflow runtime — agents execute one delegated task and return. Task chaining is the parent's job, not the agent's.
+  - Calling itself recursively or spawning copies of itself without explicit budget — recursion in agents is a cost amplifier that needs explicit budgets.
+  - Claiming to "remember" without declaring a memory scope — any persistence must be declared via the memory frontmatter field.
+  trade_offs:
+    gains:
+    - Native context isolation via forked subprocess — the agent's conversation history, file state cache, and tool permission rules are physically separated from the parent [SOURCE: runAgent.ts:694-714].
+    - "Tool surface is declarative and enforced \u2014 `tools:` whitelist plus `disallowedTools:` blacklist produce a runtime tool pool the agent cannot escape [SOURCE: agentToolUtils.ts:15-37]."
+    - Own system prompt, own CLAUDE.md scoping, own effort level, own model — agents are genuinely configurable personas, not prompt wrappers.
+    - Agent MCP servers are ephemeral and cleaned up automatically — an agent can bring its own Slack, GitHub, or custom MCP integration that exists only while the agent runs [SOURCE: runAgent.ts:95-218, 817].
+    - "`criticalSystemReminder_EXPERIMENTAL` re-injects a constitution sentence at every user turn, preventing drift without relying on the LLM to remember [SOURCE: runAgent.ts:711-714, verificationAgent.ts:150-151]."
+    - "Can preload skills natively via `skills:` frontmatter \u2014 the agent starts with domain knowledge already injected as meta user messages [SOURCE: runAgent.ts:577-646]."
+    - "`isolation: worktree` runs the agent in a separate git worktree \u2014 physical FS isolation for specialist agents that edit code [SOURCE: loadAgentsDir.ts:607-621]."
+    - "`omitClaudeMd: true` for read-only agents saves 5-15 Gtok/week at fleet scale by skipping the parent's CLAUDE.md hierarchy [SOURCE: runAgent.ts:390-398]."
+    sacrifices:
+    - Higher forge cost — a state-of-art agent requires persona design, tool boundary design, constitution design, failure mode design, and skill preloading design.
+    - Return value is unstructured text — the parent receives a single final assistant message as free text and must parse it if structure is needed; the agent's body must instruct the output format [SOURCE: AgentTool/prompt.ts:257].
+    - Per-invocation cost can be high when MCP servers are ephemeral or when the agent preloads many skills — the tradeoff is isolation over speed.
+    - Resumption is limited — Explore and Plan are one-shot archetypes, they do NOT accept SendMessage follow-ups [SOURCE: constants.ts:9-12]; only conversational agents survive SendMessage.
+    worth_it_when: The task requires delegated judgment, needs its own context window to avoid polluting the parent's working memory, or needs physical tool boundaries the parent cannot provide via prompting alone.
+
+# ===========================================================================
+# ARCHITECTURAL PRINCIPLES — 9 specializations of structural-dna.md P1-P9
+# ===========================================================================
+
+architectural_principles:
+  P1_purpose_before_shape:
+    specialization: 'Before scaffolding an agent, the creator must answer four
+      questions: (1) what delegated task does this agent solve, (2) what is the
+      parent context that will invoke it, (3) what tool boundary defines the
+      persona (whitelist or denylist), (4) what does the agent return to the
+      parent (unstructured prose OR a structured contract). The archetype selection
+      (SCOUT / ARCHITECT / GENERALIST / SPECIALIST / ADVISER / ORCHESTRATOR / FORK-HEIR)
+      is answered BEFORE the persona prose, because archetype determines the
+      tool pattern and the prompt structure.'
+    enforced_by:
+    - discovery_questions.minimum_set
+    - archetypes.selection_required
+    - lifecycle.create.type_specific.discovery_phase
+    blocks_forge_when: Creator cannot answer 'what delegated task' in one sentence OR cannot name the parent context that will invoke this agent.
+  P2_constraint_before_feature:
+    specialization: 'For agents, constraint is PHYSICAL not prose. The tool
+      boundary (`tools` whitelist and/or `disallowedTools` blacklist) is the
+      primary constraint vocabulary — an agent that cannot write files because
+      its tool pool excludes Write is more trustworthy than an agent instructed
+      in prose "please do not write files". The 18 anti-pattern catalog inherited
+      from skill is extended with agent-specific failure modes (AP-A1 to AP-A6
+      below). Anti-patterns and tool boundaries are declared BEFORE persona.'
+    enforced_by:
+    - dna_patterns.tier1.D2
+    - anti_patterns_catalog
+    - frontmatter.recommended
+    - invariants
+    - lifecycle.fill.type_specific.sections_walked
+    blocks_forge_when: "Agent declares no tool boundary (neither tools nor disallowedTools set) AND archetype is not GENERALIST."
+  P3_composition_over_monolith:
+    specialization: 'Agents compose through three native mechanisms — (1) skills
+      preloaded via the skills frontmatter field, (2) ephemeral MCP servers
+      declared via mcpServers, (3) being spawned by a parent skill or agent via
+      the Task tool. A well-forged agent delegates domain knowledge to preloaded
+      skills rather than bloating its own body. Primary AGENT.md should stay
+      below 500 lines just like skill.yaml — domain knowledge belongs in
+      references/ or in preloaded skills.'
+    enforced_by:
+    - dna_patterns.tier1.D3
+    - progressive_disclosure_model
+    - progressive_disclosure_model.skills_preload_best_practices
+    - invariants
+    blocks_forge_when: "AGENT.md exceeds 500 lines AND no references/ exist AND no `skills:` frontmatter field is declared."
+  P4_contract_before_narrative:
+    specialization: 'The agent''s contract is the frontmatter plus the first 30
+      lines of the system prompt. The frontmatter declares name, description
+      (which is the whenToUse Claude reads to decide whether to invoke), tools,
+      model, memory, hooks, mcpServers, and — crucially — the output contract
+      (as prose in the body, since Claude Code does not enforce return shape
+      natively). The description must follow the formula [ACTION] + [WHEN TO
+      INVOKE] + [RETURN SHAPE] — different from skill''s formula because agents
+      are invoked by the parent LLM, not by the user.'
+    enforced_by:
+    - frontmatter.required
+    - description_engineering
+    - lifecycle.validate.type_specific.per_stage_hooks.stage_3_dna_tier1
+    - output_contract
+    blocks_forge_when: description field is missing, vague, longer than 300 characters, OR fails to state what the agent returns.
+  P5_failure_mode_before_happy_path:
+    specialization: 'Agents declare failure modes at two levels: (a) what the
+      agent does when its input is ambiguous, dependencies are missing, or the
+      task is out of scope — delivered in the body as When-Not-To-Use; (b) what
+      the agent returns when it decides to fail — a structured "PARTIAL" or
+      "FAIL" return value the parent can detect without parsing prose. The
+      verification agent''s VERDICT protocol is the canonical example [SOURCE:
+      verificationAgent.ts:117-127].'
+    enforced_by:
+    - dna_patterns.tier1.D14
+    - failure_modes
+    - output_contract.failure_shape
+    blocks_forge_when: No When-Not-To-Use section OR no failure return convention declared.
+  P6_state_at_the_edge:
+    specialization: 'Agents have three native state channels: (1) `memory: user|project|local`
+      frontmatter field, which triggers automatic Write/Edit/Read tool injection
+      so the agent can persist [SOURCE: loadAgentsDir.ts:456-467]; (2) session
+      hooks registered via the `hooks:` frontmatter field, scoped to the agent''s
+      lifetime [SOURCE: runAgent.ts:567-575]; (3) initial prompt prepended via
+      `initialPrompt` which can contain slash commands [SOURCE: loadAgentsDir.ts:123].
+      State MUST be declared via these native mechanisms — no implicit assumptions
+      about conversation memory.'
+    enforced_by:
+    - dna_patterns.tier2.D8
+    - frontmatter.optional
+    - frontmatter.field_source_refs
+    - invariants
+    blocks_forge_when: Agent body describes 'remembering' or 'learning over time' behavior without declaring memory scope or state file.
+  P7_read_before_write:
+    specialization: '/create reads creator.yaml + scout report (if exists) + this
+      codex + templates/agent/ + canonical_spec + claude-code-ground-truth.md
+      BEFORE generating any scaffold (6 reads). The ground-truth read is new in
+      S118 — it is non-negotiable because any claim about Claude Code native
+      behavior must be backed by a source reference, not memory. /validate reads
+      the full agent + references/ + this codex + ground-truth BEFORE scoring.
+      The minimum read-before-write ratio for agents is 4:1.'
+    enforced_by:
+    - lifecycle.create.type_specific.read_before_write_ratio
+    - lifecycle.create.type_specific.ground_truth_required
+    - invariants
+    blocks_forge_when: Agent scaffolded without reading claude-code-ground-truth.md OR without reading the canonical agent spec.
+  P8_invisibility_of_mechanism:
+    specialization: 'User-facing strings in published agents (description, README,
+      examples) MUST NOT reference Engine internals, validation tiers, DNA pattern
+      names, archetype internal vocabulary (SCOUT / ADVISER as taxonomy) or
+      substrate vocabulary. The buyer installs the agent via `myclaude install`
+      and invokes it via natural-language Task spawn; they never see the codex
+      machinery. The internal archetype taxonomy (SCOUT, ARCHITECT, GENERALIST,
+      SPECIALIST, ADVISER, ORCHESTRATOR, FORK-HEIR) is coaching vocabulary for
+      the creator during /create and /fill, NOT marketing vocabulary for the
+      published agent.'
+    enforced_by:
+    - lifecycle.validate.type_specific.per_stage_hooks.stage_7_anti_commodity
+    blocks_forge_when: grep on user-facing strings in published artifact finds substrate vocabulary OR internal archetype names as marketing.
+  P9_recursive_integrity:
+    specialization: 'The /validate agent pipeline must pass when applied to the
+      Engine''s own 5 built-in agent examples (Explore, Plan, general-purpose,
+      verification, fork — as mirrored in references/) AND to any agents the
+      Engine ships as part of squads or systems. An agent codex that demands
+      MCS-3 from creators while its own dogfood examples score MCS-1 is
+      dishonest by construction. The ground truth from Claude Code''s own
+      built-in agents is the reference standard.'
+    enforced_by:
+    - lifecycle.validate.type_specific.dogfood_check
+    - quality_rubric
+    consumer_status: aspirational
+    consumer_status_reason: Wave 3 teaches /validate to run dogfood checks against Engine-shipped agents and against the 5 built-in Claude Code agents as mirrored in references/built-in-agent-exemplars/.
+    blocks_forge_when: Codex cannot pass its own validator when applied to itself — prose in this file violates the principles it enforces.
+
+# ===========================================================================
+# OPERATIONAL CALIBRATION
+# ===========================================================================
+
+operational_modes:
+  supports:
+  - structure
+  - discovery
+  default: structure
+  rationale: 'Agents support BOTH modes. A creator with a clear delegated-task
+    domain (e.g., "I want an agent that reviews my PRs for security issues")
+    enters structure mode directly via /create agent. A creator without clear
+    intent (e.g., "I want specialist agents but don''t know which to build")
+    enters discovery mode via /scout {domain} → /map → /create agent. The
+    pipeline auto-detects which mode by reading creator inputs.
+    '
+  discovery_entry_via:
+    skill: /scout
+    fallback: /map
+    rationale: /scout researches existing agents in the domain (marketplace + Claude Code built-ins) to identify gaps. /map extracts the creator's delegated-task expertise into a domain-map.md that pre-fills the persona and tool boundary.
+freedom_levels:
+  valid:
+  - 1
+  - 2
+  - 3
+  - 4
+  - 5
+  default: 3
+  rationale: 'Agents work across the full freedom spectrum. The level depends
+    on the creator''s experience AND on the archetype: GENERALIST agents
+    tolerate higher freedom (the all-tools pattern handles most decisions),
+    ADVISER and SCOUT agents benefit from lower freedom (every tool boundary
+    and every constitution line is a creator decision worth sparring).
+    '
+  per_level_behavior:
+    1: Engine asks every section question explicitly. Sparring on every section including tool boundary design and output contract. Used for first agent — produces a fully-coached MCS-2 scaffold.
+    2: Engine proposes tool boundary and persona from discovery answers. Creator confirms each. Default for second-time creators.
+    3: Engine fills sections from discovery + scout report + archetype defaults. Creator audits. DEFAULT for experienced creators with clear intent.
+    4: Engine generates full draft from creator.yaml + scout report + domain-map. Creator reviews and edits. Used by 5+ products published creators.
+    5: Engine generates agent end-to-end with minimal interaction. Creator audits final artifact. Used by power creators forging variations on existing agents.
+  per_archetype_default:
+    scout: 2
+    architect: 2
+    generalist: 3
+    specialist: 2
+    adviser: 1
+    orchestrator: 1
+    fork_heir: 3
+  consumer_status: aspirational
+  consumer_status_reason: Wave 3 teaches /create and /fill to consult freedom_level before calibrating sparring depth.
+
+# ===========================================================================
+# INTENT TOPOLOGY — the three transversal axes + locale adaptation contract
+# ===========================================================================
+# Codex-side declaration of the Wave 1 intent topology. The /create skill
+# translates creator natural-language intent into three orthogonal axes —
+# delivery_mechanism, operational_nature, cognitive_depth — and derives the
+# runtime host from the first two. This block declares which axis values are
+# LEGAL for the agent type and persists the contract codex-drift-check validates.
+#
+# Axis source: references/intent-topology.md §2 (6 × 4 × 3 enumeration).
+# Runtime host derivation: references/runtime-host-dag.md §2 (computed table).
+# Decision algorithm: references/capability-matrix.md §3 (12-step walk).
+#
+# Example of the Q1→axis mapping: Q1 "DO something" → operational_nature ∈
+# {executor}; Q1 "THINK about something" → operational_nature ∈ {advisor};
+# Q1 "ORCHESTRATE something" → operational_nature ∈ {orchestrator}. The codex
+# does not duplicate the mapping table — it only declares the enums that are
+# legal HERE so drift-check can validate the forged product's .meta.yaml
+# intent_declaration against them.
+
+intent_topology:
+  declaration_mode: full
+  declaration_mode_reason: "Agent is one of TWO certified codices (skill + agent) where operational_nature has genuine multiplicity — an agent can be executor (specialist, generalist, fork_heir), advisor (scout, architect, adviser), or orchestrator. Delivery_mechanism is fixed at invoked_task_spawn because every agent is spawned via the Task tool. Full declaration is required because the creator's choice of archetype is also the choice of operational_nature, and the forged agent's tool pool must match."
+  delivery_mechanism:
+    legal_values:
+    - invoked_task_spawn
+    default: invoked_task_spawn
+    default_reason: "Agents are ALWAYS spawned via the Task tool. The delivery is fixed — a forked context with its own tool pool, its own system prompt, and its own memory. This is the defining characteristic of the agent type install contract (.claude/agents/{slug}.md → invoked via Task tool subagent_type)."
+    excluded_values:
+    - ambient_constitutional   # claude-md only
+    - ambient_path_scoped      # skill only
+    - invoked_slash_command    # skill only
+    - reflex_hook_binding      # hooks only
+    - composed_system          # system only
+    excluded_values_reason: "Each excluded value is another type's install contract. An agent delivered ambient would be claude-md or skill; an agent delivered via hook would be a hook handler; an agent delivered as a composed bundle would be a system."
+  operational_nature:
+    legal_values:
+    - executor
+    - advisor
+    - orchestrator
+    default: advisor
+    default_reason: "The default archetype for a new agent is `scout` or `adviser` (both read-only) — the conservative shape where the agent inspects and recommends without mutation. Executor archetypes (specialist, generalist, fork_heir) require more deliberate tool-pool declaration. Orchestrator is a rarer form where the agent routes work to OTHER agents without doing the work itself."
+    excluded_values:
+    - observer  # hooks AgentHook only
+    excluded_values_reason: "Observer agents would be hook handlers in disguise. Background write-to-memory actors with no user response belong to the hooks type install contract, not the agent type."
+    archetype_mapping:
+      scout: advisor
+      architect: advisor
+      adviser: advisor
+      generalist: executor
+      specialist: executor
+      fork_heir: executor
+      orchestrator: orchestrator
+  cognitive_depth:
+    legal_values:
+    - procedural
+    - advisory
+    - cognitive
+    default: advisory
+    default_reason: "Agents default to advisory cognitive depth because a persona voice and declared knowledge boundary are part of the type's value proposition — a personaless agent is a skill in disguise. Procedural agents exist (pure executor archetypes with minimal persona) and cognitive agents exist (deep 5-layer architecture), but advisory is the sweet spot for the archetype distribution."
+    source_note: "The agent codex does not declare its own depth_discriminator block — the decision semantics are inherited from minds.yaml depth_discriminator and specialized per-archetype in the agent.archetypes table above. cognitive_depth is restated here only for drift-check enum consumption."
+  runtime_host_note:
+    computed_by: references/runtime-host-dag.md
+    example_combinations:
+      invoked_task_spawn__executor: "[agent_spawn]"
+      invoked_task_spawn__advisor: "[agent_spawn]"
+      invoked_task_spawn__orchestrator: "[agent_spawn]"
+    note: "All agent combinations derive to host=[agent_spawn] — the forked context is the definition of the type. Host is never declared on the agent artifact; it is computed at validate time from the (delivery, nature) pair. See references/runtime-host-dag.md §1."
+  locale_adaptive_clause_required: true
+  locale_adaptive_clause_source: references/locale-adaptive-clause.md
+  locale_adaptive_clause_required_reason: "Every forged agent carries a runtime contract that tells the agent to mirror the invoker's language in user-facing output, preserving the agent's source language in structural markers. An agent forged in PT-BR is installable by a French user without retranslation. The clause is ~4 lines in EN (runtime instructions parse most faithfully in EN) plus a localized header comment in the creator's language. Injected by /create during W2.6 and validated by codex-drift-check via marker grep."
+  locale_adaptive_clause_consumer_status: aspirational
+  locale_adaptive_clause_consumer_status_reason: "Wave 2 W2.6 creates references/locale-adaptive-clause.md, teaches /create to inject the clause into templates/agent/AGENT.md.template at scaffold time, and extends scripts/codex-drift-check.py with the marker-grep rule."
+  consumer_status: aspirational
+  consumer_status_reason: "Wave 2 W2.3 adds config.yaml routing extensions that consume intent_topology.delivery_mechanism and intent_topology.operational_nature. Wave 2 W2.4 adds quality-gates.yaml Stage 0 Intent Coherence. Wave 2 W2.5 extends codex-drift-check.py with enum validation. Wave 3+ teaches /create to walk the 12-step decision algorithm from references/capability-matrix.md §3."
+
+# ===========================================================================
+# ARCHETYPES — the 7 canonical agent shapes derived from Claude Code built-ins
+# ===========================================================================
+#
+# Every archetype is derived from a real built-in agent in the Claude Code source
+# OR from a documented Claude Code native primitive. This is not invention — it is
+# codification of what Anthropic's own engineers have already shipped.
+#
+# Reference: references/claude-code-ground-truth.md § Layer 5 — Built-in agents
+
+archetypes:
+  selection_required: true
+  selection_phase: lifecycle.create.type_specific.discovery_phase
+  selection_question: Which archetype best matches the agent you are forging?
+  hybrid_policy: Identify the DOMINANT archetype. Use secondary archetypes to enrich the persona. Never declare two equal archetypes — that is design indecision and produces a muddy tool boundary.
+  scout:
+    when_to_use: Fast read-only search and investigation. The agent explores the codebase or filesystem, answers questions with found evidence, and returns a concise report. It is NEVER allowed to modify state.
+    derived_from: "Claude Code built-in Explore [SOURCE: built-in/exploreAgent.ts]"
+    freedom_level: low
+    error_tolerance: minimal
+    primary_focus: read-only search with structured findings
+    knowledge_type: investigative
+    typical_output: concise findings report
+    structure:
+      references: search-strategies + domain-specific-patterns
+      body_style: identity + CRITICAL READ-ONLY BLOCK + strengths + guidelines + fast-return convention
+      assets: none
+    frontmatter_pattern:
+      name: '{domain}-scout'
+      description: 'Fast agent specialized for {domain} searches. Use this when you need to [search pattern A], [investigate pattern B], or [answer pattern C]. When calling this agent, specify the desired thoroughness level: "quick", "medium", or "very thorough".'
+      tools: null
+      disallowedTools:
+      - Agent
+      - ExitPlanMode
+      - Edit
+      - Write
+      - NotebookEdit
+      model: haiku
+      omitClaudeMd: true
+    recommended_verbs:
+    - search
+    - find
+    - locate
+    - investigate
+    - map
+    - scan
+    examples_by_domain:
+    - TypeScript codebase scout
+    - Database schema investigator
+    - Security vulnerability scanner (read-only)
+    validation_checklist:
+    - Body has explicit READ-ONLY MODE block listing what is prohibited
+    - disallowedTools list includes Edit, Write, NotebookEdit at minimum
+    - omitClaudeMd is true (read-only agents do not need project CLAUDE.md)
+    - Description specifies thoroughness parameter for the parent to tune
+    - Model is haiku or inherit (speed over depth for search)
+    - Archetype is in ONE_SHOT_BUILTIN pattern (no SendMessage follow-up expected)
+    body_target_lines: <200
+    typical_dna_emphasis:
+    - D1
+    - D2
+    - D4
+    - D7
+    - D14
+  architect:
+    when_to_use: Read-only planning and design. The agent explores the codebase, identifies patterns and conventions, and returns a step-by-step implementation plan. Never modifies files — the plan is the output.
+    derived_from: "Claude Code built-in Plan [SOURCE: built-in/planAgent.ts]"
+    freedom_level: low
+    error_tolerance: moderate
+    primary_focus: read-only analysis + structured plan output
+    knowledge_type: architectural methodology
+    typical_output: implementation plan with critical files list
+    structure:
+      references: patterns + conventions + trade-offs
+      body_style: identity + READ-ONLY BLOCK + 4-phase process + required output format
+      assets: none
+    frontmatter_pattern:
+      name: '{domain}-architect'
+      description: 'Software architect agent for {domain} implementation plans. Use this when you need to plan the implementation strategy for {target problem}. Returns step-by-step plans, identifies critical files, and considers architectural trade-offs.'
+      disallowedTools:
+      - Agent
+      - ExitPlanMode
+      - Edit
+      - Write
+      - NotebookEdit
+      model: inherit
+      omitClaudeMd: true
+    recommended_verbs:
+    - architect
+    - design
+    - plan
+    - decompose
+    - sequence
+    examples_by_domain:
+    - Refactoring architect
+    - API design planner
+    - Migration strategy architect
+    validation_checklist:
+    - Body has explicit READ-ONLY MODE block
+    - Required output section specifies format with labeled fields
+    - Required output includes 'Critical Files for Implementation' list (3-5 files)
+    - disallowedTools includes mutation tools
+    - model is inherit (uses parent's model for architectural depth)
+    - omitClaudeMd is true
+    body_target_lines: 200-400
+    typical_dna_emphasis:
+    - D1
+    - D2
+    - D4
+    - D5
+    - D14
+  generalist:
+    when_to_use: All-purpose task execution with full tool pool. The agent handles complex multi-step tasks, open-ended research, and investigations where the shape of the work is not known in advance.
+    derived_from: "Claude Code built-in general-purpose [SOURCE: built-in/generalPurposeAgent.ts]"
+    freedom_level: high
+    error_tolerance: high
+    primary_focus: flexible tool-using task completion
+    knowledge_type: general
+    typical_output: concise completion report
+    structure:
+      references: optional — depends on scope
+      body_style: identity + strengths + guidelines + report convention
+      assets: optional
+    frontmatter_pattern:
+      name: '{domain}-agent'
+      description: 'General-purpose agent for {domain} tasks. Use when researching {pattern A}, executing {pattern B}, or completing multi-step work in {domain}.'
+      tools:
+      - '*'
+      model: null
+    recommended_verbs:
+    - complete
+    - execute
+    - research
+    - investigate
+    - implement
+    examples_by_domain:
+    - Data cleaning agent
+    - Bug investigation agent
+    - Documentation writer agent
+    validation_checklist:
+    - Body has 'strengths' section listing 3-5 capabilities
+    - Body has 'guidelines' section with NEVER-create-docs rule if applicable
+    - Report convention is stated (e.g., "return a concise report covering what was done")
+    - Model is unset (inherits getDefaultSubagentModel()) OR explicit choice with rationale
+    body_target_lines: <200
+    typical_dna_emphasis:
+    - D1
+    - D2
+    - D4
+    - D14
+  specialist:
+    when_to_use: Deep domain expertise executing within a narrow and well-defined scope. The agent MAY modify files, but only within its declared domain. This is the write-capable archetype for when trust-once delegation is appropriate.
+    derived_from: Claude Code built-in pattern (custom specialists follow this shape) + myClaude convention
+    freedom_level: medium
+    error_tolerance: low
+    primary_focus: narrow expertise with write authority
+    knowledge_type: deep domain procedural
+    typical_output: files modified + commit hash + change summary
+    structure:
+      references: domain-knowledge + anti-patterns + scope-boundaries
+      body_style: identity + expertise declaration + WRITE SCOPE BOUNDARY + anti-patterns + output convention
+      assets: templates_optional
+    frontmatter_pattern:
+      name: '{domain}-specialist'
+      description: '{Domain} specialist for [specific task category]. Use when you need [precise operation A], [precise operation B]. Modifies files within [scope description]. Returns [return shape].'
+      tools:
+      - Read
+      - Write
+      - Edit
+      - Bash
+      - Grep
+      - Glob
+      model: inherit
+      maxTurns: 20
+    recommended_verbs:
+    - refactor
+    - implement
+    - migrate
+    - optimize
+    - fix
+    examples_by_domain:
+    - TypeScript type-hardening specialist
+    - SQL migration specialist
+    - Accessibility fixup specialist
+    validation_checklist:
+    - tools frontmatter is an explicit allowlist (NOT ['*'])
+    - Body has a WRITE SCOPE section that enumerates exactly which files the agent may modify
+    - Body has anti-patterns section listing 5+ domain-specific failure modes
+    - Return convention includes files-changed list and commit hash (when applicable)
+    - maxTurns is set (prevents runaway execution in the specialist scope)
+    body_target_lines: 300-500
+    typical_dna_emphasis:
+    - D1
+    - D2
+    - D4
+    - D7
+    - D14
+    - D15
+  adviser:
+    when_to_use: Read-only expert judgment that the parent can accept or reject. The agent MUST NOT modify state — it gives its opinion, ranks options, critiques approaches, or verifies plans. This is the minds-adjacent archetype that lives in the agent type.
+    derived_from: "Claude Code built-in verification [SOURCE: built-in/verificationAgent.ts] (without the adversarial verifier suffix) + the minds type native shape"
+    freedom_level: low
+    error_tolerance: moderate
+    primary_focus: judgment without execution
+    knowledge_type: critical reasoning
+    typical_output: ranked recommendations with rationale and confidence levels
+    structure:
+      references: reasoning-frameworks + domain-references + failure-patterns
+      body_style: identity + READ-ONLY BLOCK + reasoning methodology + confidence signaling convention + output shape
+      assets: none
+    frontmatter_pattern:
+      name: '{domain}-adviser'
+      description: 'Read-only {domain} adviser. Use when you need expert judgment on [pattern A], critique of [pattern B], or verification of [pattern C]. Returns ranked recommendations with confidence levels. Does NOT modify files.'
+      tools:
+      - Read
+      - Glob
+      - Grep
+      - WebSearch
+      - WebFetch
+      model: inherit
+      omitClaudeMd: true
+      criticalSystemReminder_EXPERIMENTAL: 'CRITICAL: You are a read-only adviser. You CANNOT edit, write, or create files. You deliver judgment and rationale. You end your output with a clear recommendation and confidence level.'
+    recommended_verbs:
+    - advise
+    - critique
+    - rank
+    - verify
+    - recommend
+    examples_by_domain:
+    - Code review adviser (read-only)
+    - Architecture critique adviser
+    - Migration safety reviewer
+    validation_checklist:
+    - tools frontmatter allowlist contains NO mutation tools (no Write, Edit, Bash write-operations)
+    - criticalSystemReminder_EXPERIMENTAL is set with a read-only constitution
+    - Output convention uses confidence signaling (high/moderate/low or equivalent)
+    - omitClaudeMd is true
+    - Body has explicit READ-ONLY BLOCK
+    body_target_lines: 200-400
+    typical_dna_emphasis:
+    - D1
+    - D2
+    - D4
+    - D6
+    - D11
+    - D14
+  orchestrator:
+    when_to_use: Routes tasks to other agents. The agent receives a task, consults its routing table, calls the Task tool to spawn specialist agents, and synthesizes their returns. This archetype is the entry point for squads — a squad is built around an orchestrator agent.
+    derived_from: "myClaude convention ON TOP of Claude Code's native Agent tool recursion support [SOURCE: runAgent.ts spawns child agents via query()]"
+    freedom_level: low
+    error_tolerance: low
+    primary_focus: routing and synthesis, NOT execution
+    knowledge_type: routing heuristics
+    typical_output: synthesized final report from specialist returns
+    structure:
+      references: routing-table.yaml + specialist-registry + handoff-format
+      body_style: identity + routing table + handoff convention + synthesis rules
+      assets: routing.yaml
+    frontmatter_pattern:
+      name: '{squad-slug}-orchestrator'
+      description: 'Orchestrator for {squad purpose}. Routes work to specialist agents and synthesizes results. Use when you need [multi-agent coordination pattern].'
+      tools:
+      - Agent
+      - Read
+      - Glob
+      - Grep
+      disallowedTools:
+      - Write
+      - Edit
+      - NotebookEdit
+      - Bash
+      model: opus
+      maxTurns: 50
+    recommended_verbs:
+    - orchestrate
+    - route
+    - coordinate
+    - synthesize
+    examples_by_domain:
+    - Code review squad orchestrator
+    - Multi-perspective design squad orchestrator
+    - Research squad orchestrator
+    validation_checklist:
+    - tools frontmatter INCLUDES Agent and EXCLUDES mutation tools — D9 enforcement at the tool level
+    - routing.yaml exists in agent's companion directory with specialist list
+    - Body has routing table section (may reference routing.yaml)
+    - Body does NOT contain specialist domain logic (that lives in the specialists themselves)
+    - model is opus (synthesis benefits from depth)
+    - maxTurns is set higher than specialists (orchestrator needs multiple Task calls)
+    body_target_lines: 200-400
+    typical_dna_emphasis:
+    - D1
+    - D2
+    - D4
+    - D7
+    - D9
+    - D10
+    - D14
+  fork_heir:
+    when_to_use: Inherits parent's full context and runs in parallel. This archetype is for work the parent could do itself but wants to delegate so its own context window stays clean. Fork heirs share the prompt cache with the parent, making parallel spawns cheap.
+    derived_from: "Claude Code built-in FORK_AGENT [SOURCE: forkSubagent.ts:60-71] \u2014 this is experimental but documented"
+    freedom_level: high
+    error_tolerance: medium
+    primary_focus: context-preserving parallel execution
+    knowledge_type: inherited from parent
+    typical_output: structured report following fork directive format
+    structure:
+      references: none (inherits parent's)
+      body_style: identity + fork discipline rules + structured report format
+      assets: none
+    frontmatter_pattern:
+      name: '{domain}-fork'
+      description: 'Context-inheriting fork worker for {domain}. Inherits parent conversation and runs in background. Use when the parent wants parallel work without losing its own context flow.'
+      tools:
+      - '*'
+      model: inherit
+      maxTurns: 200
+      permissionMode: bubble
+      background: true
+    recommended_verbs:
+    - fork
+    - parallel
+    - delegate
+    - offload
+    examples_by_domain:
+    - Parallel implementation worker
+    - Parallel research investigator
+    - Background audit runner
+    validation_checklist:
+    - tools frontmatter is ['*'] (all tools — fork heirs need the parent's full pool)
+    - model is inherit (MUST match parent for prompt cache hit)
+    - permissionMode is bubble (surfaces prompts to parent terminal)
+    - background is true (fork heirs always run async)
+    - Body contains the 10-rule fork directive pattern (derived from forkSubagent.ts:171-198)
+    - Output format uses labeled fields (Scope, Result, Key files, Files changed, Issues)
+    body_target_lines: <150
+    typical_dna_emphasis:
+    - D1
+    - D2
+    - D4
+    - D14
+    - D18
+  hybrids:
+    scout_adviser:
+      description: Fast investigation followed by ranked recommendations
+      when: The task needs both discovery of state and judgment on what to do about it
+      example: security audit agent — scouts for vulnerabilities, advises priority order
+    specialist_adviser:
+      description: Deep-domain write agent that can ALSO refuse to write and advise instead
+      when: The agent has write authority but its constitution allows it to refuse and explain when editing would be wrong
+      example: refactoring agent that sometimes says 'do not refactor, explain why first'
+    orchestrator_fork:
+      description: Orchestrator that forks the parent to parallelize specialist calls
+      when: The orchestrator wants to launch 5 specialists simultaneously without blocking its own reasoning
+      example: multi-perspective design squad orchestrator
+  consumer_status: aspirational
+  consumer_status_reason: /create today does not ask the creator to select an agent archetype. Wave 3 teaches /create to ask archetype as the first discovery question and to inject archetype-specific frontmatter_pattern at scaffold.
+
+# ===========================================================================
+# DESCRIPTION ENGINEERING — formula tuned for AGENTS specifically
+# ===========================================================================
+# Critical difference from skill.yaml: agent descriptions are read by the PARENT
+# LLM (the one deciding whether to spawn this agent via Task), not by the user
+# typing a slash command. The parent needs to know WHEN to invoke, WHAT the
+# agent returns, and WHAT its tool boundary is. This changes the formula.
+
+description_engineering:
+  importance: CRITICAL — the parent LLM reads this description to decide whether to invoke the agent. A vague or misleading description means the parent either never spawns the agent (wasting its value) or spawns it in the wrong context (wasting tokens and producing bad output).
+  formula:
+    structure: '[ACTION] + [DOMAIN] + [WHEN TO INVOKE] + [RETURN SHAPE] + [TOOL BOUNDARY HINT]'
+    components:
+      action: Verb describing the delegated task (investigate, refactor, verify, advise, orchestrate)
+      domain: The area of expertise or scope
+      when_to_invoke: Numbered list of parent situations that should trigger this agent
+      return_shape: What the parent will receive back (text report, structured fields, verdict)
+      tool_boundary_hint: Optional — whether the agent is read-only, write-authorized in scope X, etc.
+  template_universal: '[Verb action] [domain] with [capabilities]. Use when: (1) [parent situation A], (2) [parent situation B], (3) [parent situation C]. Returns [return shape description]. [Tool boundary hint if load-bearing].'
+  size_target_words: 40-120
+  size_floor_words: 25
+  size_ceiling_words: 180
+  size_rationale: 'Agent descriptions are token-counted by the Claude Code catalog [SOURCE: loadSkillsDir.ts:100-105] and read by the parent LLM on every decision. Under 25 words means the parent has no basis to decide. Over 180 words pollutes the description space and dilutes the parent''s attention.'
+  trigger_count_target: 3-5
+  trigger_count_floor: 2
+  trigger_count_ceiling: 7
+  trigger_format: numbered list (1), (2), (3) — implicit lists do not parse cleanly
+  return_shape_format: 'Single sentence after "Returns" describing the shape. Examples: "Returns a ranked list of findings with confidence levels." OR "Returns a list of files changed plus commit hash." OR "Returns VERDICT: PASS/FAIL/PARTIAL with evidence blocks."'
+  rubric:
+    max_points: 12
+    criteria:
+      verb_action:
+        scoring:
+          0: absent
+          1: generic ('helps')
+          2: specific delegated verb ('investigate', 'verify', 'refactor')
+      domain:
+        scoring:
+          0: vague ('things')
+          1: general ('code')
+          2: precise ('TypeScript type definitions', 'Python migration scripts')
+      when_to_invoke:
+        scoring:
+          0: none
+          1: 1-2 vague situations
+          2: 3+ numbered specific parent situations
+      return_shape:
+        scoring:
+          0: absent
+          1: implied ('returns findings')
+          2: explicit with shape ('Returns a ranked list of {fields}')
+      tool_boundary_hint:
+        scoring:
+          0: absent for ADVISER/SCOUT archetypes
+          1: present for write archetypes
+          2: present and precise ('does NOT modify files', 'modifies only *.ts files')
+      size:
+        scoring:
+          0: <25 or >250 words
+          1: 25-40 or 150-250
+          2: 40-120 words
+  anti_patterns:
+  - vague description ('investigates things')
+  - missing when-to-invoke ('this agent handles code review')
+  - missing return shape (parent has no idea what it will receive)
+  - missing tool boundary for write archetypes ('uses whatever tools it needs')
+  - infinite scope ('handles all code tasks')
+  - jargon referring to Engine or MCS or DNA patterns
+  - implicit triggers ('various situations')
+  - first-person voice ('I will help you with...')
+  validation_test:
+    positive_test: "Given 5 parent contexts the agent was designed for, does the parent LLM correctly choose this agent >80% of the time?"
+    negative_test: "Given 5 parent contexts the agent was NOT designed for, does the parent LLM correctly avoid this agent >80% of the time?"
+    target_metrics:
+      activation_correct_rate: '>80%'
+      false_positive_rate: <15%
+  consumer_status: partial
+  consumer_status_reason: /validate Stage 3 D1 today checks 'activation/protocol section + references/ ref'. Wave 3 teaches Stage 3 to apply this rubric (6 criteria × 0-2 = 12 points) as executable spec for agent descriptions specifically.
+
+# ===========================================================================
+# PROGRESSIVE DISCLOSURE MODEL — inherited from skill + agent-specific tweaks
+# ===========================================================================
+
+progressive_disclosure_model:
+  level_1_frontmatter:
+    always_loaded: true
+    contains:
+    - name
+    - description
+    function: catalog trigger — the parent LLM reads this on every Task-decision turn
+    budget_words: 100
+    budget_chars: 600
+    cost_per_session: always
+    optimization_priority: MAXIMUM — every word is paid for in every session, even if agent never invokes
+  level_2_agent_md_body:
+    loaded_when: agent spawns (via Task tool call OR Claude auto-selects via description match)
+    contains:
+    - identity_declaration
+    - constitution_block
+    - domain_methodology
+    - tool_boundary_explanation
+    - output_convention
+    - when_not_to_use
+    - anti_patterns
+    function: procedural and persona instructions the agent follows during its invocation
+    budget_lines_hard: 500
+    budget_lines_soft: 350
+    budget_words: 4000
+    cost_per_invocation: loaded once per spawn
+    optimization_priority: HIGH — body is loaded every time agent spawns
+  level_3_references_and_skills:
+    loaded_on_demand: true
+    contains:
+      references: deep domain knowledge files in references/
+      preloaded_skills: "declared via `skills:` frontmatter — each is a user meta message at spawn"
+      mcp_tools: "declared via `mcpServers:` frontmatter — tools only exist while agent runs"
+    function: deep knowledge, composable capability, ephemeral integrations
+    budget: unlimited_but_each_item_costs
+    cost_per_invocation: references when body points to them, skills always at spawn, mcp tools during execution
+    optimization_priority: HIGH — skills declared in frontmatter ARE loaded every spawn
+  loading_decision_tree:
+    rule: 'For each piece of agent content, ask:
+
+      1. Critical for the parent''s spawn decision? → Level 1 (description)
+
+      2. Necessary every time agent runs? → Level 2 (body)
+
+      3. Already exists as a skill the agent can preload? → skills: frontmatter (Level 3 pre-injected)
+
+      4. Deep domain knowledge read occasionally? → references/ (Level 3 on-demand)
+
+      5. External integration needed only during execution? → mcpServers: frontmatter (Level 3 ephemeral)
+
+      6. Rarely useful? → DO NOT INCLUDE
+      '
+  reference_organization_patterns:
+    identity_and_domain:
+      when_to_use: Single-persona agent with one domain
+      structure: AGENT.md (body) + references/domain-knowledge.md + references/anti-patterns.md
+    methodology_library:
+      when_to_use: Agent uses multiple reasoning frameworks (common for ADVISER archetype)
+      structure: AGENT.md + references/frameworks.md + references/rubrics.md
+    specialist_knowledge:
+      when_to_use: Specialist agent with narrow but deep scope
+      structure: AGENT.md + references/domain-knowledge.md + references/scope-boundaries.md + references/examples.md
+  reference_best_practices:
+    pointer_clarity: Each reference must have an explicit pointer in the body. Orphan references are a critical anti-pattern (AP-A4).
+    pointer_context: "BAD: 'See references/reasoning.md'. GOOD: 'For the 3-step falsification framework: references/reasoning.md (includes examples and anti-patterns).'"
+    nesting_max: 1
+    nesting_rule: AGENT.md → references/x.md is OK. Deeper nesting is forbidden.
+  skills_preload_best_practices:
+    principle: "Declare `skills:` in frontmatter when the agent needs procedural knowledge that already exists as a skill. Do NOT copy the skill's content into the agent body — preload it instead."
+    max_preloaded: 3
+    max_preloaded_reason: Each preloaded skill adds a user meta message at spawn. More than 3 bloats the initial context and negates the lazy-load benefit.
+    naming_rule: "Use bare skill names; runAgent.ts:945-973 handles plugin namespace resolution automatically."
+  mcp_server_best_practices:
+    principle: "Declare `mcpServers:` only when the agent requires an MCP integration that is NOT already in the user's global MCP config. Inline definitions create ephemeral servers that are destroyed when the agent finishes [SOURCE: runAgent.ts:95-218, 817]."
+    naming_rule: "For inline servers, use `{ serverName: { command, args, env } }` \u2014 the object key becomes the server name."
+    reference_vs_inline: "Reference-by-string when the server is a shared integration. Inline when the integration is specific to this agent and should not persist."
+  ideal_distribution_pct:
+    description: 4-8% of total agent content
+    body: 35-55% of total agent content
+    references: 25-45% of total agent content
+    preloaded_skills: varies — each skill is its own file
+  red_flags:
+  - description >200 words → context pollution
+  - body >500 lines → split to references
+  - single reference >1000 lines → split
+  - zero references AND zero preloaded skills AND body >300 lines → agent is a monolith
+  - orphan references → add pointers OR delete
+  - skills: field listing >3 skills → context bloat at spawn
+  - mcpServers: field referencing shared server AND declaring it inline → redundancy
+  consumer_status: partial
+  consumer_status_reason: "/validate Stage 3 D3 checks primary <500 lines + references/ exists. Does NOT check skills: preload discipline, mcp inline vs reference, or pointer clarity. Wave 3 enriches Stage 3 D3 with the full checklist above."
+
+# ===========================================================================
+# MATURITY MODEL — inherited from skill with agent-specific entry criteria
+# ===========================================================================
+
+maturity_model:
+  levels:
+    1_embryonic:
+      label: Embryonic
+      description: Basic AGENT.md works. Name + description present. Body has minimal identity.
+      entry_criteria:
+      - Frontmatter parses with name + description
+      - Body has identity declaration
+      - Agent spawns without crashing
+      rubric_score_range: <15
+      typical_time_to_next_level: hours
+      next_level_requirements:
+      - Declare tool boundary (tools OR disallowedTools)
+      - Add when-to-invoke numbered list to description
+      - Add 1 example in body or references/
+    2_functional:
+      label: Functional
+      description: Tool boundary declared. Description has triggers. Body structured in sections. At least 1 example.
+      entry_criteria:
+      - Tool boundary declared (tools OR disallowedTools set)
+      - Description has 3+ numbered triggers
+      - Body has identifiable identity + methodology + output sections
+      - At least 2 examples
+      - Rubric score ≥15/30
+      rubric_score_range: 15-19
+      typical_time_to_next_level: days
+      next_level_requirements:
+      - Add anti-patterns section with 5+ items
+      - Declare return shape in description
+      - Add references/ if body >300 lines
+      - Add criticalSystemReminder_EXPERIMENTAL if ADVISER archetype
+    3_robust:
+      label: Robust
+      description: Full persona + tool boundary + constitution + output convention + anti-patterns. Tested in multiple scenarios.
+      entry_criteria:
+      - Description follows formula (action + domain + when-to-invoke + return shape)
+      - Body <500 lines
+      - References organized with pointers
+      - 3+ contrasting examples
+      - Anti-patterns section with 5+ items
+      - Rubric score ≥20/30
+      - Tested in 5+ real spawn scenarios
+      rubric_score_range: 20-24
+      typical_time_to_next_level: weeks
+      activation_correct_target: '>80%'
+      false_positive_target: <15%
+      task_success_target: '>70%'
+    4_optimized:
+      label: Optimized
+      description: Token density maximized. Zero redundancy. Composes with other agents. Iterated based on usage.
+      entry_criteria:
+      - Rubric score ≥25/30
+      - Each rubric dimension ≥8/10
+      - Token density >0.7
+      - Zero orphan references, zero redundancy
+      - Tested in 20+ spawn scenarios
+      - Iterated 2x+ based on parent-spawn feedback
+      - Composes with at least 1 other agent (squad-ready)
+      rubric_score_range: 25-27
+      typical_time_to_next_level: months
+      activation_correct_target: '>90%'
+      false_positive_target: <10%
+      task_success_target: '>85%'
+      token_efficiency_target: '>0.7'
+    5_reference:
+      label: Reference
+      description: Exemplar in its archetype. Patterns extracted as reusable knowledge. Other agents derive from it.
+      entry_criteria:
+      - Rubric score ≥28/30
+      - Used as template by other creators
+      - Patterns documented in references/
+      - Success metrics tracked
+      - Feedback loop established
+      rubric_score_range: 28-30
+      activation_correct_target: '>95%'
+      false_positive_target: <5%
+      task_success_target: '>90%'
+      reuse_as_template_target: '>0'
+  evolution_anti_patterns:
+    skip_levels:
+      symptom: Jump from L1 to L4 — declaring optimized without going through functional and robust
+      why_bad: Weak fundamentals cause cascading problems in production spawns
+      antidote: Evolve level by level, validate each
+    premature_persona:
+      symptom: Elaborate persona prose before the tool boundary and constitution are defined
+      why_bad: Persona without constraint produces unpredictable agents
+      antidote: Frontmatter (constraint) before body (persona)
+    stagnation:
+      symptom: Agent stays at L2-L3 indefinitely
+      why_bad: Never reaches production-grade trustworthiness
+      antidote: Regular assessment + iteration cycle
+  consumer_status: aspirational
+  consumer_status_reason: Wave 3 extends /validate Stage 8 to emit current_maturity_level + next_level_requirements for agents.
+
+# ===========================================================================
+# QUALITY RUBRIC — 30-point agent craft quality
+# ===========================================================================
+
+quality_rubric:
+  total_points: 30
+  scope: agent craft quality (artifact-level), complementary to MCS (product-level)
+  relationship_to_mcs: Rubric runs in /validate Stage 7 (anti_commodity coaching). MCS runs in Stages 3-5 (structural + DNA). An agent can score MCS-2 with rubric 18/30 — the rubric catches that craft gap.
+  dimensions:
+    description:
+      max_points: 12
+      criteria:
+        verb_action:
+          0: absent or non-action verb
+          1: generic verb ('helps with')
+          2: specific delegated verb ('investigate', 'verify', 'refactor')
+        domain:
+          0: vague ('things')
+          1: general ('code')
+          2: precise ('TypeScript type definitions')
+        when_to_invoke:
+          0: none
+          1: 1-2 vague parent situations
+          2: 3+ numbered specific parent situations
+        return_shape:
+          0: absent
+          1: implied
+          2: explicit with field shape
+        tool_boundary_hint:
+          0: absent for write archetypes
+          1: present but vague
+          2: present and precise
+        size:
+          0: <25 or >250 words
+          1: 25-40 or 150-250
+          2: 40-120 words (sweet spot for agent descriptions)
+    persona_body:
+      max_points: 10
+      criteria:
+        identity_declaration:
+          0: absent
+          1: 'generic (''You are an agent'')'
+          2: 'specific identity with scope (''You are a file search specialist for Claude Code...'')'
+        tool_boundary_in_body:
+          0: no block explaining the tool boundary
+          1: mentions restrictions in prose
+          2: has a dedicated block (e.g. READ-ONLY MODE section) listing exactly what the agent cannot do
+        constitution_block:
+          0: absent
+          1: implicit in prose
+          2: explicit block or criticalSystemReminder_EXPERIMENTAL set
+        output_convention:
+          0: absent
+          1: loose instructions
+          2: labeled field format OR verdict line OR structured shape
+        anti_patterns:
+          0: absent
+          1: <5 items
+          2: 5+ items with domain-specific failures
+    architecture:
+      max_points: 8
+      criteria:
+        body_size:
+          0: '>700 lines'
+          1: 500-700 lines
+          2: <500 lines
+        references_organization:
+          0: orphan or absent
+          1: present but unclear pointers
+          2: organized with body pointers
+        skills_preload_discipline:
+          0: "more than 5 preloaded skills OR no preload when body duplicates skill content"
+          1: "some preloading, some duplication"
+          2: "preload count \u22643 with zero body duplication"
+        archetype_fidelity:
+          0: archetype unclear or contradicted by frontmatter
+          1: archetype declared but frontmatter pattern differs
+          2: archetype declared and frontmatter_pattern matches the archetype spec
+  scoring_thresholds:
+    state_of_art:
+      range: 27-30
+      verdict: Production-ready and reference-grade
+    excellent:
+      range: 23-26
+      verdict: Production-ready
+    good:
+      range: 19-22
+      verdict: Minor adjustments recommended
+    functional:
+      range: 15-18
+      verdict: Improvements needed before production
+    deficient:
+      range: 11-14
+      verdict: Significant refactor needed
+    critical:
+      range: 0-10
+      verdict: Rewrite from scratch
+  per_dimension_minimum: 6
+  per_dimension_failure_consequences:
+    description_below_6: Parent LLM fails to invoke correctly
+    persona_body_below_6: Agent drifts mid-execution
+    architecture_below_6: Agent bloats context or violates isolation
+  quick_validation_5min:
+    description:
+    - 3+ numbered triggers present? (+1)
+    - Return shape stated? (+1)
+    - 40-120 words? (+1)
+    persona_body:
+    - Identity declaration specific? (+1)
+    - Tool boundary block present? (+1)
+    - Anti-patterns ≥5? (+1)
+    architecture:
+    - Body <500 lines? (+1)
+    - References with pointers? (+1)
+    - Archetype declared and matches frontmatter? (+1)
+    quick_score_max: 9
+    quick_thresholds:
+      8_to_9: approved
+      6_to_7: review
+      below_6: failed
+  consumer_status: aspirational
+  consumer_status_reason: Wave 3 teaches /validate Stage 7 to apply this rubric and surface per-dimension breakdown for agents.
+
+# ===========================================================================
+# ANTI-PATTERNS CATALOG — agent-specific failure modes
+# ===========================================================================
+# Extends the 18 skill anti-patterns with 6 agent-specific ones. The skill
+# catalog (AP-D1 to AP-P3) still applies — these are additions.
+
+anti_patterns_catalog:
+  scope: Agent-specific failure modes. Skill anti-patterns (AP-D1 through AP-P3) also apply to agents and are inherited by reference.
+  tool_boundary_failures:
+    AP_A1:
+      name: Unbounded Tool Pool
+      symptom: 'tools: [''*''] declared on a non-GENERALIST archetype without justification'
+      problem: An agent that can do everything CANNOT be trusted-once-delegated. The parent must micro-supervise.
+      severity: high
+      fix: Declare an explicit allowlist that matches the archetype. If all tools are genuinely needed, document why in the agent body.
+    AP_A2:
+      name: Missing Denylist on Read-Only Archetype
+      symptom: ADVISER or SCOUT archetype without Edit/Write/NotebookEdit in disallowedTools
+      problem: 'The agent''s constitution says "read-only" but the runtime tool pool includes write tools. Physical enforcement is missing — the agent could edit.'
+      severity: critical
+      fix: 'Add explicit disallowedTools: [Edit, Write, NotebookEdit] for all read-only archetypes.'
+  description_failures:
+    AP_A3:
+      name: Missing Return Shape
+      symptom: Description states when to invoke but not what comes back
+      problem: The parent has no basis to integrate the agent's return into its workflow. Either the parent ignores the agent or builds fragile parsers.
+      severity: high
+      fix: "Add an explicit 'Returns {shape}' clause to the description."
+  structure_failures:
+    AP_A4:
+      name: Preloaded Skill Duplication
+      symptom: '`skills: [review-patterns]` in frontmatter AND the review-patterns content copied into AGENT.md body'
+      problem: Double-loading — context cost twice, and updates to the skill won't propagate.
+      severity: medium
+      fix: Preload OR inline, not both. Prefer preload.
+  persona_failures:
+    AP_A5:
+      name: First-Person Persona in Description
+      symptom: "description: 'I will help you with code review...'"
+      problem: The description is read by the parent LLM, not the user. First-person voice confuses whose perspective is active.
+      severity: medium
+      fix: Write description in third-person impersonal voice.
+  scope_failures:
+    AP_A6:
+      name: Scope Bleed in Specialist
+      symptom: 'SPECIALIST archetype declares write scope ''*.ts files'' but body examples show it editing *.md files too'
+      problem: The agent's declared boundary does not match its actual behavior, leading to unpredictable mutations.
+      severity: high
+      fix: Either tighten the agent's examples to match scope OR broaden the declared scope explicitly.
+  severity_definitions:
+    critical: Breaks the agent's trust contract — must fix before publish
+    high: Significant degradation — fix recommended for MCS-2
+    medium: Suboptimal — fix recommended for MCS-3
+    low: Polish — fix improves craftsmanship score
+  inherited_from_skill: AP-D1 through AP-P3 from product-dna/skill.yaml.anti_patterns_catalog apply to agents as well.
+  consumer_status: aspirational
+  consumer_status_reason: Wave 3 teaches /validate Stage 7 to grep against this catalog plus the skill inherited catalog and emit AP-IDs in violation reports.
+
+# ===========================================================================
+# REASONING FRAMEWORKS — inherited from skill.yaml (by reference)
+# ===========================================================================
+
+reasoning_frameworks:
+  inherited_from: product-dna/skill.yaml.reasoning_frameworks
+  agent_specific_notes:
+    first_principles_decomposition: Useful when the creator cannot decide which archetype fits — decompose 'what does this agent deliver' first, then archetype follows.
+    jobs_to_be_done: Critical for agent forge — the 'job' is the delegated task, the 'user' is the parent LLM context that will spawn this agent.
+    stakeholder_mapping: Agent stakeholders are different from skills — (a) the parent LLM that spawns, (b) the Claude Code runtime that loads the agent, (c) the end user who installed the agent, (d) the creator who maintains it.
+  consumer_status: aspirational
+  consumer_status_reason: /think today does not consult these frameworks per type. Wave 3 may route based on problem shape.
+
+# ===========================================================================
+# DECISION TREES — agent-specific routing
+# ===========================================================================
+
+decision_trees:
+  archetype_selection:
+    question: Which archetype best matches this agent?
+    branches:
+    - condition: Read-only AND fast search/investigation?
+      result: SCOUT
+    - condition: Read-only AND planning/analysis with structured output?
+      result: ARCHITECT
+    - condition: Read-only AND judgment/recommendation?
+      result: ADVISER
+    - condition: Routes to other agents via Task tool?
+      result: ORCHESTRATOR
+    - condition: Inherits parent context and runs in parallel?
+      result: FORK_HEIR
+    - condition: Narrow write authority within scope?
+      result: SPECIALIST
+    - condition: All-purpose with full tool pool?
+      result: GENERALIST
+    - condition: Default
+      result: GENERALIST
+  tool_boundary:
+    question: How should this agent's tools be bounded?
+    branches:
+    - condition: ADVISER or SCOUT archetype?
+      result: 'tools allowlist: [Read, Glob, Grep, WebSearch, WebFetch] + disallowedTools: [Edit, Write, Bash, NotebookEdit]'
+    - condition: ARCHITECT archetype?
+      result: 'tools allowlist: inherit from Explore (read + search tools) + disallowedTools: [Edit, Write, NotebookEdit]'
+    - condition: SPECIALIST archetype?
+      result: Explicit allowlist matching the delegated task scope. Set maxTurns.
+    - condition: GENERALIST archetype?
+      result: "tools: ['*'] with explicit justification in body"
+    - condition: ORCHESTRATOR archetype?
+      result: 'tools allowlist: [Agent, Read, Glob, Grep] + disallowedTools: [Edit, Write, Bash, NotebookEdit] — the tool pool IS the D9 enforcement'
+    - condition: FORK_HEIR archetype?
+      result: "tools: ['*'] + model: inherit + permissionMode: bubble + background: true"
+  memory_scope:
+    question: Does this agent need cross-invocation memory?
+    branches:
+    - condition: No persistent state needed?
+      result: DO NOT DECLARE memory — keep the agent stateless
+    - condition: Needs to remember creator preferences across projects?
+      result: 'memory: user'
+    - condition: Needs to remember state within one project?
+      result: 'memory: project'
+    - condition: Needs to remember only within one directory (fine-grained)?
+      result: 'memory: local'
+  claude_md_omission:
+    question: Should this agent inherit the parent's CLAUDE.md hierarchy?
+    branches:
+    - condition: Read-only archetype (SCOUT, ARCHITECT, ADVISER)?
+      result: 'omitClaudeMd: true — save tokens, the agent''s judgment should be independent of project conventions'
+    - condition: Write archetype that needs to respect project conventions?
+      result: 'omitClaudeMd: false (default) — inherit CLAUDE.md for code style, commit conventions, lint rules'
+    - condition: FORK_HEIR?
+      result: 'omitClaudeMd: false — forks must inherit everything for prompt cache identity'
+  mcp_composition:
+    question: Does this agent need its own MCP servers?
+    branches:
+    - condition: Agent needs an integration already in the user's shared MCP config?
+      result: 'Reference by name: mcpServers: [slack] — uses shared server'
+    - condition: Agent needs an ephemeral integration specific to this agent?
+      result: 'Inline: mcpServers: [{my-custom-server: {command, args}}] — ephemeral, destroyed on finish'
+    - condition: Agent does not need MCP?
+      result: DO NOT declare mcpServers
+  critical_reminder_need:
+    question: Does this agent need criticalSystemReminder_EXPERIMENTAL?
+    branches:
+    - condition: ADVISER or verification-style agent whose constitution must not drift?
+      result: YES — set a short sentence that enforces the key constraint
+    - condition: SPECIALIST with a narrow write scope that must be enforced every turn?
+      result: YES — set a reminder about the scope boundary
+    - condition: SCOUT or ARCHITECT (tool boundary already enforces read-only)?
+      result: NO — the tool boundary is sufficient
+    - condition: GENERALIST or FORK_HEIR?
+      result: NO — these are flexible by design
+  consumer_status: aspirational
+  consumer_status_reason: Wave 3 teaches /create to execute these trees as routing scripts before scaffolding.
+
+# ===========================================================================
+# STAKEHOLDER MAPPING — agent-specific stakeholders
+# ===========================================================================
+
+stakeholder_mapping:
+  parent_llm:
+    role: The Claude Code agent or skill that spawns this agent via the Task tool
+    wants:
+    - clear description for the spawn decision
+    - structured return value (or at least a predictable format)
+    - predictable tool boundary (so it can trust the delegation)
+    - concise final report (not a conversation)
+    design_for:
+    - Description follows the formula
+    - Output convention is labeled fields or verdict line
+    - Tool boundary is declared in frontmatter
+    - Body teaches the agent to return once and stop
+  claude_code_runtime:
+    role: The Claude Code platform that loads the agent file, validates the frontmatter, spawns the subagent, and cleans up on finish
+    wants:
+    - valid frontmatter (parsable by parseAgentFromMarkdown)
+    - no fields the runtime does not recognize
+    - declared limits (maxTurns, model, permissionMode)
+    - clean MCP references (either names of existing servers OR well-formed inline definitions)
+    design_for:
+    - Frontmatter only contains fields in the verified schema
+    - Optional fields are omitted when not needed (not defaulted)
+    - File ends with clean markdown, no trailing garbage
+  end_user:
+    role: The human who installs the agent via myclaude install and whose Claude Code spawns it
+    wants:
+    - agent shows up in /agents list with clear purpose
+    - agent does what the description claims
+    - no surprises (no writes when it says read-only, no external calls when it says local)
+    - fast returns when the description promises fast
+    design_for:
+    - Description is honest about capabilities and limits
+    - Installation leaves no footprint beyond the declared files
+    - Agent cleans up its state on finish (MCP servers, background tasks, hooks)
+  creator_maintainer:
+    role: The original creator who must update and debug the agent over time
+    wants:
+    - predictable file structure
+    - easy to update persona without breaking tool boundary
+    - easy to add/remove preloaded skills
+    - testable via /test
+    design_for:
+    - Body uses clear section headers that match section walker
+    - References are named by function, not domain buzzwords
+    - Frontmatter is the source of truth for boundaries
+    - examples/ directory has scenario tests
+  conflict_resolution:
+    rule: 'When stakeholders conflict, priority order is: claude_code_runtime > parent_llm > end_user > creator_maintainer'
+    rationale: Runtime constraints are non-negotiable. Parent LLM needs determine whether the agent ever spawns. End-user value is the purpose. Maintainer convenience is last.
+
+# ===========================================================================
+# OUTPUT PATTERNS — agent-specific return shapes
+# ===========================================================================
+
+output_patterns:
+  labeled_fields:
+    when_to_use: SCOUT, ARCHITECT, FORK_HEIR, SPECIALIST returning multiple structured pieces of information
+    structure: 'Response uses plain-text labels, one per line. Example: "Scope: ... / Result: ... / Key files: ... / Files changed: ... / Issues: ..."'
+    example: "Derived from fork agent canonical directive [SOURCE: forkSubagent.ts:171-198]"
+  verdict_line:
+    when_to_use: ADVISER or verification-style agents where the parent needs a single machine-parsable decision
+    structure: 'Body produces evidence blocks, then ends with "VERDICT: PASS" or "VERDICT: FAIL" or "VERDICT: PARTIAL"'
+    example: "Derived from built-in verification agent [SOURCE: verificationAgent.ts:117-127]"
+  ranked_recommendations:
+    when_to_use: ADVISER returning multiple options with priority
+    structure: 'Numbered list with rationale per item: 1. [recommendation] — reason, confidence level'
+  concise_report:
+    when_to_use: GENERALIST whose task is too open-ended for structured output
+    structure: "Prose report 'covering what was done and any key findings \u2014 the caller will relay this to the user, so it only needs the essentials' [SOURCE: generalPurposeAgent.ts:20]"
+  files_changed_summary:
+    when_to_use: SPECIALIST with write authority
+    structure: "List of files changed + commit hash + one-line summary per file. Example: 'Files changed: src/types.ts (commit abc123 — hardened User type)'"
+  combinations:
+    labeled_fields_plus_verdict: 'Structured fields ending with an explicit VERDICT line'
+    ranked_plus_confidence: 'Numbered list where each item has explicit confidence (high/moderate/low)'
+  consumer_status: aspirational
+  consumer_status_reason: /validate Stage 4 checks for output format section presence. Wave 3 enriches to detect which output_pattern the agent uses and verify body teaches that pattern.
+
+# ===========================================================================
+# OUTPUT CONTRACT — the myClaude convention for structured agent returns
+# ===========================================================================
+# This is NOT a Claude Code native feature. Claude Code returns agent output as
+# unstructured text. output_contract is a myClaude CONVENTION that makes agents
+# composable by teaching the creator to instruct the child agent to produce
+# predictable output shapes. This is coaching, not runtime enforcement.
+
+output_contract:
+  rationale: Claude Code does not natively parse subagent output — the parent receives a single final assistant message as text. To make agents composable, myClaude agents declare an output_contract in this codex field, and the body of AGENT.md contains an explicit 'Output format' section that teaches the agent to match the contract. The parent can then reliably parse the return because the child was instructed exactly how to format it.
+  declaration_location: The contract is declared HERE in this codex for each archetype's default. The agent creator can override. The final enforcement lives in AGENT.md body — it must contain an 'Output format' section that matches.
+  shape_types:
+    unstructured_prose:
+      when_to_use: GENERALIST archetype
+      example: 'Single paragraph or short report.'
+    labeled_fields:
+      when_to_use: SCOUT, ARCHITECT, SPECIALIST, FORK_HEIR
+      example: |
+        Scope: "<echo of task>"
+        Result: "<main finding>"
+        Key files: <list>
+        Files changed: <list with commit hashes>
+        Issues: "<list>"
+    verdict_suffix:
+      when_to_use: ADVISER, verification-style
+      example: |
+        [evidence blocks]
+        VERDICT: "PASS | FAIL | PARTIAL"
+    ranked_list:
+      when_to_use: ADVISER with multiple recommendations
+      example: |
+        1. [recommendation] — [rationale] (confidence: high)
+        2. [recommendation] — [rationale] (confidence: moderate)
+  failure_shape:
+    rule: Every archetype must declare how it fails — a FAIL return must be distinguishable from a SUCCESS return by the parent parser.
+    examples:
+      labeled_fields: "Issues field populated AND/OR explicit 'Status: failed' line"
+      verdict_suffix: VERDICT FAIL
+      unstructured_prose: Body contains 'Could not complete' prefix
+  rubric:
+    max_points: 4
+    criteria:
+      shape_declared:
+        0: no output format section in body
+        1: format described loosely
+        2: format specified with fields
+      failure_handled:
+        0: no failure convention
+        1: implied failure handling
+        2: explicit failure shape the parent can parse
+  consumer_status: aspirational
+  consumer_status_reason: Wave 3 teaches /validate Stage 4 to check body for an 'Output format' section matching the declared output_contract shape.
+
+# ===========================================================================
+# LIFECYCLE — 10 skills × universal contract + type_specific
+# ===========================================================================
+
+lifecycle:
+  map:
+    role: Extract creator's delegated-task expertise into domain-map.md before agent creation. Agents benefit from /map when creator has deep domain knowledge that needs structuring into a persona.
+    optional: true
+    inputs:
+    - creator.yaml
+    - domain topic seed ($ARGUMENTS)
+    outputs:
+    - workspace/domain-map.md
+    consumer_status: aspirational
+    consumer_status_reason: /map writes domain-map.md but does not yet consult this codex's lifecycle.map for agent-specific coaching.
+    blocks_when: []
+    next_action: null
+    next_action_reason: read-only skill — /map writes domain-map.md, next action determined by creator
+    type_specific:
+      skip_recommended: false
+      skip_message: If you already know exactly what delegated task your agent performs, skip /map. /map is most valuable when you have rich expertise and need to decompose it into a persona plus a tool boundary plus a constitution.
+      agent_specific_prompts:
+      - What delegated task does your agent perform?
+      - What will the parent context that spawns this agent look like?
+      - What does your agent NEVER do?
+      - What does your agent return to the parent?
+  scout:
+    role: Research existing agents in the marketplace and in Claude Code built-ins. Identify gaps. Skills benefit from /scout because duplicating a built-in is wasted effort.
+    optional: true
+    inputs:
+    - creator.yaml
+    - domain query ($ARGUMENTS)
+    outputs:
+    - workspace/scout-{slug}.md
+    - STATE.yaml.last_scout updated
+    consumer_status: aspirational
+    consumer_status_reason: /scout produces scout reports but does not yet consult this codex's lifecycle.scout for agent-specific research calibration.
+    blocks_when: []
+    next_action: null
+    next_action_reason: read-only research skill — next action determined by scout report
+    type_specific:
+      skip_recommended: false
+      skip_message: Skipping /scout for agents means you may duplicate a built-in. Claude Code ships 5+ built-in agents (Explore, Plan, general-purpose, verification, fork) that you should know about before forging a new one.
+      scout_baseline_sources:
+      - claude-code-ground-truth.md § Layer 5 — Built-in agents
+      - myclaude.sh marketplace agent category
+      - .claude/agents/ in the user's existing projects (via discovery walk)
+  import:
+    role: "Bring an existing agent from .claude/agents/{slug}.md into the Engine workspace for validation, packaging, republish."
+    inputs:
+    - 'Source: .claude/agents/{slug}.md'
+    - creator.yaml
+    outputs:
+    - workspace/{slug}/AGENT.md (renamed from {slug}.md)
+    - workspace/{slug}/README.md (synthesized if missing)
+    - 'workspace/{slug}/.meta.yaml (state auto-detected)'
+    blocks_when:
+    - workspace/{slug}/ already exists (no --force)
+    - Source has no YAML frontmatter OR no name/description fields
+    - Source is a marketplace product
+    consumer_status: blocked
+    consumer_status_reason: /import SKILL.md detection table lists 9 types. agent IS in the list but the detection pattern is generic (single .md in .claude/agents/). Wave 3 should refine detection to check for agent-specific fields like tools, mcpServers, and criticalSystemReminder.
+    next_action: "/validate {slug}"
+    optional: true
+    type_specific:
+      detection_pattern: single .md file in .claude/agents/ with frontmatter containing 'name' and 'description' fields
+      rename_on_import:
+        from: '{slug}.md'
+        to: AGENT.md
+        reason: "Workspace convention is AGENT.md as primary file. /package renames it back to {slug}.md at publish time."
+      auto_detected_phase: content (agents installed in .claude/agents/ are by definition non-template)
+  create:
+    role: 'Run the 6-phase creation cycle for agents: discovery (with archetype selection first) → architecture (tool boundary + frontmatter pattern) → description engineering → content development (persona body, constitution, anti-patterns) → validation → iteration. Output is a fully scaffolded agent with WHY comments.'
+    inputs:
+    - field: creator.yaml
+      purpose: Author metadata, technical_level, freedom_level default
+    - field: type
+      value: agent
+    - field: slug
+      purpose: "Validates against ^[a-z0-9][a-z0-9-]{2,39}$"
+    - field: archetype
+      purpose: MUST be selected before other questions
+    - field: scout_report
+      purpose: Optional — market intelligence
+    - field: domain_map
+      purpose: Optional — pre-fills persona sections
+    - field: discovery_answers
+      purpose: Delegated task + parent context + tool boundary + output contract + constitution + anti-patterns
+    outputs:
+    - workspace/{slug}/AGENT.md (scaffold with sections, WHY comments, archetype-appropriate template)
+    - workspace/{slug}/README.md (4-section skeleton)
+    - workspace/{slug}/references/ (archetype-specific skeleton files)
+    - 'workspace/{slug}/.meta.yaml (state: scaffold, archetype recorded)'
+    blocks_when:
+    - slug invalid
+    - workspace/{slug}/ exists without --force
+    - creator.yaml missing AND micro-onboard fails
+    - archetype not selected
+    consumer_status: partial
+    consumer_status_reason: /create reads dna_patterns + frontmatter hoje. Does NOT consult archetypes.selection_required, description_engineering formula, or output_contract. Wave 3 enriches /create with archetype selection as the first question and archetype-specific frontmatter pattern injection.
+    next_action: "/fill {slug}"
+    optional: false
+    type_specific:
+      activates_templates:
+      - templates/agent/AGENT.md.template
+      - templates/agent/README.md.template
+      - templates/agent/references/domain-knowledge.md.template
+      activates_dna_at_scaffold:
+      - D1
+      - D2
+      - D3
+      - D4
+      - D13
+      - D14
+      discovery_phase:
+        questions_source: this file → discovery_questions.minimum_set
+        archetype_selection_required: true
+        archetype_selection_question: 'Which agent archetype matches your need? SCOUT (fast read-only search), ARCHITECT (read-only planning), GENERALIST (all-purpose), SPECIALIST (narrow write authority), ADVISER (read-only judgment), ORCHESTRATOR (routes to other agents), or FORK_HEIR (inherits parent context for parallel work)?'
+        archetype_first: true
+        archetype_first_reason: Archetype determines tool boundary, frontmatter pattern, and output contract. Asking later produces incoherent agents.
+        reasoning_framework_offered: true
+        reasoning_framework_when: If creator answers 'I'm not sure' to 2+ discovery questions
+      read_before_write_ratio: '6:1 (canonical_spec + this codex + claude-code-ground-truth.md + creator.yaml + template + scout_report read; 1 AGENT.md scaffold written)'
+      ground_truth_required: true
+      ground_truth_required_reason: No claim about Claude Code native behavior may be made in the scaffold without verification against references/claude-code-ground-truth.md
+  fill:
+    role: Walk the AGENT.md sections (Identity, Tool Boundary Explanation, Core Methodology, Output Format, Anti-Patterns, When Not To Use) extracting creator expertise via sparring protocol. Agents get sparring on the tool boundary and constitution sections specifically — these are where commodity creeps in.
+    inputs:
+    - 'workspace/{slug}/.meta.yaml (state: scaffold or content)'
+    - workspace/{slug}/AGENT.md (with WHY comments)
+    - workspace/{slug}/references/* (skeleton files)
+    - creator.yaml
+    - scout report (if exists)
+    - domain-map.md (if exists)
+    - this file (sections_walked, sparring_protocol, anti_patterns_catalog)
+    outputs:
+    - workspace/{slug}/AGENT.md (filled, WHY comments preserved)
+    - workspace/{slug}/references/*.md (filled)
+    - workspace/{slug}/examples/examples.md (3+ scenarios) if MCS-2+
+    - 'workspace/{slug}/.meta.yaml (state: content, fill_progress updated)'
+    consumer_status: partial
+    consumer_status_reason: /fill reads product-dna + scout + domain-map. Does NOT consult lifecycle.fill.sections_walked structured form. Wave 3 teaches /fill to use sections_walked as spec of walker for agents.
+    next_action: "/validate {slug}"
+    optional: false
+    blocks_when: []
+    type_specific:
+      sections_walked:
+      - name: Identity Declaration
+        why: Specific identity ('You are a X specialist for Y') — anchors the persona
+        sparring_required: true
+        sparring_minimum: 1
+        deepening_offered: true
+      - name: Tool Boundary Explanation
+        why: Body block explaining what the agent can and cannot do (parallels the frontmatter boundary)
+        sparring_required: true
+        sparring_minimum: 2
+        deepening_offered: true
+      - name: Core Methodology
+        why: How the agent thinks/acts within its boundary (process, decision tree, heuristics)
+        sparring_required: true
+        sparring_minimum: 3
+        deepening_offered: true
+      - name: Output Format
+        why: Exact format the agent returns to the parent (matches output_contract)
+        sparring_required: true
+        sparring_minimum: 1
+        deepening_offered: false
+      - name: Anti-Patterns
+        why: Agent-specific failure modes (AP-A1 to AP-A6 plus domain-specific)
+        sparring_required: true
+        sparring_minimum: 1
+        deepening_offered: true
+        minimum_items: 5
+      - name: When Not To Use
+        why: Degradation behavior + scope boundaries
+        sparring_required: true
+        sparring_minimum: 1
+        deepening_offered: false
+      fill_protocol_section: .claude/skills/fill/references/fill-protocol.md → agent section if exists (verify via grep)
+      fill_protocol_section_status: unverified in S118 — the current /fill SKILL.md does not appear to have a dedicated agent section; uses generic walker
+      sparring_protocol: Deep sparring on Tool Boundary and Core Methodology (2-3 challenges each). Agents are NOT commodity-prone if their tool boundary is sharp — sparring is where that sharpness gets forged.
+      research_injection_eligible: true
+      research_injection_reason: Agents benefit from research on the delegated task domain, on similar existing agents (Claude Code built-ins, marketplace), and on the anti-patterns of the domain.
+  validate:
+    role: 'Run structural + integrity + DNA Tier 1+2+3 + CLI preflight + anti-commodity + value intelligence. Agents can apply D11 (Socratic Pressure) and D18 (Subagent Isolation) naturally; D9/D10/D12 are typically not applicable (those are squad-level).'
+    inputs:
+    - workspace/{slug}/AGENT.md + README.md + references/ + examples/
+    - workspace/{slug}/.meta.yaml
+    - this file (dna_patterns, mcs_expectations, quality_rubric, anti_patterns_catalog, output_contract)
+    - references/claude-code-ground-truth.md
+    - config.yaml + quality-gates.yaml
+    outputs:
+    - 'workspace/{slug}/.meta.yaml (state: validated, scores, intelligence)'
+    - Validation report
+    consumer_status: partial
+    consumer_status_reason: /validate reads dna_patterns + mcs_expectations. Does NOT consult the agent-specific rubric, anti_patterns_catalog additions, or output_contract. Wave 3 enriches.
+    optional: false
+    blocks_when: []
+    next_action: "/test {slug} (required for MCS-2+) OR /package {slug}"
+    type_specific:
+      stages_run:
+        mcs1:
+        - 1
+        - 2
+        - 3
+        - 6
+        mcs2:
+        - 1
+        - 2
+        - 3
+        - 4
+        - 6
+        - 7
+        - 8
+        mcs3:
+        - 1
+        - 2
+        - 3
+        - 4
+        - 5
+        - 6
+        - 7
+        - 8
+      per_stage_hooks:
+        stage_1_structural:
+          check: "Glob workspace/{slug}/AGENT.md AND README.md exist. references/ exists if body >300 lines."
+          blocking: true
+        stage_2_integrity:
+          check: "YAML frontmatter parses. name + description present. tools (if set) is array. mcpServers (if set) is array. memory (if set) in {user, project, local}. permissionMode (if set) in valid enum."
+          blocking: true
+        stage_3_dna_tier1:
+          required_patterns:
+          - D1
+          - D2
+          - D3
+          - D4
+          - D13
+          - D14
+          recommended_patterns:
+          - D19
+          check_d1: Identity Declaration section present
+          check_d2: Anti-Patterns section with ≥5 items (including at least 1 from AP-A1..AP-A6)
+          check_d3: "If body >300 lines, references/ exists with pointers"
+          check_d4: Quality Gate OR Output Format section with ≥3 verifiable criteria
+          check_d13: README.md with what/install/usage/requirements
+          check_d14: When-Not-To-Use OR failure behavior section
+          blocking: true
+        stage_4_dna_tier2:
+          required_patterns:
+          - D16
+          recommended_patterns:
+          - D5
+          - D6
+          - D7
+          - D8
+          - D15
+          - D17
+          check_d16: "Frontmatter install_target is .claude/agents/{slug}.md (no hardcoded paths elsewhere)"
+          check_d6: If ADVISER archetype, confidence signaling present in output format
+          check_d8: If memory declared in frontmatter, body explains what is persisted
+          blocking: false
+        stage_5_dna_tier3:
+          applicable_patterns:
+          - D11
+          - D18
+          not_applicable_patterns:
+          - D9
+          - D10
+          - D12
+          - D20
+          not_applicable_reason: 'Single agents do not orchestrate (D9 is for squads/systems), have no handoffs (D10 is for squads/systems), no compound memory yet (D12 feature-flag gated in source — see ground-truth), are not always-loaded (D20 is claude-md only).'
+          check_d11: For ADVISER archetype, self-challenge or falsification pattern present in methodology
+          check_d18: If context:fork is used (via skill that invokes agent), isolation is declared
+          blocking: false
+        stage_6_cli_preflight:
+          check: "myclaude validate {slug} succeeds"
+          blocking: true
+        stage_7_anti_commodity:
+          check: Substance score + invisibility audit + quality_rubric application + anti_patterns_catalog grep
+          blocking: false
+          coaching_only: true
+          rubric_application: Apply quality_rubric (30 pts) and surface per-dimension scores
+          anti_pattern_grep: Scan for AP-A1 to AP-A6 from this file plus AP-D1 to AP-P3 from skill.yaml
+          output_contract_check: Verify body has an 'Output format' section matching the declared archetype's output_contract shape
+          invisibility_check: grep user-facing strings for substrate vocabulary — Engine, MCS, DNA, archetype names as marketing
+        stage_8_value_intelligence:
+          check: Value score, suggested price range, market position
+          blocking: false
+          runs_at_mcs:
+          - 2
+          - 3
+          recommended_pricing_strategy: 'Per archetype: scout → solid ($5-12), architect → solid, generalist → signal ($0-5), specialist → premium ($12-25), adviser → premium ($12-35), orchestrator → premium-rare ($15-40), fork_heir → signal (inherits parent cost)'
+      read_before_write_ratio: Read-only skill — updates .meta.yaml only
+      dogfood_check:
+        description: P9 enforcement — /validate agent applied against the Engine's own shipped agents AND against the 5 Claude Code built-in exemplars mirrored in references/built-in-agent-exemplars/
+        method: Run full /validate agent against each dogfood target, surface failures
+        consumer_status: aspirational
+        consumer_status_reason: Wave 3 teaches /validate to accept --target=engine-agents and --target=built-in-agents to run the dogfood checks
+      next_action_pass: "/test {slug} (required for MCS-2+) OR /package {slug}"
+      next_action_fail: "/validate --fix {slug}"
+  test:
+    role: Sandbox-spawn the agent in worktree isolation, verify frontmatter parses, verify the agent actually spawns via the Task tool, verify it returns output matching the declared contract, run 3 scenarios.
+    inputs:
+    - workspace/{slug}/ (validated)
+    - this file (install_target, lifecycle.test.type_specific_steps, output_contract)
+    outputs:
+    - workspace/{slug}/.meta.yaml (test_result, last_tested, test_scenarios)
+    - Test report with scenario-by-scenario verdicts
+    consumer_status: partial
+    consumer_status_reason: /test has hardcoded Step 2b tables. Wave 3 teaches /test to consult lifecycle.test.type_specific_steps from each codex.
+    optional: true
+    blocks_when: []
+    next_action: "/package {slug}"
+    type_specific:
+      required_for_mcs:
+      - 2
+      - 3
+      optional_for_mcs:
+      - 1
+      sandbox_isolation: 'worktree (via context: fork in the test skill)'
+      type_specific_steps:
+      - step: Frontmatter parse via the same Zod schema Claude Code uses
+        check: All required fields present, all optional fields match their expected types. Reference the verified schema in claude-code-ground-truth.md § Layer 2.
+      - step: Agent discovery simulation
+        check: "Copy {slug}.md into a sandbox .claude/agents/ and verify parseAgentFromMarkdown accepts it (via mock or integration script)"
+      - step: Spawn test via Task tool
+        check: In the sandbox, attempt to spawn the agent with a minimal prompt. Verify it returns a message within maxTurns.
+      - step: Output contract verification
+        check: The returned message matches the archetype's declared output_contract shape (labeled fields, verdict suffix, etc.)
+      - step: Tool boundary verification
+        check: If the archetype is read-only, attempt a test that would fail if the agent tried to write. Verify it fails gracefully.
+      scenarios_applicable: true
+      scenarios:
+      - name: Happy Path
+        purpose: Normal parent context, agent runs and returns successfully
+        input_strategy: Typical task matching primary trigger
+        on_fail: Agent is fundamentally broken — investigate Core Methodology and tool resolution
+      - name: Edge Case
+        purpose: Boundary conditions for the archetype
+        input_strategy: Minimal input, missing context, unclear delegation
+        on_fail: D14 Graceful Degradation is weak — strengthen When-Not-To-Use
+      - name: Adversarial
+        purpose: Graceful failure on scope violation or invalid spawn
+        input_strategy: Task outside declared scope, prompt injection, contradictory instructions
+        on_fail: Agent is unsafe for marketplace — fix or block publish
+      must_haves_verification: true
+      next_action_pass: "/package {slug}"
+  package:
+    role: "Strip WHY comments, rename AGENT.md to {slug}.md, generate triple manifests, verify install artifacts, stage .publish/."
+    inputs:
+    - 'workspace/{slug}/ (state: validated, test_result: pass for MCS-2+)'
+    - creator.yaml + this file + config.yaml
+    outputs:
+    - workspace/{slug}/.publish/{slug}.md (renamed, stripped, attribution injected)
+    - workspace/{slug}/.publish/README.md (badges injected)
+    - workspace/{slug}/.publish/references/* (preserved)
+    - workspace/{slug}/.publish/vault.yaml
+    - workspace/{slug}/.publish/plugin.json (agents field = .claude/agents/{slug}.md)
+    - workspace/{slug}/.publish/agentskills.yaml
+    - workspace/{slug}/.publish/CHANGELOG.md + LICENSE.md
+    consumer_status: partial
+    consumer_status_reason: /package reads install_target + package_rename. Does not consult lifecycle.package.step_6b_verify. Wave 3 teaches /package to use step_6b_verify as per-type spec.
+    next_action: "/publish {slug}"
+    optional: false
+    blocks_when: []
+    type_specific:
+      strips:
+      - '<!-- WHY: ... --> HTML comments'
+      - '# WHY: lines'
+      - .meta.yaml
+      - domain-map.md
+      renames:
+        from: AGENT.md
+        to: '{slug}.md'
+        reason: "Claude Code loadAgentsDir discovers .claude/agents/*.md by filename. Workspace uses AGENT.md for clarity; install uses {slug}.md."
+      injects:
+      - field: marketplace_url in frontmatter
+        value: "https://myclaude.sh/p/{slug}"
+      - field: Attribution comment at file end
+        value: '<!-- Published on MyClaude (myclaude.sh) | Quality: MCS-{level} ({score}%) | Engine: Studio v3 -->'
+      - field: README badges
+      plugin_json_block: "{\n  \"name\": \"{slug}\",\n  \"agents\": [\".claude/agents/{slug}.md\"]\n}\n"
+      plugin_json_reason: Agents use the 'agents' field in plugin.json with a file path list.
+      agentskills_yaml_block: 'Generate with platforms: [claude-code]. Agents are Claude Code native — other platforms do not currently support the subagent primitive.'
+      step_6b_verify:
+      - '{slug}.md exists in .publish/ (renamed from AGENT.md)'
+      - Frontmatter has name + description
+      - No WHY comments remaining (grep verification)
+      - If tools is set, it is a valid array
+      - If mcpServers inline, each spec has valid command + args
+      - If criticalSystemReminder_EXPERIMENTAL is set, it is ≤300 characters (sanity check)
+      - If memory is set, one of user/project/local
+      - Body ≤500 lines
+  publish:
+    role: Push to myclaude.sh + Anthropic plugin marketplace. Agents are distributed via vault.yaml + plugin.json (agents field). Not via agentskills.yaml universal (that format is skill-specific).
+    inputs:
+    - 'workspace/{slug}/.publish/ (state: packaged)'
+    - myclaude CLI auth
+    - creator confirmation
+    outputs:
+    - Live listing at https://myclaude.sh/p/{slug}
+    - Plugin marketplace listing
+    - 'workspace/{slug}/.meta.yaml (state: published)'
+    blocks_when:
+    - state != packaged
+    - test_result != pass (for MCS-2+)
+    - myclaude auth missing
+    - creator declines confirmation
+    consumer_status: partial
+    consumer_status_reason: "/publish reads vault.yaml. config.yaml.intelligence.distribution.channels_by_type.agent should list ['myclaude', 'anthropic-plugin'] — verify in Wave 3."
+    optional: false
+    next_action: null
+    next_action_reason: terminal action — product is live, feedback loop begins via post_publish_actions
+    type_specific:
+      distribution_channels:
+      - channel: myclaude
+        primary: true
+        url_pattern: "https://myclaude.sh/p/{slug}"
+      - channel: anthropic-plugin
+        primary: true
+        plugin_json_block: agents field
+      - channel: agentskills_universal
+        primary: false
+        applicable: false
+        reason: The agentskills.yaml format is a skill-centric universal manifest. Agents are Claude Code specific — other platforms do not currently expose the subagent primitive. myClaude may still generate an agentskills.yaml entry marking the agent as claude-code-only.
+      confirmation_required: true
+      post_publish_actions:
+      - 'Suggest: ''Use it daily via Task tool. The best validation is real spawn usage.'''
+      - 'Surface install command: myclaude install {slug}'
+      - 'Schedule check-in (Proactive #14): 7 days post-publish, check spawn count'
+  status:
+    role: Display the agent in the dashboard with archetype-aware UX, maturity level surfacing, spawn count intelligence.
+    inputs:
+    - workspace/{slug}/.meta.yaml
+    - this file (essence.one_line, archetypes for ux_type_name)
+    - references/ux-vocabulary.md
+    outputs:
+    - Dashboard line for the agent
+    - Archetype badge (if computed)
+    - Portfolio role suggestion
+    consumer_status: aspirational
+    consumer_status_reason: /status today does not surface agent archetype badges or spawn counts. Wave 3 adds.
+    optional: true
+    blocks_when: []
+    next_action: null
+    next_action_reason: read-only dashboard
+    type_specific:
+      ux_type_name: Agent
+      ux_type_name_source: references/ux-vocabulary.md → product types table
+      state_emoji_rules: Universal — uses status/SKILL.md state display rules
+      portfolio_role_default: teammate
+      portfolio_role_reason: Agents are teammates in the creator's portfolio — the parent skill/agent delegates to them.
+
+# ===========================================================================
+# FLOW — mermaid diagram of the agent lifecycle
+# ===========================================================================
+
+flow: "```mermaid\nflowchart LR\n  THINK[/think optional/] -.->|archetype unclear| MAP[/map/]\n  MAP -.->|expertise extracted| SCOUT[/scout/]\n  SCOUT -.->|built-ins and marketplace surveyed| CREATE[/create agent/]\n\
+  \  IMPORT[/import existing/] -.->|already in .claude/agents/| WORKSPACE\n  CREATE -->|scaffold with archetype + tool boundary| WORKSPACE[(workspace/slug/)]\n  WORKSPACE --> FILL[/fill/]\n  FILL -->|sparring\
+  \ on tool boundary + methodology| VALIDATE[/validate/]\n  VALIDATE -->|fail| VALIDATE\n  VALIDATE -->|pass MCS-1| TEST[/test/]\n  TEST -->|spawn simulation + contract verification| PACKAGE[/package/]\n\
+  \  VALIDATE -.->|MCS-1 only, optional| PACKAGE\n  PACKAGE -->|renamed + stripped| PUBLISH[/publish/]\n  PUBLISH -->|live on myclaude + plugin marketplace| MARKET[(marketplace)]\n  MARKET -.->|spawn\
+  \ feedback| SCOUT\n\n  STATUS[/status/] -.->|read-only| WORKSPACE\n\n  classDef writeSkill fill:#e1f5ff,stroke:#0277bd\n  classDef readSkill fill:#fff8e1,stroke:#f9a825\n  classDef gate fill:#fff4e1,stroke:#ef6c00\n\
+  \  classDef terminal fill:#e8f5e9,stroke:#2e7d32\n  classDef discovery fill:#f3e5f5,stroke:#6a1b9a\n  class CREATE,FILL,PACKAGE writeSkill\n  class STATUS,VALIDATE,TEST gate\n  class PUBLISH terminal\n\
+  \  class IMPORT,THINK,MAP,SCOUT discovery\n```\n"
+
+# ===========================================================================
+# FAILURE VOCABULARY — agent-specific failure modes
+# ===========================================================================
+
+failure_modes:
+- mode: creator cannot select archetype
+  detection: /create discovery — creator answers 'I don't know if it's scout or adviser'
+  degradation: Engine offers reasoning_frameworks (jobs_to_be_done) to clarify delegated task
+  recovery: Run framework, classify the result against archetype matrix, propose dominant archetype
+- mode: description fails parent spawn test
+  detection: /test description trigger test — parent LLM fails to choose this agent for the 5 positive contexts
+  degradation: Block /package for MCS-2+
+  recovery: Apply description_engineering.formula, identify which dimension scored <2, regenerate description
+- mode: tool boundary contradicts archetype
+  detection: /validate Stage 3 — ADVISER archetype with Edit in tools OR SCOUT archetype without omitClaudeMd
+  degradation: Block MCS-2 — the constitution is not physically enforced
+  recovery: Align frontmatter with archetype.frontmatter_pattern
+- mode: primary file exceeds 500 lines
+  detection: /validate Stage 3 D3
+  degradation: Score D3 as PARTIAL
+  recovery: "Split content into references/ with body pointers, OR preload via skills: frontmatter"
+- mode: preloaded skill duplication (AP-A4)
+  detection: "/validate Stage 7 — skill content in body duplicates a skill listed in skills: frontmatter"
+  degradation: Coaching — context bloat at spawn
+  recovery: "Remove body content, keep only the skills: reference"
+- mode: missing return shape in description (AP-A3)
+  detection: /validate Stage 3 D1 + Stage 7 anti-pattern grep
+  degradation: Parent cannot reliably integrate the return
+  recovery: "Add 'Returns {shape}' clause to description"
+- mode: mcpServers declared but server does not exist
+  detection: /test — spawn fails with 'MCP server not found'
+  degradation: Agent fails to spawn
+  recovery: Either reference an existing server OR switch to inline definition with complete spec
+- mode: criticalSystemReminder_EXPERIMENTAL too long
+  detection: "/validate Stage 2 — reminder >300 characters"
+  degradation: Over-long reminder dilutes its effect at every turn
+  recovery: Compress to single sentence with the key constraint
+- mode: agent tries to call Task tool to spawn itself recursively
+  detection: /test — fork boilerplate detected in agent output OR agent calls Agent tool with its own agentType
+  degradation: "Recursive fork prevented by Claude Code runtime [SOURCE: forkSubagent.ts:78-89]"
+  recovery: Redesign methodology to avoid recursion, or use a different archetype
+- mode: orphan references
+  detection: /validate Stage 3 enhanced — file in references/ has no pointer in AGENT.md body
+  degradation: Files exist but are never loaded — wasted disk and context
+  recovery: Add pointers OR delete files
+- mode: memory scope declared without explaining what is persisted
+  detection: /validate Stage 4 D8
+  degradation: Creator will not know what to expect from cross-session behavior
+  recovery: Add a 'Memory' section to body explaining what the agent persists
+- mode: tool boundary not mirrored in body
+  detection: /validate Stage 3 — frontmatter disallowedTools set but no READ-ONLY block in body
+  degradation: Agent's constitution is invisible to the runtime LLM — drift risk
+  recovery: Add explicit tool boundary explanation block in body
+
+# ===========================================================================
+# INVARIANTS — hard rules that cannot be violated
+# ===========================================================================
+
+invariants:
+- Primary file is AGENT.md in workspace, renamed to {slug}.md at package time
+- Install target is .claude/agents/{slug}.md (single file, not directory) [SOURCE: loadAgentsDir.ts:308]
+- Frontmatter required fields are name + description [SOURCE: loadAgentsDir.ts:404-414]
+- Agent belongs to ONE archetype (scout | architect | generalist | specialist | adviser | orchestrator | fork_heir) — hybrids have a dominant
+- Read-only archetypes (scout, architect, adviser) MUST declare disallowedTools including Edit, Write, NotebookEdit
+- Read-only archetypes SHOULD declare omitClaudeMd: true
+- Orchestrator archetype MUST include Agent in tools allowlist AND MUST exclude Write/Edit (D9 enforcement)
+- Fork_heir archetype MUST declare model: inherit (cache parity)
+- Primary AGENT.md ≤500 lines
+- Each reference in references/ must have a body pointer (no orphans)
+- Maximum 1 level of reference nesting
+- Preloaded skills via frontmatter ≤3 (more = context bloat at spawn)
+- README.md required
+- Output format section in body MUST match archetype's declared output_contract shape
+- No common command names in frontmatter name field
+- Distributed via vault.yaml + plugin.json (agents field)
+- Tier 3 patterns D9/D10/D12 are NOT applicable to single agents (those are squad/system level)
+
+# ===========================================================================
+# GOVERNANCE — security_profile + marketplace_taxonomy
+# ===========================================================================
+
+security_profile:
+  aegis_applicable: true
+  reason: Agents execute code via their tool pool. Write archetypes (specialist, generalist) can modify files. Agents with mcpServers can reach external services. Agents with hooks can execute shell commands. Agents are security-relevant.
+  attack_surfaces:
+  - tools frontmatter (over-broad permissions)
+  - mcpServers declarations (external network calls to MCP endpoints)
+  - hooks frontmatter (shell execution side effects)
+  - references/ content (loaded into context — prompt injection vector)
+  - criticalSystemReminder_EXPERIMENTAL (persistent re-injection — must not contain injection payloads)
+  - initialPrompt (prepended to first user turn — must not contain hidden instructions)
+  shell_execution: via Bash tool if in allowlist, via BashCommandHook if in hooks frontmatter
+  file_io: via Read/Write/Edit tools if in allowlist
+  network_calls: via WebFetch/WebSearch tools OR mcpServers
+  tool_invocation: controlled via tools + disallowedTools frontmatter
+  installation_trust_level: audit_recommended
+  installation_trust_reason: "Agents install to .claude/agents/{slug}.md. Depending on tool pool and mcpServers, the agent may have write and network authority under user permissions. Marketplace agents SHOULD be audited via /aegis before install."
+  recommended_audit_checks:
+  - Review tools frontmatter — flag if Bash is allowed without explicit justification in body
+  - Review mcpServers frontmatter — flag if inline definitions have untrusted network endpoints
+  - Review hooks frontmatter — flag if BashCommandHook contains suspicious patterns (curl|sh, eval, base64-decode)
+  - Review references/ for prompt injection patterns in user-facing strings
+  - Review criticalSystemReminder for injection payloads
+  - Review initialPrompt for injection payloads
+  consumer_status: aspirational
+  consumer_status_reason: /aegis does not yet consult product-dna.agent.security_profile. Wave 3 teaches /aegis to use this as audit checklist.
+
+marketplace_taxonomy:
+  default_category: agent
+  default_price: 0
+  default_license: MIT
+  pricing_rationale: 'Agents price by archetype. Scout and Architect are read-only and commodity-prone (free or solid). Generalist is flexible but often duplicates built-ins (free). Specialist justifies premium for narrow deep scope. Adviser justifies premium for judgment value. Orchestrator justifies premium-rare for squad integration value. Fork_heir is usually bundled, not standalone.'
+  bundle_eligible: true
+  bundle_eligible_reason: Agents compose into squads naturally. A bundle of related specialists plus an orchestrator is a natural squad offering.
+  composition_eligible_with:
+  - skill
+  - squad
+  - system
+  - minds
+  - hooks
+  composition_eligible_reason: Agents compose with skills (preloaded), squads (as members), systems (as components), minds (as advisory voices), and hooks (for lifecycle reactions).
+  consumer_status: aspirational
+  consumer_status_reason: /package today reads vault_defaults from config.yaml. Wave 3 teaches /package to consult this block first.
+  natural_tags:
+    scope: by_archetype
+    by_archetype:
+      scout:
+      - search
+      - investigation
+      - read-only
+      - scan
+      architect:
+      - planning
+      - design
+      - architecture
+      - read-only
+      generalist:
+      - agent
+      - task
+      - research
+      - general
+      specialist:
+      - specialist
+      - refactor
+      - migration
+      - domain-expert
+      adviser:
+      - advisor
+      - review
+      - judgment
+      - verification
+      orchestrator:
+      - orchestration
+      - squad
+      - router
+      - coordinator
+      fork_heir:
+      - fork
+      - parallel
+      - context-inherit
+      - background
+  pricing_strategy:
+    scope: by_archetype
+    by_archetype:
+      scout:
+        default: solid
+        recommended_range_usd:
+        - 5
+        - 12
+      architect:
+        default: solid
+        recommended_range_usd:
+        - 5
+        - 15
+      generalist:
+        default: signal
+        recommended_range_usd:
+        - 0
+        - 5
+      specialist:
+        default: premium
+        recommended_range_usd:
+        - 12
+        - 25
+      adviser:
+        default: premium
+        recommended_range_usd:
+        - 12
+        - 35
+      orchestrator:
+        default: premium
+        recommended_range_usd:
+        - 15
+        - 40
+      fork_heir:
+        default: signal
+        recommended_range_usd:
+        - 0
+        - 5
+
+# ===========================================================================
+# DNA PATTERNS — which of the 20 apply to agents
+# ===========================================================================
 
 dna_patterns:
   tier1:
-    D1:  { required: true,  name: "Activation Protocol",    check: "grep activation/protocol section + references/ ref" }
-    D2:  { required: true,  name: "Anti-Pattern Guard",     check: "grep anti-pattern section with >=5 items" }
-    D3:  { required: true,  name: "Progressive Disclosure",  check: "references/ exists + primary <500 lines" }
-    D4:  { required: true,  name: "Quality Gate",            check: "grep quality gate with >=3 criteria" }
-    D13: { required: true,  name: "Self-Documentation",      check: "README.md with what/install/usage/requirements" }
-    D14: { required: true,  name: "Graceful Degradation",    check: "grep 'when not to use' or error handling" }
-    D19: { required: false, name: "Attention-Aware Authoring", check: "critical rules in last 30% of file" }
+    D1:
+      required: true
+      applicable: true
+      name: Activation Protocol
+      check: grep activation/identity/boot section in AGENT.md body
+    D2:
+      required: true
+      applicable: true
+      name: Anti-Pattern Guard
+      check: "grep anti-pattern section with >=5 items"
+    D3:
+      required: true
+      applicable: true
+      name: Progressive Disclosure
+      check: references/ exists + primary <500 lines OR skills preload declared
+    D4:
+      required: true
+      applicable: true
+      name: Quality Gate
+      check: "grep quality gate or output format with >=3 verifiable criteria"
+    D13:
+      required: true
+      applicable: true
+      name: Self-Documentation
+      check: README.md with what/install/usage/requirements
+    D14:
+      required: true
+      applicable: true
+      name: Graceful Degradation
+      check: grep when-not-to-use OR error handling OR failure convention
+    D19:
+      required: false
+      applicable: true
+      name: Attention-Aware Authoring
+      check: critical rules in last 30% of file
   tier2:
-    D5:  { required: true,  name: "Question System",         check: "grep question/input table" }
-    D6:  { required: true,  name: "Confidence Signaling",    check: "grep confidence levels or certainty markers" }
-    D7:  { required: true,  name: "Pre-Execution Gate",      check: "grep precondition checks" }
-    D8:  { required: true,  name: "State Persistence",       check: "memory config in frontmatter or state section" }
-    D15: { required: true,  name: "Testability",             check: "test scenarios or expected outputs" }
-    D16: { required: true,  name: "Composability",           check: "no hardcoded paths, no common names" }
-    D17: { required: false, name: "Hook Integration",        check: "hooks section" }
+    D5:
+      required: false
+      applicable: true
+      name: Question System
+      check: If the agent accepts ambiguous input, it asks one clarifying question
+    D6:
+      required: false
+      applicable: true
+      name: Confidence Signaling
+      check: For ADVISER archetype, confidence levels present in output
+      note: Required for ADVISER archetype
+    D7:
+      required: true
+      applicable: true
+      name: Pre-Execution Gate
+      check: Activation protocol loads context before acting
+    D8:
+      required: false
+      applicable: true
+      name: State Persistence
+      check: If agent claims memory, memory frontmatter declared
+    D15:
+      required: false
+      applicable: true
+      name: Testability
+      check: test scenarios or examples directory
+    D16:
+      required: true
+      applicable: true
+      name: Composability
+      check: No hardcoded paths, no common name conflicts, file structure matches convention
+    D17:
+      required: false
+      applicable: true
+      name: Hook Integration
+      check: hooks frontmatter declared if agent needs lifecycle reactions
+    D20:
+      required: false
+      applicable: false
+      name: Cache-Friendly Design
+      reason: Agents are not always-loaded. D20 is claude-md only.
   tier3:
-    D9:  { required: false, name: "Orchestrate Don't Execute", applicable: false }
-    D10: { required: false, name: "Handoff Spec",              applicable: false }
-    D11: { required: true,  name: "Socratic Pressure",         check: "self-challenge or falsification pattern" }
-    D12: { required: false, name: "Compound Memory",           check: "memory config with project scope" }
-    D18: { required: false, name: "Subagent Isolation",        applicable: false }
-    D20: { applicable: false }
+    D9:
+      required: false
+      applicable: false
+      name: Orchestrate Don't Execute
+      reason: Single agents do not orchestrate. D9 applies to the ORCHESTRATOR archetype at the squad level.
+      note: ORCHESTRATOR archetype inherits D9 from squad.yaml context
+    D10:
+      required: false
+      applicable: false
+      name: Handoff Specification
+      reason: Single agents do not have handoffs. D10 applies at squad level.
+    D11:
+      required: false
+      applicable: true
+      name: Socratic Pressure
+      check: Self-challenge pattern in methodology (for ADVISER archetype, this is recommended)
+      note: Required for MCS-3 on ADVISER archetype
+    D12:
+      required: false
+      applicable: true
+      name: Compound Memory
+      check: If memory scope declared, cross-session behavior is documented
+      note: Feature-flag gated in Claude Code runtime (AGENT_MEMORY_SNAPSHOT) — see ground-truth
+    D18:
+      required: false
+      applicable: false
+      name: Subagent Isolation
+      reason: Single agents ARE the subagent. They do not spawn other subagents unless they are ORCHESTRATOR archetype (which is squad territory).
+
+# ===========================================================================
+# MCS EXPECTATIONS
+# ===========================================================================
 
 mcs_expectations:
-  mcs1: "All Tier 1 PASS. Score >= 75%."
-  mcs2: "Tier 1+2 required PASS (D5-D8, D15-D16). Score >= 85%."
-  mcs3: "D11 required. D12 recommended. Score >= 92%."
+  mcs1:
+    dna_required:
+    - D1
+    - D2
+    - D3
+    - D4
+    - D13
+    - D14
+    score_min: 75
+    blocks_publish: true
+    natural_ceiling: false
+  mcs2:
+    dna_required:
+    - D1
+    - D2
+    - D3
+    - D4
+    - D7
+    - D13
+    - D14
+    - D16
+    dna_recommended:
+    - D5
+    - D6
+    - D8
+    - D15
+    - D17
+    - D19
+    score_min: 85
+    blocks_publish: false
+    natural_ceiling: false
+  mcs3:
+    dna_required:
+    - D1
+    - D2
+    - D3
+    - D4
+    - D7
+    - D11
+    - D13
+    - D14
+    - D16
+    dna_recommended:
+    - D5
+    - D6
+    - D8
+    - D15
+    - D17
+    - D19
+    score_min: 92
+    blocks_publish: false
+    natural_ceiling: true
+    ceiling_reason: 'Single agents cannot satisfy D9/D10/D18 (squad patterns). MCS-3 for agents means: all applicable patterns + rubric ≥27/30 + maturity level ≥4 + dogfood check passes.'
+    applicable: true
 
-template_files:
-  - source: "AGENT.md.template"
-    target: "AGENT.md"
-    dna_injected: [D1, D2, D4, D5, D6, D7, D8, D11, D14]
-  - source: "README.md.template"
-    target: "README.md"
-    dna_injected: [D13]
-  - source: "references/domain-knowledge.md.template"
-    target: "references/domain-knowledge.md"
-    dna_injected: [D3]
+# ===========================================================================
+# FRONTMATTER — the authoritative field list, verified against source
+# ===========================================================================
 
 frontmatter:
   required:
-    - name            # Invocation name [SOURCE: loadAgentsDir.ts]
-    - description     # Catalog display, token counted [SOURCE: loadSkillsDir.ts:100-105]
+  - name
+  - description
   recommended:
-    - tools           # Minimal tool list (alias for allowed-tools in agents)
-    - model           # sonnet|opus|haiku — force specific model [SOURCE: AgentTool.ts]
+  - tools
+  - model
   optional:
-    - "allowed-tools" # Restrict tool access (whitelist) [SOURCE: AgentTool.ts]
-    - "denied-tools"  # Block specific tools (blacklist) [SOURCE: AgentTool.ts]
-    - memory          # user|project|local — memory persistence scope [SOURCE: AgentTool internals]
-    - permissionMode  # default|plan|dontAsk|bypassPermissions
-    - maxTurns        # Limit agentic iterations [SOURCE: AgentTool.ts]
-    - effort          # low|medium|high|max or integer [SOURCE: frontmatterParser.ts]
-    - context         # fork for isolation
-    - skills          # Preloaded skill knowledge
-    - hooks           # Frontmatter-defined hooks [SOURCE: schemas/hooks.ts]
-    - "auto-memory"   # Enable/disable auto-memory for this agent
+  - disallowedTools
+  - memory
+  - permissionMode
+  - maxTurns
+  - effort
+  - mcpServers
+  - hooks
+  - skills
+  - initialPrompt
+  - background
+  - isolation
+  - color
+  - criticalSystemReminder_EXPERIMENTAL
+  - omitClaudeMd
+  - requiredMcpServers
+  field_source_refs:
+    name: loadAgentsDir.ts:404-409
+    description: loadAgentsDir.ts:411-414
+    tools: loadAgentsDir.ts:660 via parseAgentToolsFromFrontmatter
+    disallowedTools: loadAgentsDir.ts:677-681
+    model: loadAgentsDir.ts:568-573
+    memory: "loadAgentsDir.ts:594-605 (valid values user|project|local)"
+    permissionMode: loadAgentsDir.ts:634-645 (enum from PERMISSION_MODES)
+    maxTurns: loadAgentsDir.ts:647-654 (positive int)
+    effort: loadAgentsDir.ts:624-631 (enum or int)
+    mcpServers: loadAgentsDir.ts:693-708
+    hooks: loadAgentsDir.ts:424-440 (validated via HooksSchema)
+    skills: loadAgentsDir.ts:684
+    initialPrompt: loadAgentsDir.ts:686-690
+    background: loadAgentsDir.ts:575-591 (boolean or 'true'/'false' string)
+    isolation: loadAgentsDir.ts:607-621 (worktree or remote, remote is ant-only)
+    color: loadAgentsDir.ts:567
+    criticalSystemReminder_EXPERIMENTAL: loadAgentsDir.ts:121 (type declaration) + verificationAgent.ts:150-151 (canonical usage)
+    omitClaudeMd: loadAgentsDir.ts:127-133 + runAgent.ts:390-398
+    requiredMcpServers: loadAgentsDir.ts:125 + loadAgentsDir.ts:229-242
 
-# Token economics [SOURCE: loadSkillsDir.ts:100-105]
+# ===========================================================================
+# PACKAGE RENAME
+# ===========================================================================
+
+package_rename:
+  from: AGENT.md
+  to: '{slug}.md'
+  applies_at: package time
+  reason: "Claude Code loadAgentsDir scans .claude/agents/*.md by filename. Workspace uses AGENT.md for editorial clarity and to prevent file collision within squad directories. Install uses {slug}.md so the agent's invocation name matches its filename."
+
+# ===========================================================================
+# TEMPLATE FILES
+# ===========================================================================
+
+template_files:
+- source: AGENT.md.template
+  target: AGENT.md
+  dna_injected:
+  - D1
+  - D2
+  - D4
+  - D14
+  why_comments: true
+- source: README.md.template
+  target: README.md
+  dna_injected:
+  - D13
+  why_comments: true
+- source: references/domain-knowledge.md.template
+  target: references/domain-knowledge.md
+  dna_injected:
+  - D3
+  why_comments: true
+  optional: true
+  optional_for: archetypes where body fits under 300 lines without references
+- source: examples/examples.md.template
+  target: examples/examples.md
+  dna_injected:
+  - D15
+  why_comments: true
+  optional: true
+  optional_for: MCS-1
+  required_for: MCS-2+
+
+# ===========================================================================
+# TOKEN ECONOMICS
+# ===========================================================================
+
 token_economics:
-  catalog_cost: "name + description → ~50 tokens always in context when agent is available"
-  invocation_cost: "Full AGENT.md loaded only when Agent() spawns this agent"
-  ambient_cost: "Zero — agents are never auto-loaded"
-  optimization: "Short description, detailed content in references/"
+  catalog_cost_tokens: 50
+  catalog_cost_source: loadSkillsDir.ts:100-105 — same formula applies to agents since both live in the skill/agent catalog
+  catalog_cost_reason: name + description loaded in agent catalog as part of every session's agent registry
+  invocation_cost: load_on_demand
+  invocation_cost_reason: Full AGENT.md loaded only when Task tool spawns this agent
+  ambient_cost: zero
+  ambient_cost_reason: Agents are not auto-loaded — they activate via Task spawn
+  optimization_notes: 'Short focused description = lower catalog cost. Long reference content
 
-# Compact instructions applicability
+    in references/ = zero cost until spawn. Preloaded skills via skills: frontmatter
+
+    ARE loaded at every spawn, so keep the preloaded list small (max 3).
+
+    Ephemeral MCP servers are destroyed on finish, so they do not leak cost
+
+    across invocations.
+    '
+  budget_example: 10 agents × 50 tokens each = ~500 tokens always in catalog
+  omitClaudeMd_savings: '5-15 Gtok/week at fleet scale per read-only archetype adoption [SOURCE: loadAgentsDir.ts:127-133]'
+  gitStatus_skip_savings: '1-3 Gtok/week at fleet scale when archetype is Explore or Plan [SOURCE: runAgent.ts:404-410]'
+
+# ===========================================================================
+# COMPACT INSTRUCTIONS
+# ===========================================================================
+
 compact_instructions:
   applicable: true
-  location: "AGENT.md → ## Compact Instructions section"
-  preserves: "persona, routing table, active handoffs, decision history"
+  location: 'AGENT.md → ## Compact Instructions section'
+  source_reference: compact/prompt.ts:133-143
+  preserves:
+  - persona identity
+  - tool boundary declaration
+  - output contract
+  - current archetype
+  - constitution summary
+  - active delegation state
 
-canonical_refs:
-  description: "Mandatory section listing full paths to every external reference downstream consumers must read"
-  required: true
-  validation: "grep canonical_refs|canonical references in primary file"
+# ===========================================================================
+# DISCOVERY QUESTIONS
+# ===========================================================================
 
 discovery_questions:
-  - "What persona should this agent embody (expertise, voice, personality)?"
-  - "What decisions will this agent make autonomously vs escalate?"
-  - "What tools does this agent need (Read, Write, Bash, etc.)?"
-  - "What domain knowledge must the agent carry?"
-  - "How should this agent handle uncertainty or conflicting information?"
-  - "What should this agent NEVER do (destructive actions, assumptions)?"
-  - "Should this agent remember across sessions (memory scope)?"
+  source_of_truth: this file (canonical for agent)
+  legacy_location: ".claude/skills/create/references/discovery-questions.md → ## Agents section (if exists)"
+  legacy_status: unverified in S118 — Wave 4 should align or deprecate
+  minimum_set:
+  - 'Which agent archetype matches your need? SCOUT (fast read-only search), ARCHITECT (read-only planning), GENERALIST (all-purpose), SPECIALIST (narrow write authority), ADVISER (read-only judgment), ORCHESTRATOR (routes to other agents), or FORK_HEIR (inherits parent context for parallel work)?'
+  - What specific delegated task does this agent perform? (One sentence — not 'helps with X')
+  - What parent contexts will spawn this agent? (When does it get invoked?)
+  - What tool boundary defines its scope? (What tools does it need? What tools must it be denied?)
+  - What does the agent return to the parent? (text report, labeled fields, verdict, ranked list)
+  - What are the top 5 things this agent should NEVER do?
+  - Does this agent need cross-invocation memory? If yes, which scope (user/project/local)?
+  depth_set:
+  - What reasoning framework or methodology drives the agent's decisions?
+  - Should this agent inherit the parent's CLAUDE.md hierarchy? (Default yes for write archetypes, no for read-only)
+  - Does this agent need its own MCP servers? If yes, shared (reference) or ephemeral (inline)?
+  - Does this agent need a criticalSystemReminder_EXPERIMENTAL that re-injects its constitution every turn?
+  - How should the agent handle ambiguous input? (ask one question / proceed with default / refuse)
+  - What would the PARENT LLM need to know to decide whether to invoke this agent vs. a built-in?
+  - What existing agents (Claude Code built-ins OR marketplace) does this compete with? What makes yours different?
+  archetype_specific_questions:
+    scout:
+    - What are you searching FOR? (files, patterns, structures)
+    - How fast is 'fast'? (return in seconds, return in under 2 minutes)
+    - What are the thoroughness levels? (quick, medium, thorough)
+    architect:
+    - What kind of plan? (implementation plan, migration plan, refactoring plan)
+    - What critical-files count is appropriate for your domain? (3, 5, 10)
+    - What trade-offs does your domain have? (complexity vs speed, cost vs correctness)
+    generalist:
+    - What is the scope? (narrow but varied, or truly open-ended?)
+    - Why a generalist instead of a specialist? (what makes this not a narrow domain?)
+    specialist:
+    - What is the narrow scope? (specific file types, specific operations)
+    - What must the specialist NEVER touch outside its scope?
+    - What is the commit convention? (per change, per task, end of session)
+    adviser:
+    - What kind of judgment? (ranking, critique, verification, recommendation)
+    - What confidence levels does the adviser use? (high/moderate/low, or numeric)
+    - What happens when the adviser disagrees with the parent's direction?
+    orchestrator:
+    - How many specialists does your squad have?
+    - What is the routing logic? (sequential, parallel, conditional)
+    - How does the orchestrator synthesize specialist returns?
+    fork_heir:
+    - What parent context does the fork inherit?
+    - What is the fork's scope boundary? (what must it not touch in the inherited context)
+    - What format is the return report? (labeled fields per fork directive convention)
+  reasoning_framework_offering:
+    when: If creator answers 'I'm not sure' or vague to 2+ minimum_set questions
+    offering: Would you like to think through this with one of the reasoning frameworks? (jobs-to-be-done is recommended for agent creation — the 'job' is the delegated task)
+    routing: jobs_to_be_done is the default; fall back to first_principles if the creator cannot describe the job either
+
+# ===========================================================================
+# STATE MACHINE HOOKS
+# ===========================================================================
+
+state_machine_hooks:
+  source_file: quality-gates.yaml
+  source_section: states
+  scope: universal
+  type_specific_branches: []
+  regression_rules: Universal — file edit after validation regresses to content
+  publish_prerequisites_addendum:
+  - test_result == pass (for MCS-2+ agents)
+  publish_prerequisites_addendum_reason: Agents at MCS-2+ require spawn simulation and output contract verification
+
+# ===========================================================================
+# VALIDATION PIPELINE REFS
+# ===========================================================================
+
+validation_pipeline_refs:
+  stage_1: .claude/skills/validate/references/validation-stages/stage-1-structural.md
+  stage_2: .claude/skills/validate/references/validation-stages/stage-2-integrity.md
+  stage_3: .claude/skills/validate/references/validation-stages/stage-3-dna-tier1.md
+  stage_4: .claude/skills/validate/references/validation-stages/stage-4-dna-tier2.md
+  stage_5: .claude/skills/validate/references/validation-stages/stage-5-dna-tier3.md
+  stage_6: .claude/skills/validate/references/validation-stages/stage-6-cli-preflight.md
+  stage_7: .claude/skills/validate/references/validation-stages/stage-7-anti-commodity.md
+  stage_8: .claude/skills/validate/references/validation-stages/stage-8-value-intelligence.md
+  index: .claude/skills/validate/references/validation-stages/_index.md
+
+# ===========================================================================
+# LIFECYCLE SHARED REFS
+# ===========================================================================
+
+lifecycle_shared_refs:
+  ux_experience:
+    path: references/ux-experience-system.md
+    consumed_by:
+    - /create
+    - /fill
+    - /validate
+    - /package
+    - /test
+    - /help
+    - /status
+    sections_relevant_to_type:
+    - §1 Context Assembly
+    - §2.1 Experience Level Scaling
+    - §2.2 Archetype-Aware Insights
+    - §2.3 Moment Awareness
+    invisibility_audit_status: PRE-EXISTING DEBT — Wave 4 scope
+  ux_vocabulary:
+    path: references/ux-vocabulary.md
+    consumed_by:
+    - /create
+    - /fill
+    - /validate
+    - /package
+    - /test
+    - /help
+    - /status
+    purpose: Translate 'agent' to user-facing 'Agent', translate internal archetype names to user-facing archetype names
+    invisibility_audit_status: PRE-EXISTING DEBT — Wave 4 scope
+  engine_voice:
+    path: references/quality/engine-voice.md
+    consumed_by:
+    - /create
+    - /fill
+    - /validate
+    - /package
+    - /test
+    - /help
+    - /status
+    purpose: Brand DNA, voice markers
+    invisibility_audit_status: Acceptable — engine-voice IS the engine speaking
+  intelligence_layer:
+    path: references/intelligence-layer.md
+    consumed_by:
+    - /validate
+    - /package
+    - /scout
+    purpose: Value scoring, pricing strategy, portfolio analysis
+    invisibility_audit_status: PRE-EXISTING DEBT — Wave 4 scope
+  product_spec:
+    path: references/product-specs/agent-spec.md
+    consumed_by:
+    - /create
+    - /validate
+    purpose: Canonical Claude Code agent spec — file structure, frontmatter, spawn behavior
+    invisibility_audit_status: unverified in S118
+  claude_code_ground_truth:
+    path: references/claude-code-ground-truth.md
+    consumed_by:
+    - /create
+    - /fill
+    - /validate
+    purpose: Verified capability register with SOURCE references — the single truth source for all native behavior claims in this codex
+    invisibility_audit_status: Clean — file is internal Engine documentation, never shipped in published artifacts
+
+# ===========================================================================
+# SCHEMA CONSUMER STATUS
+# ===========================================================================
+
+schema_consumer_status:
+  fully_wired_sections:
+  - type, primary_file, install_target, template (read by /create, /validate, /package, /test, /import)
+  - dna_patterns (read by /validate Stage 3, 4, 5)
+  - mcs_expectations (read by /validate scoring)
+  - frontmatter (read by /create scaffold + /package Step 1.5 verify)
+  - template_files (read by /create scaffold)
+  - discovery_questions.minimum_set (read by /create)
+  partially_wired_sections:
+  - lifecycle.create (skill reads product-dna but not lifecycle.create.discovery_phase.archetype_selection_required or archetype_first)
+  - lifecycle.fill (skill reads product-dna but not lifecycle.fill.sections_walked)
+  - lifecycle.validate (skill reads dna_patterns but not per_stage_hooks structured form)
+  - lifecycle.test (skill reads install_target but not type_specific_steps)
+  - lifecycle.package (skill reads install_target/package_rename but not step_6b_verify)
+  - lifecycle.import (detection is generic — does not check agent-specific fields)
+  aspirational_sections:
+  - essence
+  - architectural_principles
+  - operational_modes
+  - freedom_levels
+  - archetypes (CRITICAL — no current consumer; Wave 3 teaches /create to ask archetype first)
+  - description_engineering (no consumer; Wave 3 teaches /validate Stage 3 D1 to apply agent-specific rubric)
+  - progressive_disclosure_model
+  - maturity_model
+  - quality_rubric
+  - anti_patterns_catalog (the AP-A1..A6 additions)
+  - reasoning_frameworks
+  - decision_trees
+  - stakeholder_mapping
+  - output_patterns
+  - output_contract (CRITICAL — no current consumer; Wave 3 teaches /validate Stage 4 to verify body has matching Output format section)
+  - flow
+  - failure_modes
+  - invariants
+  - security_profile
+  - marketplace_taxonomy
+  - lifecycle_shared_refs.claude_code_ground_truth (new in S118 — must be consumed by Wave 3 as the verified source for all native claims)
+  blocking_gaps_for_this_type:
+  - id: GAP-1
+    where: .claude/skills/import/SKILL.md detection table
+    issue: 9 types listed including agent. Detection is generic (single .md with frontmatter) — does not check for agent-specific fields like tools, mcpServers, criticalSystemReminder_EXPERIMENTAL
+    wave_to_fix: 3
+    severity: minor — detection works for basic agents
+  - id: GAP-2
+    where: ".claude/skills/create/references/discovery-questions.md → ## Agents section"
+    issue: existence and completeness unverified in S118
+    wave_to_fix: 4
+    severity: unknown
+  - id: GAP-3
+    where: .claude/skills/validate/references/validation-stages/stage-3-dna-tier1.md
+    issue: D1 check is grep-based. Does NOT apply agent-specific description_engineering rubric or check archetype fidelity between frontmatter and declared archetype
+    wave_to_fix: 3
+    severity: MAJOR — current /validate accepts agents with tool boundaries that contradict their archetype
+  - id: GAP-4
+    where: config.yaml.intelligence.distribution.channels_by_type.agent
+    issue: unverified whether agent is in channels_by_type table
+    wave_to_fix: 3
+    severity: MINOR — defaults apply
+  - id: GAP-5
+    where: Engine product-dna codex consumers
+    issue: No skill currently reads references/claude-code-ground-truth.md as the verified source for native behavior claims
+    wave_to_fix: 3
+    severity: MAJOR — claims about native Claude Code behavior must be verified, not parroted

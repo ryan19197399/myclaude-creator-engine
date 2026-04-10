@@ -1,118 +1,2174 @@
-# product-dna/system.yaml — DNA requirements for Systems
-# Read by /create, /validate, /package when type=system
-# Systems are the most complex product type — ALL 18 DNA patterns apply
+# product-dna/system.yaml — Codex for Systems
+# Read by /create, /fill, /validate, /test, /package, /publish, /import, /map, /status
+# when type=system. The SINGLE SOURCE OF TRUTH for the System product type.
+#
+# Schema version: 3.0.0 (Sprint 8 Wave 2b — codex)
+# Ground truth: every claim about Claude Code native behavior carries a
+# [SOURCE: file.ts:line] reference verified in S118c. See
+# references/claude-code-ground-truth.md for the full verified capability register.
+#
+# HERITAGE: system extends squad.yaml, which extends agent.yaml, which extends
+# skill.yaml. Everything about sub-agents inherits from agent.yaml; everything
+# about coordinated sub-squads inherits from squad.yaml; everything about
+# composed skills inherits from skill.yaml. This codex adds the ORGANISM layer —
+# operational closure, declared metabolism, re-injected constitution, triple
+# mnemonic substrate, environmental perception via hooks, declared cognitive
+# reflexes, coupling declaration requirement, and recursive integrity made into
+# a forge-time gate.
+#
+# VOCABULARY NOTE (Vitruvian declaration in the portico of essence below):
+# When this codex uses the word "system", read it as you would read "organism" —
+# not as you would read "software". A system here is not a cohesive set of
+# components; it is a composed organism with re-declared identity, memory in
+# three registers, environmental reflexes, plasticity across two scales, and
+# the capacity to observe its own behavior longitudinally. The word stays for
+# communication reasons; the meaning is richer by declaration at the portico.
+
+# ===========================================================================
+# IDENTITY
+# ===========================================================================
 
 type: system
 primary_file: CLAUDE.md
-install_target: ".claude/commands/{slug}/"
-template: "templates/system/"
+install_target: .claude/systems/{slug}/
+template: templates/system/
+canonical_spec: references/product-specs/system-spec.md
+package_rename: '{slug}.md'
+
+# ===========================================================================
+# ESSENCE
+# ===========================================================================
+
+essence:
+  one_line: A composed cognitive organism with operational closure, re-declared identity, triple memory, environmental reflexes, and reversible lifecycle.
+  amplifies: "Organism-scale capability composition \u2014 a system lets a creator ship a full cognitive stack (multiple squads + agents + skills + hooks + claude-md fragment + output-style) as one reversible install whose parts were designed together, whose boundaries are declared, and whose recursive self-validation is a forge-time gate."
+  philosophy: |
+    Read the word "system" in this codex as you would read "organism", not as you would read "software".
+    A state-of-art system is NOT a coherent set of components. It is what emerges when declared capabilities
+    meet executive prohibitions — runtime-enforced restrictions that channel cognitive energy into useful flow.
+    A pile is a set of capabilities. A system is a set of capabilities each of which has a named executive
+    counterpart declaring what useful flow its prohibition produces. The founding question for forging a
+    system is not "what can it do" — it is "what can it physically NOT do, and what useful flow does that
+    impossibility channel". Every engine declared below instantiates this founding question at a different
+    scale. The meta-requirement is that every active engine name its functional counterpart, because without
+    that naming it is a drawer, not an organ.
+  refuses:
+  - Existing as a single monolithic CLAUDE.md fragment — a system requires at minimum a CLAUDE.md fragment PLUS at least one of (sub-squad, sub-agent, hooks fragment, output-style). Otherwise it is a claude-md product mislabeled.
+  - Shipping capabilities without declaring their executive counterparts — every capability must name the runtime prohibition that channels it into useful flow.
+  - Assuming context will remember across sessions — state must live in externalized artifacts (STATE.yaml, .meta.yaml, memory scope files, install_manifest.lock) that survive /compact.
+  - Declaring environmental reflexes without declaring the executive prohibition that makes them reflexes rather than arbitrary event handlers.
+  - Claiming to self-validate without a recursion_proof section demonstrating that /validate passed when pointed at the system itself.
+  - Co-existing with other installed systems without declaring its ecological niche — namespace conflicts, hook event binding overlap, claude-md fragment scope.
+  trade_offs:
+    gains:
+    - Operational closure made physical via omitClaudeMd + context fork + ephemeral mcpServers + tools intersection [SOURCE: runAgent.ts:390-398, 694-714, 95-218; agentToolUtils.ts:15-37].
+    - Metabolic budget declarable at both rest and operation — auditable against config.yaml token_budgets, plus conditional activation of path-scoped components [SOURCE: loadSkillsDir.ts:159-178].
+    - Re-injected constitution via criticalSystemReminder_EXPERIMENTAL per turn plus CLAUDE.md re-load per turn — identity as active work [SOURCE: runAgent.ts:711-714, verificationAgent.ts:150-151, claudemd.ts:1-16].
+    - Triple mnemonic substrate in three orthogonal registers — hereditary via skills preload, procedural via STATE.yaml+.meta.yaml+memory, declarative via memory:project natural-language notes [SOURCE: runAgent.ts:577-646; loadAgentsDir.ts:456-467].
+    - Environmental perception via 27 canonical hook events — the full enum is verified [SOURCE: coreTypes.ts:25-53, coreSchemas.ts:355-385].
+    - Declared cognitive reflexes via the four hook types — BashCommand, Prompt, Http, Agent [SOURCE: schemas/hooks.ts:31-163].
+    - Isolated judgment via fork-context subagents [SOURCE: runAgent.ts:694-714].
+    - Coordinated network via declarative routing.yaml consumed by orchestrators [SOURCE: AgentTool/prompt.ts:271].
+    - External voice via composed output-style fragments — declared signature, not decoration.
+    - Recursive integrity operationalized — /validate --target=self is a forge-time gate.
+    - Externalized persistent state with an explicit survival matrix.
+    - Longitudinal self-observation available via PostToolUse + AgentHook + memory:project composition.
+    - Reversible lifecycle via install_manifest + manifest-lock hash-verified — symmetric install and uninstall.
+    sacrifices:
+    - Highest forge cost in the family-skill lineage — 3-5x a squad.
+    - Multi-target install complexity — install_manifest dispatches fragments to multiple native destinations.
+    - Validation recursion cost at level=3 — ~44 nested validate runs for a complex system, ~836K tokens, exceeds single-session window, must be split or cached.
+    - Ecological coexistence overhead — namespace, hook binding, and fragment scope must be declared.
+    - Return value still unstructured text at the orchestrator layer [SOURCE: AgentTool/prompt.ts:257].
+    worth_it_when: The creator is shipping a full cognitive stack whose parts were designed together — constitution plus orchestration plus reflexes plus memory plus voice — and needs the install to be reversible, the validation to be recursive, and the coexistence with other installed products to be declared.
+
+# ===========================================================================
+# ARCHITECTURAL PRINCIPLES — 9 specializations for systems
+# ===========================================================================
+
+architectural_principles:
+  P1_purpose_before_shape:
+    specialization: "Before scaffolding a system, the creator answers the 9 discovery questions in order — operational closure, productive asymmetry, survival checklist, metabolism, external voice, recursion, context cardinality, reflex vs judgment, ecological coexistence. Archetype selection and declaration of which of the 13 engines are active happens BEFORE any fragment is scaffolded."
+    enforced_by:
+    - discovery_questions.required_in_order
+    - archetypes.selection_required
+    - lifecycle.create.type_specific.discovery_phase
+    blocks_forge_when: Creator cannot answer any of the 9 discovery questions OR cannot name which engines of the 13 are active.
+  P2_constraint_before_feature:
+    specialization: "For a system, constraint is the entire organism's runtime boundary. Operational closure is declared FIRST — what is inside, what is outside, what is the membrane. Every capability must name an executive prohibition that channels it into useful flow. Every sub-agent inherits the tool boundary enforcement pattern from agent.yaml and squad.yaml."
+    enforced_by:
+    - dna_patterns.tier1.D2
+    - coupling_declaration_requirement
+    - anti_patterns_catalog
+    - invariants
+    blocks_forge_when: Any active engine is declared without a couples_with field OR any sub-agent violates tool boundary discipline.
+  P3_composition_over_monolith:
+    specialization: "A system IS composition by definition — it composes multiple squads, agents, skills, hooks, claude-md fragments, and output-style into one reversible install. Minimum is CLAUDE.md fragment PLUS at least one of (sub-squad, sub-agent, hooks fragment, output-style)."
+    enforced_by:
+    - dna_patterns.tier1.D3
+    - dna_patterns.tier2.D20
+    - install_manifest
+    - invariants
+    blocks_forge_when: "System composes zero sub-parts beyond its own CLAUDE.md fragment OR the CLAUDE.md fragment exceeds the 4000 character soft limit without modular composition via @include."
+  P4_contract_before_narrative:
+    specialization: "The system's contract is the union of install_manifest, hooks_fragment_spec, claude_md_fragment_spec, organism_state_machine, and recursion_proof. Prose in the CLAUDE.md fragment explains the contract but never replaces it."
+    enforced_by:
+    - install_manifest
+    - hooks_fragment_spec
+    - claude_md_fragment_spec
+    - organism_state_machine
+    - recursion_proof
+    - frontmatter.required
+    blocks_forge_when: install_manifest missing OR hooks_fragment_spec declared but hooks_fragment file absent OR claude_md_fragment_spec declared but fragment file absent OR recursion_proof absent.
+  P5_failure_mode_before_happy_path:
+    specialization: "Systems declare failure modes at five levels — individual agent failure, routing failure at squad level, hook fragment failure, claude-md fragment load failure, recursion proof failure. Each level has a declared degradation path. Silent failure is forbidden."
+    enforced_by:
+    - dna_patterns.tier1.D14
+    - failure_modes
+    - hooks_fragment_spec
+    - claude_md_fragment_spec
+    - recursion_proof
+    - invariants
+    blocks_forge_when: Any of the 5 failure levels lacks a declared degradation path.
+  P6_state_at_the_edge:
+    specialization: "System state has four native channels — STATE.yaml at the organism root, .meta.yaml per composed sub-part, memory scope files of sub-agents, install_manifest.lock computed at install time. Every state claim must map to an externalized file that survives /compact."
+    enforced_by:
+    - dna_patterns.tier2.D8
+    - dna_patterns.tier3.D12
+    - organism_state_machine
+    - invariants
+    blocks_forge_when: System declares cross-session memory without declaring which file stores it OR without declaring how it survives /compact.
+  P7_read_before_write:
+    specialization: "/create reads creator.yaml plus optional scout report plus this codex plus templates/system/ plus canonical_spec plus claude-code-ground-truth.md plus agent.yaml plus squad.yaml plus structural-dna.md plus config.yaml BEFORE generating any scaffold (10 reads). Highest read-before-write ratio in the family-skill group."
+    enforced_by:
+    - lifecycle.create.type_specific.read_before_write_ratio
+    - lifecycle.create.type_specific.ground_truth_required
+    - recursion_proof
+    - invariants
+    blocks_forge_when: System scaffolded without reading squad.yaml AND agent.yaml for inheritance OR without reading claude-code-ground-truth.md for native behavior verification.
+  P8_invisibility_of_mechanism:
+    specialization: "User-facing strings in published systems MUST NOT reference Engine internals, substrate vocabulary, engine numbers, dimension names, archetype taxonomy labels, or meta-vocabulary used inside this codex. The buyer installs an organism and uses it; the forge machinery stays invisible."
+    enforced_by:
+    - lifecycle.validate.type_specific.per_stage_hooks.stage_7_anti_commodity
+    blocks_forge_when: Word-bounded grep on published user-facing strings matches substrate vocabulary OR internal archetype names as marketing copy.
+  P9_recursive_integrity:
+    specialization: "The system is the ONLY type in the family-skill lineage where P9 is fully recursive. The organism must pass /validate when pointed at itself — structurally, integrally, on DNA patterns at all three tiers, on sub-squads recursively, on sub-agents recursively, on the hooks fragment, on the claude-md fragment, on the output-style. At level=3 the recursion is expensive; the codex offers three modalities."
+    enforced_by:
+    - recursion_proof
+    - lifecycle.validate.type_specific.recursion_modalities
+    - dna_patterns.tier1.D4
+    - dna_patterns.tier3.D11
+    blocks_forge_when: recursion_proof section absent OR /validate --target=self was never run on this system before publish attempt.
+
+# ===========================================================================
+# OPERATIONAL MODES + FREEDOM LEVELS
+# ===========================================================================
+
+operational_modes:
+  supports: [discovery, structure]
+  default: discovery
+  rationale: "Systems default to DISCOVERY because composing an organism benefits enormously from /scout (existing systems, agents, squads in the marketplace) and /map (decomposing the organism into engines, sub-parts, and couplings). A creator with a fully clear system design can enter structure mode via /create system directly, but this is rare."
+  discovery_entry_via:
+    skill: /scout
+    fallback: /map
+    rationale: "/scout identifies existing organisms and composable sub-parts. /map decomposes the creator's workflow expertise into the 13 engines and 4 dimensions."
+
+freedom_levels:
+  valid: [1, 2, 3]
+  default: 2
+  rationale: "Systems work at freedom levels 1-3. Levels 4-5 are NOT recommended because autonomous system generation produces incoherent engine-plus-sub-part compositions. The creator must deliberately decide which engines are active and why."
+  per_level_behavior:
+    1: "Engine walks every engine, every coupling, every sub-part, every hook binding. Used for first system."
+    2: "Engine proposes engine selection and sub-part roster from discovery; creator confirms. DEFAULT."
+    3: "Engine generates full system from discovery plus scout plus domain-map; creator audits."
+  consumer_status: aspirational
+  consumer_status_reason: "Wave 3 teaches /create and /fill to consult freedom_level for systems."
+
+# ===========================================================================
+# INTENT TOPOLOGY — derived shape (delivery fixed to composed_system; nature + depth inherited)
+# ===========================================================================
+# Axis source: references/intent-topology.md §2. System is the only type
+# delivered via composed_system — a myClaude convention dispatching CLAUDE.md
+# fragment + sub-agents + sub-squads + hooks + output-style as a reversible
+# bundle. Operational nature and cognitive depth are inherited from the
+# composed sub-parts, not declared at the system level. Declaration mode: derived.
+
+intent_topology:
+  declaration_mode: derived
+  declaration_mode_reason: "System has fixed delivery_mechanism=composed_system (the defining characteristic of the type) and INHERITED operational_nature and cognitive_depth from its composed sub-parts. A system can contain executor sub-agents (mutating state), advisor sub-agents (read-only judgment), orchestrator squads, and observer hooks — all simultaneously. Declaring a single operational_nature would misrepresent the composite nature of the type. cognitive_depth likewise applies per sub-part, not at the system level."
+  runtime_shape_note: "delivery_mechanism=composed_system, operational_nature=inherited-from-sub-parts, cognitive_depth=inherited-from-sub-parts. See references/runtime-host-dag.md §2 row 6 (composed_system → varies by composed parts) and references/composition-anatomy.md §3 for the three composition classes."
+  delivery_mechanism_fixed: composed_system
+  operational_nature_inherited: true
+  operational_nature_inherited_from: "sub-parts (agents, squads, hooks, output-styles, claude-md fragment)"
+  cognitive_depth_applicable: per_sub_part
+  cognitive_depth_applicable_reason: "A system itself has no cognitive architecture — it is a composition contract. Depth lives in each sub-agent and each sub-mind within the composition. The system's quality depends on composition discipline (D9 orchestrate-don't-execute, D10 handoff specification, D16 composability) not on depth."
+  runtime_host_derived: "varies-by-composed-parts"
+  locale_adaptive_clause_required: true
+  locale_adaptive_clause_source: references/locale-adaptive-clause.md
+  locale_adaptive_clause_required_reason: "Every forged system carries a runtime contract that propagates to ALL composed sub-parts: the CLAUDE.md fragment, each sub-agent, each sub-squad, each hook handler, and the output-style. Mirror the invoker's language in user-facing output while preserving structural markers in the source language. A system forged in PT-BR is installable by a French user as a complete organism: the composition contracts travel; every user-facing voice mirrors. Injected by /create during W2.6 into templates/system/ across all sub-part templates."
+  locale_adaptive_clause_consumer_status: aspirational
+  consumer_status: aspirational
+  consumer_status_reason: "Wave 2 W2.3-W2.5 consume this block per the standard routing, Stage 0, and drift-check enum paths. System-specific note: Stage 0 Intent Coherence for system type must recursively validate each sub-part's intent_declaration, not just the system's."
+
+# ===========================================================================
+# ARCHITECTURAL DIMENSIONS — 4 orthogonal coupling patterns (mental frame)
+# ===========================================================================
+
+architectural_dimensions:
+  rationale: "These 4 dimensions are the mental frame the creator applies BEFORE deciding which of the 13 engines to instantiate. Without the frame, a system is a list of features. With the frame, a system is an organism with layered capability at different scales and registers. Each dimension pairs or triples engines that are functionally orthogonal and must be present together."
+  dimensions_total: 4
+  dual_temporal_homeostasis:
+    one_line: The organism wakes pre-aligned at two time scales — once per session, once per agent spawn.
+    description: "Homeostasis at the system level (once per session, via SessionStart or Setup hook) combined with homeostasis at the agent level (once per agent spawn, via initialPrompt). Together these two scales ensure the organism is cognitively punctual — no agent pays preparation cost in the user's working time."
+    engines_touched: [E2, E4, E5]
+    temporal_regimes: [instant, operational]
+    pairs_with_patterns: [constitutional_homeostasis_via_session_hook, executable_boot_via_initial_prompt]
+    one_line_pedagogy: "Ask — when the user opens a new session, what state is the organism in BEFORE the user types anything? And when a new agent is spawned, what work has it already done BEFORE reading the user's request?"
+  dual_plasticity:
+    one_line: The organism adapts at install time and at operation time, on two orthogonal scales.
+    description: "Plasticity at install time via requiredMcpServers (phenotype tracks habitat) combined with plasticity at operation time via ephemeral mcpServers (temporary organs dissolve without trace). Two disjoint plasticities — adaptive to habitat at installation, adaptive to moment at operation."
+    engines_touched: [E0, E12, E6]
+    temporal_regimes: [operational, longitudinal]
+    pairs_with_patterns: [habitat_polymorphism_via_required_mcp, ephemeral_specialist_with_temporary_organ]
+    one_line_pedagogy: "Ask — does every user see the same visible form of this organism, or does the visible form depend on what the user's environment already contains? And does every invocation carry the same organs, or do some organs exist only for a single invocation?"
+  dual_cognition_brain_and_spine:
+    one_line: The organism has deliberate cognition (orchestrated squad) AND ambient reflexes (path-scoped conditional skills).
+    description: "Deliberate cognition via the orchestrator-plus-specialists pattern (brain — decides then acts) combined with ambient reflexes via path-scoped conditional skills (spine — triggered by environmental signals, cheap, fast, context-specific). A system with only brain is slow for routine contexts; with only reflexes, cannot do strategy."
+    engines_touched: [E5, E6, E7]
+    temporal_regimes: [instant, operational]
+    pairs_with_patterns: [stigmergic_reflex_via_path_scoped_skills]
+    one_line_pedagogy: "Ask — which responses are ambient reflexes that should fire automatically when the user touches a certain kind of file, and which responses are deliberate decisions the orchestrator should make? Name the split consciously."
+  triple_memory:
+    one_line: The organism has memory in three orthogonal registers — hereditary, procedural, declarative.
+    description: "Hereditary via skills preload (the agent is born knowing what the species learned, updated by editing the skill file). Procedural via STATE.yaml plus .meta.yaml plus memory scope files used for structured facts. Declarative via memory:project used for natural-language observations. Mixing functions across registers is an anti-pattern (AP-S6)."
+    engines_touched: [E3, E10, E11]
+    temporal_regimes: [instant, operational, longitudinal]
+    pairs_with_patterns: [bifasic_mnemonic_consciousness, phylogenetic_cognition_via_skills_preload, longitudinal_self_observation]
+    one_line_pedagogy: "Ask — what does this organism KNOW before any user arrives (hereditary), what does it TRACK during operation (procedural), what does it LEARN ABOUT ITSELF across sessions (declarative)?"
+
+# ===========================================================================
+# ORGANISMIC ENGINES — 13 functional engines + coupling meta-requirement
+# ===========================================================================
+
+organismic_engines:
+  total_engines: 13
+  meta_requirement: coupling_declaration_requirement
+  engines_mandatory_for_all_systems: [E0, E1, E2, E4, E9, E10, E12]
+  engines_optional_for_mcs1: [E3, E5, E6, E7, E8, E11]
+  engines_required_for_mcs3_apex: all
+
+  E0_operational_closure:
+    rank: 0
+    one_line: The declared boundary between inside and outside the organism — condition of possibility of all other engines.
+    native_mechanisms:
+    - "omitClaudeMd: true drops parent CLAUDE.md hierarchy [SOURCE: runAgent.ts:390-398]"
+    - "context: fork creates isolated conversation history [SOURCE: runAgent.ts:694-714]"
+    - "ephemeral mcpServers inline, cleaned up on agent exit [SOURCE: runAgent.ts:95-218, 817]"
+    - "tools ∩ ¬disallowedTools computed before spawn, fixed for lifetime [SOURCE: agentToolUtils.ts:15-37]"
+    - "isolation: worktree for physical FS isolation [SOURCE: loadAgentsDir.ts:607-621]"
+    couples_with: [E4]
+    couples_rationale: "The membrane only makes functional sense when there is something outside to perceive. Operational closure without environmental perception is a sealed chamber — technically bounded but operationally dead."
+    temporal_regimes: [instant, operational]
+    principles_enforced: [P2, P8]
+    dna_patterns_instantiated: [D3, D16, D18]
+    discovery_question: 1
+    codex_destination: "Forged system declares operational_closure section in CLAUDE.md fragment naming what is inside, what tool surface is closed, which sub-agents drop parent context."
+    consumer_status: fully-wired
+  E1_metabolic_budget:
+    rank: 1
+    one_line: The declared token cost at rest and in operation — the condition of continued life, not a function.
+    native_mechanisms:
+    - "paths frontmatter on skills stays dormant until matching files are touched [SOURCE: loadSkillsDir.ts:159-178, 826-1058]"
+    - "paths frontmatter on CLAUDE.md fragments stays dormant until matching files are present [SOURCE: claudemd.ts:253-279]"
+    - "omitClaudeMd drops 5-15 Gtok/week at fleet scale [SOURCE: runAgent.ts:390-398]"
+    - "Fork subagent cache byte-identical prefix [SOURCE: forkSubagent.ts:91-169]"
+    - "config.yaml token_budgets — ambient 4000, per_op 15000, ceiling 0.70"
+    couples_with: [E0]
+    couples_rationale: "A rigid membrane without metabolism is a coffin. Metabolism without membrane is continuous leakage. Co-conditions of the organism being alive AND being an organism."
+    temporal_regimes: [operational, longitudinal]
+    principles_enforced: [P3]
+    dna_patterns_instantiated: [D3, D20]
+    discovery_question: 4
+    codex_destination: "Forged system declares metabolic_budget section with at_rest tokens and in_operation tokens per invocation type."
+    consumer_status: fully-wired
+  E2_reinjected_constitution:
+    rank: 2
+    one_line: Active identity re-declared each turn — constitution as continuous work.
+    native_mechanisms:
+    - "criticalSystemReminder_EXPERIMENTAL re-injected at every user turn [SOURCE: runAgent.ts:711-714, verificationAgent.ts:150-151]"
+    - "CLAUDE.md re-loaded per turn, 4-tier hierarchy managed+user+project+local, reverse-priority order [SOURCE: claudemd.ts:1-16]"
+    - "initialPrompt prepended to first user turn of each agent spawn [SOURCE: loadAgentsDir.ts:123, 686-690]"
+    - "@include directive for modular composition [SOURCE: claudemd.ts:18-26]"
+    couples_with: [E1, E8]
+    couples_rationale: "Re-injection has metabolic cost that must be accounted for in E1. And the internal constitution re-declared must match the external voice (E8), or the organism lies about itself."
+    temporal_regimes: [instant]
+    principles_enforced: [P1, P5]
+    dna_patterns_instantiated: [D1, D19]
+    discovery_question: 2
+    codex_destination: "Forged system declares constitutional_reinjection section listing what is re-injected and on which event."
+    consumer_status: fully-wired
+  E3_triple_mnemonic_substrate:
+    rank: 3
+    one_line: Memory in three orthogonal registers — hereditary, procedural, declarative — serving disjoint functions.
+    native_mechanisms:
+    - "HEREDITARY — skills preload via skills frontmatter, injected as isMeta user messages [SOURCE: loadAgentsDir.ts:684, runAgent.ts:577-646]"
+    - "PROCEDURAL — STATE.yaml, .meta.yaml, memory:project for structured facts [SOURCE: loadAgentsDir.ts:456-467, 594-605]"
+    - "DECLARATIVE — memory:project for natural-language observations, auto-injected Write/Edit/Read [SOURCE: loadAgentsDir.ts:456-467, 662-674]"
+    - "Updating a preloaded skill updates all future agent spawns"
+    couples_with: [E10, E11]
+    couples_rationale: "The procedural register IS externalized state (E10) — same files, different angles. The declarative register is fed by longitudinal self-observation (E11) — without observation there is nothing to declare."
+    temporal_regimes: [instant, operational, longitudinal]
+    principles_enforced: [P6]
+    dna_patterns_instantiated: [D8, D12]
+    discovery_question: 3
+    codex_destination: "Forged system declares mnemonic_layers section with three sub-fields — hereditary, procedural, declarative — each naming the files and the function."
+    consumer_status: fully-wired
+  E4_environmental_perception:
+    rank: 4
+    one_line: Ability to sense what changed in the world — via the 27 canonical hook events.
+    native_mechanisms:
+    - "27 canonical hook events in the SDK core types [SOURCE: coreTypes.ts:25-53, coreSchemas.ts:355-385]"
+    - "4 hook types — BashCommandHook, PromptHook, HttpHook, AgentHook — with if matching via permission rule syntax [SOURCE: schemas/hooks.ts:31-163, 19-27]"
+    - "SessionStart and Setup are ALWAYS emitted regardless of matchers [SOURCE: hookEvents.ts:18]"
+    - "SubagentStart hook injects additionalContexts into child agent spawn [SOURCE: runAgent.ts:532-555]"
+    couples_with: [E0, E5]
+    couples_rationale: "Perception needs a boundary to distinguish inside from outside (E0), and perception needs a reflex layer to turn signals into reactions (E5). An eye without a membrane is dissolution; an eye without a reflex is a passive sensor."
+    temporal_regimes: [instant]
+    principles_enforced: [P7]
+    dna_patterns_instantiated: [D17]
+    discovery_question: 8
+    codex_destination: "Forged system declares environmental_perception section with list of bound hook events from the canonical 27."
+    consumer_status: fully-wired
+  E5_declared_cognitive_reflex:
+    rank: 5
+    one_line: Automatic reactions to perceptions — including reactions that involve judgment, via AgentHook.
+    native_mechanisms:
+    - "AgentHook spawns a full agent to react — cognitive reflex [SOURCE: schemas/hooks.ts:128-163]"
+    - "PromptHook makes the LLM evaluate a condition — semantic reflex [SOURCE: schemas/hooks.ts:67-96]"
+    - "BashCommandHook executes a shell side effect [SOURCE: schemas/hooks.ts:31-66]"
+    - "HttpHook fires a webhook [SOURCE: schemas/hooks.ts:97-126]"
+    couples_with: [E6, E4]
+    couples_rationale: "A reflex without isolated judgment is rigidity — fast but context-blind. Judgment without reflex is slowness — every routine event goes through deliberation. Together with perception (E4) they form the sensorimotor cognitive chain."
+    temporal_regimes: [instant]
+    principles_enforced: [P2, P5]
+    dna_patterns_instantiated: [D14, D17]
+    discovery_question: 8
+    codex_destination: "Forged system declares cognitive_reflexes section with a table of threats handled by reflex versus threats handled by judgment."
+    consumer_status: fully-wired
+  E6_isolated_judgment:
+    rank: 6
+    one_line: Specialized decision units in forked context with restricted tools and own constitution.
+    native_mechanisms:
+    - "context: fork creates isolated context window [SOURCE: runAgent.ts:694-714]"
+    - "tools intersection with disallowedTools per agent [SOURCE: agentToolUtils.ts:15-37]"
+    - "forkContextMessages parameter for context inheritance decisions [SOURCE: runAgent.ts:248-329]"
+    - "7 archetypes from agent.yaml (SCOUT, ARCHITECT, GENERALIST, SPECIALIST, ADVISER, ORCHESTRATOR, FORK-HEIR)"
+    couples_with: [E7, E5]
+    couples_rationale: "Isolated judgment without a coordination network (E7) is a set of independent opinions, not a system. Judgment must be coupled with reflex (E5) so routine contexts do not burden judgment."
+    temporal_regimes: [operational]
+    principles_enforced: [P1, P2, P4]
+    dna_patterns_instantiated: [D6, D9, D11, D18]
+    discovery_question: 7
+    codex_destination: "Forged system declares isolated_judgment section with cardinality of forked contexts, inheriting from squad.yaml and agent.yaml archetypes."
+    consumer_status: fully-wired
+  E7_coordinated_network:
+    rank: 7
+    one_line: Auditable connective tissue between specialized judgments — routes without commanding.
+    native_mechanisms:
+    - "routing.yaml declarative routing consumed by squad orchestrators"
+    - "handoff_format_spec XML envelope for Task spawns"
+    - "install_manifest multi-target copy for cross-sub-part coordination"
+    - "Native parallelism via multiple Task calls in one assistant turn [SOURCE: AgentTool/prompt.ts:271]"
+    couples_with: [E8, E6]
+    couples_rationale: "A network without nodes (E6) is empty. A network without an external voice (E8) is a closed circuit the outside cannot observe — the organism is mute."
+    temporal_regimes: [operational]
+    principles_enforced: [P3, P4, P9]
+    dna_patterns_instantiated: [D9, D10, D12]
+    discovery_question: 7
+    codex_destination: "Forged system inherits routing_table_schema and handoff_format_spec from squad.yaml for each composed sub-squad, plus declares system-level routing between sub-squads."
+    consumer_status: fully-wired
+  E8_external_voice:
+    rank: 8
+    one_line: The signature of external identity — how the organism announces itself to the world.
+    native_mechanisms:
+    - "output-style.yaml codex consumed when the system ships an output-style sub-part"
+    - "CLAUDE.md fragment prose itself carries the voice in its phrasing"
+    - "Sub-agent description fields shown in the Task catalog are the first line of voice"
+    couples_with: [E2, E7]
+    couples_rationale: "The external voice is the external manifestation of the internal constitution (E2). If they diverge, the organism is lying about itself. The coordination network (E7) produces the voice; it must match the internal structure."
+    temporal_regimes: [operational]
+    principles_enforced: [P8]
+    dna_patterns_instantiated: [D13]
+    discovery_question: 5
+    codex_destination: "Forged system declares external_voice section pointing to the output-style sub-part it ships (if any), plus the CLAUDE.md fragment voice characteristics."
+    consumer_status: partial
+    consumer_status_reason: "Engine composes output-style as a sub-part but /validate does not yet check coherence between constitutional content and external voice. Wave 3 adds a coherence check."
+  E9_recursive_integrity:
+    rank: 9
+    one_line: The organism passes its own validator when pointed at itself — the recursive integrity principle made material.
+    native_mechanisms:
+    - "/validate --target=self is the Engine's canonical dogfood invocation against any codex"
+    - "recursion_proof section declared below with blocks_publish: true"
+    - "AgentHook as verifier is aspirational — Wave 3 work"
+    couples_with: [E11]
+    couples_rationale: "Recursive integrity is point-in-time — it tests the organism at a moment. Longitudinal self-observation (E11) is continuous — it tracks the organism across moments. Same principle, different time scales."
+    temporal_regimes: [operational, longitudinal]
+    principles_enforced: [P9]
+    dna_patterns_instantiated: [D4, D11, D15]
+    discovery_question: 6
+    codex_destination: "Forged system declares recursion_proof section and ships a recursion_proof.md or equivalent demonstration file."
+    consumer_status: fully-wired
+  E10_externalized_persistent_state:
+    rank: 10
+    one_line: Serialized artifacts that survive compaction, reinstallation, and update.
+    native_mechanisms:
+    - "STATE.yaml at organism root — Engine convention"
+    - ".meta.yaml per composed sub-part — Engine convention"
+    - "install_manifest.lock computed at install time — hash-verified"
+    - "memory scope files [SOURCE: loadAgentsDir.ts:456-467]"
+    - "CLAUDE.md fragment as a disk file re-loaded per turn [SOURCE: claudemd.ts:1-16]"
+    - "settings.local.json hooks fragment as a disk file"
+    couples_with: [E1, E3]
+    couples_rationale: "Externalized state has IO cost that must be declared in E1. And the procedural and declarative registers of E3 ARE the externalized state viewed functionally."
+    temporal_regimes: [operational, longitudinal]
+    principles_enforced: [P6]
+    dna_patterns_instantiated: [D8]
+    discovery_question: 3
+    codex_destination: "Forged system declares state_persistence section with explicit survival matrix — for each artifact, does it survive /compact, session end, reinstall, Claude Code update."
+    consumer_status: fully-wired
+  E11_longitudinal_self_observation:
+    rank: 11
+    one_line: Continuous auto-narrative built by an observer spawned via hook-agent.
+    native_mechanisms:
+    - "PostToolUse hook binding to an AgentHook [SOURCE: schemas/hooks.ts:128-163, coreTypes.ts:25-53]"
+    - "memory:project declared on the observer sub-agent [SOURCE: loadAgentsDir.ts:456-467, 594-605]"
+    - "TaskCompleted event as alternate binding point for post-task narration"
+    - "forkContextMessages lets the observer read parent conversation [SOURCE: runAgent.ts:248-329]"
+    couples_with: [E3, E9]
+    couples_rationale: "Longitudinal observation feeds the declarative register of E3 — without observation there is nothing to declare. And E11 is E9 made continuous — same principle extended across time."
+    temporal_regimes: [longitudinal]
+    principles_enforced: [P5, P9]
+    dna_patterns_instantiated: [D11, D12]
+    discovery_question: 6
+    codex_destination: "Forged system at apex level declares longitudinal_self_observation section with hook binding, observer sub-agent definition, and memory scope it writes to. Optional at lower quality tiers."
+    consumer_status: partial
+    consumer_status_reason: "The composition is possible with verified native primitives but /validate does not yet check the PostToolUse+AgentHook+memory:project composition as a recognized pattern. The mechanism by which the observer reads the parent's conversation is documented but needs Wave 3 verification."
+  E12_reversible_lifecycle:
+    rank: 12
+    one_line: Install, operate, uninstall as symmetric audited acts via install_manifest and manifest-lock.
+    native_mechanisms:
+    - "install_manifest declarative (myClaude convention, squad.yaml precedent)"
+    - "install_manifest.lock hash-verified per target"
+    - "myclaude install and myclaude uninstall symmetric acts (CLI Wave 3)"
+    - "append kind uses BEGIN/END markers for idempotent removal"
+    - "merge kind tracks added keys for exact reversal"
+    couples_with: [E1]
+    couples_rationale: "Install has one-time metabolic cost. Operate has continuing metabolic cost. Uninstall has terminal metabolic cost. E12 and E1 must agree on the shape of these costs."
+    temporal_regimes: [operational, longitudinal]
+    principles_enforced: [P3, P9]
+    dna_patterns_instantiated: [D16]
+    discovery_question: 9
+    epistemic_warning: "Reversibility is an adjunct property, not a definition of viability. A system that never drifts is a system that never evolves, and systems that do not evolve eventually die when the environment shifts. Celebrate reversibility; do not confuse it with health."
+    codex_destination: "Forged system inherits install_manifest from squad.yaml and extends with system-specific multi-destination dispatch."
+    consumer_status: aspirational
+    consumer_status_reason: "install_manifest convention is documented across squad.yaml and system.yaml but the myclaude CLI does not yet consume it. Wave 3 teaches the CLI to read install_manifest and perform multi-target copy with manifest-lock generation."
+
+# ===========================================================================
+# COUPLING DECLARATION REQUIREMENT — the meta-requirement
+# ===========================================================================
+
+coupling_declaration_requirement:
+  rule: "For every engine active in a forged system, the creator MUST declare a non-empty couples_with field naming 1 to 3 functional counterpart engines, plus a couples_rationale explaining what useful flow the coupling produces. An engine without declared couplings is a drawer; an engine with declared couplings is an organ."
+  enforced_by:
+  - lifecycle.validate.type_specific.per_stage_hooks.stage_5_dna_tier3
+  - dna_patterns.tier1.D2
+  - anti_patterns_catalog.orchestration_failures.AP_S1_pile_without_couplings
+  blocks_forge_when: Any engine declared in the forged system's organismic_engines section has couples_with empty OR missing rationale OR coupling references a non-declared engine.
+  reciprocity_hint: "When engine E_a declares couples_with [E_b], engine E_b SHOULD either declare couples_with containing E_a OR explicitly document the asymmetry in its couples_rationale. Reciprocity is the default; asymmetry must be named."
+  consumer_status: aspirational
+  consumer_status_reason: "Wave 3 teaches /validate to parse the organismic_engines section of a forged system, verify every active engine has a non-empty couples_with, and cross-check reciprocity."
+
+# ===========================================================================
+# ADVANCED COMPOSITION PATTERNS — the 8 brechas
+# ===========================================================================
+
+advanced_composition_patterns:
+  total_patterns: 8
+  canonical_example: constitutional_homeostasis_via_session_hook
+  canonical_example_rationale: "Chosen because (1) it instantiates the thesis directly — a SessionStart hook IS an executive prohibition channeling the organism into the useful flow of waking pre-aligned; (2) it touches five engines simultaneously — E0, E2, E3, E4, E9; (3) it is invisible to the end user — the user opens a session and the system is simply ready, without visible preparation. Silent excellence is the criterion."
+
+  constitutional_homeostasis_via_session_hook:
+    one_line: The organism wakes pre-aligned via a SessionStart hook that spawns a verifier which reads state and updates the constitution before the user acts.
+    primitives_combined:
+    - "SessionStart event [SOURCE: coreTypes.ts:25-53]"
+    - "AgentHook type [SOURCE: schemas/hooks.ts:128-163]"
+    - "criticalSystemReminder_EXPERIMENTAL [SOURCE: runAgent.ts:711-714]"
+    - "STATE.yaml as procedural memory"
+    - "SubagentStart hook injecting additionalContexts into subsequent spawns [SOURCE: runAgent.ts:532-555]"
+    when_to_use: "When the organism has non-trivial state and the constitution appropriate to the user's next action depends on that state. Buys cognitive punctuality."
+    when_NOT_to_use: "When state is trivial OR when the verifier would cost more tokens than inline verification. The pattern has metabolic cost at every session boot; justify it against E1."
+    coupled_with_engines: [E0, E2, E3, E4, E9]
+    consumer_status: fully-wired
+
+  ephemeral_specialist_with_temporary_organ:
+    one_line: A sub-agent spawned for one invocation with an ephemeral MCP server that dissolves on agent exit.
+    primitives_combined:
+    - "context: fork [SOURCE: runAgent.ts:694-714]"
+    - "mcpServers inline ephemeral object [SOURCE: runAgent.ts:95-218]"
+    - "FINALLY block cleanup guaranteed [SOURCE: runAgent.ts:817]"
+    when_to_use: "When a specialist needs an integration (Slack, GitHub, custom tool) that should exist only during invocation. The parent never pays ambient cost."
+    when_NOT_to_use: "When the integration is reused across many invocations — spawn cost is paid per call and can exceed amortized cost of a persistent shared server."
+    coupled_with_engines: [E0, E1, E6]
+    consumer_status: fully-wired
+
+  stigmergic_reflex_via_path_scoped_skills:
+    one_line: Path-scoped skills dormant until matching files are touched, producing coordinated reflex behavior via environmental signals.
+    primitives_combined:
+    - "paths frontmatter on skills in conditionalSkills map [SOURCE: loadSkillsDir.ts:159-178, 826-1058]"
+    - "activateConditionalSkillsForPaths on Read/Write/Edit [SOURCE: loadSkillsDir.ts:997-1058]"
+    - "Gitignored directories skipped [SOURCE: loadSkillsDir.ts:892-897]"
+    - "paths frontmatter on CLAUDE.md rules [SOURCE: claudemd.ts:253-279]"
+    when_to_use: "When the organism's routine behavior is context-dependent and should not require the orchestrator to decide whether to activate it."
+    when_NOT_to_use: "When the specialist should NOT be discoverable from file touch — for example, a security auditor that should run only under explicit invocation."
+    coupled_with_engines: [E1, E4, E5]
+    consumer_status: fully-wired
+
+  executable_boot_via_initial_prompt:
+    one_line: An agent that runs a pre-programmed initialization sequence via initialPrompt before accepting user input.
+    primitives_combined:
+    - "initialPrompt prepended to first user turn [SOURCE: loadAgentsDir.ts:123, 686-690]"
+    - "slash commands work inside initialPrompt"
+    - "skills preload runs before initialPrompt [SOURCE: runAgent.ts:577-646]"
+    when_to_use: "When the agent needs deterministic preparation (load project context, read a specific file, verify state) before the user can make a request. Buys agent-spawn punctuality."
+    when_NOT_to_use: "When preparation steps can fail in variable ways — fixed action patterns are FRAGILE in variable contexts. MUST be coupled with declared graceful degradation (D14)."
+    coupled_with_engines: [E2]
+    critical_warning: "Without D14 graceful degradation explicitly paired, the agent that boots executing a fragile protocol dies without ever hearing the user. Every system adopting this pattern MUST declare the degradation path."
+    consumer_status: fully-wired
+
+  habitat_polymorphism_via_required_mcp:
+    one_line: The same organism appears in different visible forms depending on which MCP servers the user has configured — phenotype tracks habitat.
+    primitives_combined:
+    - "requiredMcpServers pattern list on agents [SOURCE: loadAgentsDir.ts:125, 229-242]"
+    - "Agent filtered from selectable list if patterns do not match — case-insensitive substring"
+    when_to_use: "When the organism has optional specialists that only make sense in certain habitats. Enables graceful coexistence with other systems via niche specialization."
+    when_NOT_to_use: "When the specialist is core to the organism's identity — filtering hides it from the user, confusing what the system can do."
+    coupled_with_engines: [E0, E12]
+    consumer_status: fully-wired
+
+  bifasic_mnemonic_consciousness:
+    one_line: Explicit declaration of which memory content is procedural versus declarative, with the two registers kept non-overlapping.
+    primitives_combined:
+    - "STATE.yaml and .meta.yaml for procedural register"
+    - "memory:project for declarative register [SOURCE: loadAgentsDir.ts:456-467, 594-605]"
+    - "auto-injection of Write/Edit/Read when memory scope declared [SOURCE: loadAgentsDir.ts:662-674]"
+    when_to_use: "In any system where the organism both tracks facts AND learns patterns. Prevents mnemonic layer collapse (AP-S6)."
+    when_NOT_to_use: "In trivial systems where the organism only tracks one kind of information."
+    coupled_with_engines: [E3, E10]
+    consumer_status: fully-wired
+
+  phylogenetic_cognition_via_skills_preload:
+    one_line: Agents born with preloaded skills — knowledge inscribed at the species level, updated by editing the skill file.
+    primitives_combined:
+    - "skills frontmatter field on agents [SOURCE: loadAgentsDir.ts:684]"
+    - "runAgent injects skill content as isMeta user messages before first turn [SOURCE: runAgent.ts:577-646]"
+    - "Skill name resolution via 3-strategy algorithm [SOURCE: runAgent.ts:945-973]"
+    when_to_use: "When a specialist needs deep domain knowledge shared across many invocations but not hard-coded in the agent body."
+    when_NOT_to_use: "When the knowledge is ephemeral or user-specific — preloaded skills are for domain knowledge true across users."
+    coupled_with_engines: [E3, E6]
+    consumer_status: fully-wired
+
+  longitudinal_self_observation:
+    one_line: An observer sub-agent spawned by a PostToolUse AgentHook that writes narrative observations into memory:project.
+    primitives_combined:
+    - "PostToolUse event [SOURCE: coreTypes.ts:25-53]"
+    - "AgentHook spawning full observer [SOURCE: schemas/hooks.ts:128-163]"
+    - "memory:project on observer [SOURCE: loadAgentsDir.ts:456-467]"
+    - "TaskCompleted event as alternate binding"
+    when_to_use: "At apex systems where the organism needs auto-narrative across sessions — creator reads the dossier and uses it to update the constitution."
+    when_NOT_to_use: "At lower quality tiers — significant complexity and token cost. Apex feature, not baseline."
+    coupled_with_engines: [E3, E9, E11]
+    consumer_status: partial
+    consumer_status_reason: "Composition uses verified native primitives but the mechanism by which the observer reads the parent's conversation needs Wave 3 verification — likely via SubagentStart additionalContexts or forkContextMessages."
+
+# ===========================================================================
+# ARCHETYPES — 5 canonical organism shapes
+# ===========================================================================
+
+archetypes:
+  selection_required: true
+  selection_phase: lifecycle.create.type_specific.discovery_phase
+  selection_question: "Which organism archetype best matches the system you are forging?"
+  hybrid_policy: "Identify the dominant archetype. Use secondary traits for enrichment. Never declare two equal archetypes."
+  cognitive_organism:
+    when_to_use: "The default. A full stack composing constitution + orchestration + reflexes + memory + voice, with all 13 engines active at varying depths. Used when the creator is shipping the complete organism."
+    mandatory_engines: [E0, E1, E2, E3, E4, E9, E10, E12]
+    recommended_engines: [E5, E6, E7, E8]
+    optional_engines: [E11]
+    typical_dimensions: [dual_temporal_homeostasis, triple_memory]
+    examples_by_domain:
+    - "A domain-expert advisor organism (constitution + specialist squad + reflex on PostToolUse + memory:project for domain patterns)"
+    - "A multi-mode development environment (constitution + workflow state machine + conditional skills + hooks for lifecycle)"
+    validation_checklist:
+    - "All 8 mandatory engines are declared in organismic_engines with non-empty couples_with"
+    - "recursion_proof section exists with demonstration"
+    - "CLAUDE.md fragment under 4000 chars or uses @include composition"
+    - "install_manifest dispatches to at least 3 distinct native destinations"
+  defensive_perimeter:
+    when_to_use: "When the primary job of the organism is boundary enforcement — audit, security, policy verification. Emphasis on E0 operational closure, E4 environmental perception, E5 cognitive reflex."
+    mandatory_engines: [E0, E1, E2, E4, E5, E9, E10, E12]
+    recommended_engines: [E6]
+    optional_engines: [E3, E7, E8, E11]
+    typical_dimensions: [dual_cognition_brain_and_spine]
+    examples_by_domain:
+    - "A security audit organism that hooks PreToolUse on Bash + Write and spawns an AgentHook verifier"
+    - "A compliance organism that hooks PostToolUse and checks every change against declared rules"
+    validation_checklist:
+    - "E4 declares at least 3 bound hook events from the canonical 27"
+    - "E5 declares at least one AgentHook or PromptHook"
+    - "Every reflex has a declared degradation path (D14)"
+  observatorium:
+    when_to_use: "When the primary job is longitudinal observation — the organism watches, records, learns patterns, and surfaces insights without intervening. Emphasis on E11 longitudinal self-observation and E3 declarative register."
+    mandatory_engines: [E0, E1, E2, E3, E4, E9, E10, E11, E12]
+    recommended_engines: [E5]
+    optional_engines: [E6, E7, E8]
+    typical_dimensions: [triple_memory]
+    examples_by_domain:
+    - "A project-health observatorium that runs post-tool-use observers and surfaces patterns weekly"
+    - "A learning-extraction organism that watches the creator's work and builds a domain map over time"
+    validation_checklist:
+    - "E11 is declared and the observer sub-agent is defined"
+    - "E3 declarative register maps to memory:project"
+    - "No active write-intervention engines OR intervention requires explicit creator opt-in"
+  stigmergic_workshop:
+    when_to_use: "When the primary job is context-reactive specialist activation — path-scoped skills and rules that surface only when the user touches relevant files. Emphasis on brecha #3 stigmergic reflex and the dual cognition dimension."
+    mandatory_engines: [E0, E1, E2, E4, E5, E9, E10, E12]
+    recommended_engines: [E3, E6]
+    optional_engines: [E7, E8, E11]
+    typical_dimensions: [dual_cognition_brain_and_spine]
+    examples_by_domain:
+    - "A polyglot development organism with language-specific specialists that activate on file extension"
+    - "A framework-specialized organism where the framework's conventions are ambient only when framework files are touched"
+    validation_checklist:
+    - "At least 2 sub-skills declare paths frontmatter"
+    - "Ambient cost at rest (no matching files) is near zero"
+    - "Conditional activation documented in the CLAUDE.md fragment"
+  autonomic_agent_council:
+    when_to_use: "When the primary job is multi-specialist advisory coordination — the organism composes multiple distinct specialist agents that the user or an orchestrator consults. Emphasis on E6 isolated judgment and E7 coordinated network."
+    mandatory_engines: [E0, E1, E2, E4, E6, E7, E9, E10, E12]
+    recommended_engines: [E5, E8]
+    optional_engines: [E3, E11]
+    typical_dimensions: [dual_cognition_brain_and_spine]
+    examples_by_domain:
+    - "A multi-expert review organism (security + architecture + style + performance advisors)"
+    - "A research council where each specialist owns a research angle and returns synthesized findings"
+    validation_checklist:
+    - "At least 3 sub-agents declared, each with its own archetype from agent.yaml"
+    - "routing.yaml at system root coordinating the council"
+    - "handoff_format_spec declared in the system-level CLAUDE.md fragment"
+  consumer_status: aspirational
+  consumer_status_reason: "/create does not yet ask for system archetype. Wave 3 teaches /create to ask archetype first and inject archetype-specific scaffolds."
+
+# ===========================================================================
+# DISCOVERY QUESTIONS — 9 mandatory in order
+# ===========================================================================
+
+discovery_questions:
+  source_of_truth: this file
+  required_in_order:
+  - id: Q1
+    question: "Operational closure — what defines the inside of this organism? What is within the membrane and what is outside?"
+    engine: E0
+    rationale: "The first field in any organism is its boundary. Without a declared inside and outside, there is no organism to forge."
+  - id: Q2
+    question: "Productive asymmetry — for each capability this organism declares, what is the executive prohibition that channels it, and what useful flow does that prohibition produce?"
+    engine: E2
+    rationale: "Directly instantiates the thesis. A capability without a named prohibition is a drawer, not an organ."
+  - id: Q3
+    question: "Survival checklist — which artifacts of this organism must survive /compact, session end, reinstall, and update? List them explicitly."
+    engine: E10
+    rationale: "Forces explicit declaration of the externalized state surface."
+  - id: Q4
+    question: "Metabolism — what is the token cost at rest and in operation? How do path-scoped components stay dormant until needed?"
+    engine: E1
+    rationale: "Metabolism is the condition of being alive, not a function. Explicit declaration prevents ambient-cost creep."
+  - id: Q5
+    question: "External voice — what is the signature of identity this organism presents to the external world? How does it announce itself?"
+    engine: E8
+    rationale: "Voice is identity as observed from outside. Without declaration, the organism is performed inconsistently."
+  - id: Q6
+    question: "Recursion — does this organism pass its own validator when pointed at itself? Demonstrate in a recursion_proof section."
+    engine: E9
+    rationale: "Forge-time gate. A tool that fails its own validator cannot be trusted to validate others."
+  - id: Q7
+    question: "Context cardinality — how many forked contexts does this organism require to be one coherent thing? Justify the number."
+    engine: E6
+    rationale: "Forces the creator to think in multi-context architecture from the start, not as a later optimization."
+  - id: Q8
+    question: "Reflex versus judgment — which threats are handled by reflex (hooks) versus by judgment (agents)? Is the split conscious?"
+    engine: E5
+    rationale: "The brain-and-spine dimension. The split determines where latency and cost live."
+  - id: Q9
+    question: "Ecological coexistence — is this organism designed to coexist with other installed systems? How does it declare its niche, namespace conflicts, and composition boundaries?"
+    engine: E12
+    rationale: "A single user runs many installed products. Unnamed conflicts destroy coexistence silently."
+  depth_set:
+  - "What is the cardinality of sub-squads in this organism, and why that number?"
+  - "Which of the 8 advanced composition patterns are adopted and why?"
+  - "What is the fallback when the recursion proof fails mid-validation?"
+  - "How does this organism behave when its hooks fragment conflicts with another installed organism's hooks fragment?"
+  - "What is the longitudinal observation strategy, if any?"
+  consumer_status: partial
+  consumer_status_reason: "The 9 required_in_order questions are the canonical scaffolding input, but /create does not yet walk them in strict order — Wave 3 teaches /create to iterate the 9 in the declared order before scaffolding."
+
+# ===========================================================================
+# LIFECYCLE — 10 skills × universal contract + system-specific type_specific
+# ===========================================================================
+
+lifecycle:
+  map:
+    role: "Extract the creator's organism-scale expertise into domain-map.md, decomposing the workflow into the 13 engines and 4 dimensions."
+    optional: true
+    inputs:
+    - creator.yaml
+    - domain topic seed ($ARGUMENTS)
+    outputs:
+    - workspace/domain-map.md
+    blocks_when: []
+    consumer_status: aspirational
+    consumer_status_reason: "/map does not yet consult system-specific decomposition prompts per the 13 engines."
+    next_action: null
+    next_action_reason: "read-only skill"
+    type_specific:
+      skip_recommended: false
+      skip_message: "For systems, /map is valuable when the creator has workflow expertise but has not yet decomposed it into engine-by-engine shape."
+      system_specific_prompts:
+      - "What does this organism refuse to do? (boundary question — feeds E0)"
+      - "What is the organism's state between sessions, and where does it live? (feeds E10)"
+      - "What should happen automatically when the user starts a session? (feeds E2 + E4)"
+      - "What specialist knowledge should be preloaded into sub-agents before they read any user input? (feeds E3 hereditary)"
+      - "How does this organism coexist with other installed products? (feeds Q9)"
+  scout:
+    role: "Research existing systems in the marketplace and existing composable sub-parts. Prevents reinventing organisms that exist."
+    optional: true
+    inputs:
+    - creator.yaml
+    - domain query ($ARGUMENTS)
+    outputs:
+    - workspace/scout-{slug}.md
+    - STATE.yaml.last_scout updated
+    blocks_when: []
+    consumer_status: aspirational
+    consumer_status_reason: "/scout does not yet calibrate for system-specific composability research."
+    next_action: null
+    next_action_reason: "read-only research skill"
+    type_specific:
+      skip_recommended: false
+      skip_message: "Skipping /scout for systems is risky — systems are the most likely type to reinvent existing compositions."
+      scout_calibration_for_systems:
+      - "Scan the marketplace for existing organisms in the same domain"
+      - "Scan for composable sub-parts (squads, agents, skills, claude-md products, hooks products) that the new system could reuse"
+      - "Identify composable gaps versus what must be forged new"
+  import:
+    role: "Bring an existing system directory from a workspace install target into the Engine workspace for validation, packaging, republish."
+    optional: true
+    inputs:
+    - "Source directory containing CLAUDE.md + STATE.yaml + config/routing.yaml + (agents/ OR squads/ OR skills/)"
+    - creator.yaml
+    outputs:
+    - workspace/{slug}/ (full directory imported preserving constitution, state, routing, sub-parts)
+    - workspace/{slug}/.meta.yaml (state auto-detected)
+    blocks_when:
+    - workspace/{slug}/ already exists (no --force)
+    - Source has no CLAUDE.md
+    - Source has no STATE.yaml
+    consumer_status: partial
+    consumer_status_reason: "/import SKILL.md detection table now includes the system signature (CLAUDE.md + STATE.yaml + config/routing.yaml) after S118c update. Full inheritance walker not yet implemented."
+    next_action: "/validate {slug}"
+    type_specific:
+      detection_pattern: "directory containing CLAUDE.md + STATE.yaml + config/routing.yaml + at least one of agents/ squads/ skills/"
+      rename_on_import: null
+      rename_on_import_reason: "Systems use the same filename convention in workspace and install — no rename needed during import."
+      auto_detected_phase: content
+  create:
+    role: "Run the creation cycle for systems — 9 discovery questions in order, engine activation selection, archetype selection, sub-part roster declaration, scaffold of CLAUDE.md fragment, STATE.yaml skeleton, config/routing.yaml, install-manifest.yaml, and the sub-part directories."
+    optional: false
+    inputs:
+    - creator.yaml
+    - type
+    - slug
+    - archetype
+    - engine_activation_table
+    - sub_part_roster
+    - scout_report
+    - domain_map
+    - discovery_answers
+    outputs:
+    - workspace/{slug}/CLAUDE.md (constitutional fragment scaffold)
+    - workspace/{slug}/STATE.yaml (state skeleton)
+    - workspace/{slug}/config/routing.yaml (routing scaffold)
+    - workspace/{slug}/install-manifest.yaml (multi-destination dispatch scaffold)
+    - workspace/{slug}/agents/ (if archetype requires sub-agents)
+    - workspace/{slug}/squads/ (if archetype requires sub-squads)
+    - workspace/{slug}/hooks.json (if hooks fragment required)
+    - workspace/{slug}/README.md (4-section skeleton)
+    - workspace/{slug}/.meta.yaml (state scaffold, archetype recorded, engines_active recorded)
+    blocks_when:
+    - slug invalid
+    - workspace/{slug}/ exists without --force
+    - creator.yaml missing AND micro-onboard fails
+    - archetype not selected
+    - engines_active table empty
+    - any declared engine has empty couples_with
+    consumer_status: aspirational
+    consumer_status_reason: "/create does not yet scaffold system sub-parts. Wave 3 extends /create with system-specific scaffolding that walks the 9 discovery questions in order, iterates the engine activation table, and generates the multi-part structure."
+    next_action: "/fill {slug}"
+    type_specific:
+      activates_templates:
+      - templates/system/CLAUDE.md.template
+      - templates/system/STATE.yaml.template
+      - templates/system/config/routing.yaml.template
+      - templates/system/install-manifest.yaml.template
+      - templates/system/hooks.json.template
+      - templates/system/README.md.template
+      activates_dna_at_scaffold:
+      - D1
+      - D2
+      - D3
+      - D4
+      - D13
+      - D14
+      - D19
+      - D20
+      discovery_phase:
+        questions_source: this file → discovery_questions.required_in_order
+        questions_walked_in_order: true
+        archetype_selection_required: true
+        archetype_first: true
+        archetype_first_reason: "Archetype determines which engines are mandatory, which dimensions are typical, and which sub-parts the scaffold must create."
+        engine_activation_phase: "After archetype selection, the creator declares engines_active table and for each engine declares couples_with with rationale."
+      read_before_write_ratio: "10:1 — reads creator.yaml + scout + this codex + squad.yaml + agent.yaml + skill.yaml + structural-dna.md + ground-truth.md + config.yaml + template files before writing CLAUDE.md + sub-part files."
+      ground_truth_required: true
+      inherits_from:
+      - squad.yaml (routing, handoff, install_manifest)
+      - agent.yaml (sub-agent frontmatter, archetypes, token budgets)
+      - skill.yaml (conditional activation, hub-and-spoke structure)
+  fill:
+    role: "Walk the CLAUDE.md fragment sections plus STATE.yaml schema plus routing.yaml plus install-manifest.yaml plus every sub-part sequentially. Systems have the deepest fill of all types."
+    optional: false
+    inputs:
+    - workspace/{slug}/ (all files)
+    - workspace/{slug}/.meta.yaml
+    - creator.yaml
+    - scout report
+    - domain-map.md
+    - this file (sections_walked)
+    - squad.yaml (per-sub-squad walker)
+    - agent.yaml (per-sub-agent walker)
+    outputs:
+    - All files filled
+    - workspace/{slug}/.meta.yaml (state content, fill_progress updated, fill_metrics recorded)
+    blocks_when: []
+    consumer_status: aspirational
+    consumer_status_reason: "/fill does not yet know how to walk a system bundle with multiple sub-parts across agents/squads/hooks/claude-md-fragment/output-style. Wave 3 teaches /fill to iterate sub-parts."
+    next_action: "/validate {slug}"
+    type_specific:
+      sections_walked:
+      - name: Organism Identity (CLAUDE.md fragment portico)
+        why: Vitruvian declaration of what 'system' means in this organism, plus the one-line thesis of what this organism IS
+        sparring_required: true
+      - name: Engine Activation Table
+        why: Which of the 13 engines are active in this organism, with couples_with declared for each
+        sparring_required: true
+        sparring_minimum: 2
+      - name: Operational Closure Declaration
+        why: What is inside, what is outside, what is the membrane
+        sparring_required: true
+      - name: Metabolic Budget
+        why: At-rest cost plus per-invocation cost plus dormancy mechanisms
+        sparring_required: true
+      - name: Constitutional Re-injection
+        why: What is re-injected each turn, in what event
+        sparring_required: true
+      - name: Mnemonic Layers (triple register)
+        why: Hereditary + procedural + declarative registers, explicit function separation
+        sparring_required: true
+      - name: Environmental Perception (bound hook events)
+        why: Which of the 27 hook events this organism binds, and what each triggers
+        sparring_required: true
+      - name: Cognitive Reflexes vs Judgment
+        why: Threats handled by reflex vs by judgment, explicit split
+        sparring_required: true
+      - name: Isolated Judgment Cardinality
+        why: How many forked contexts, why that number
+        sparring_required: false
+      - name: Coordinated Network (system-level routing)
+        why: If more than one sub-squad, how they coordinate at the system level
+        sparring_required: false
+      - name: External Voice
+        why: Signature of identity, composed output-style reference
+        sparring_required: false
+      - name: Recursion Proof
+        why: Demonstration of /validate --target=self pass
+        sparring_required: true
+      - name: State Persistence Survival Matrix
+        why: Per-artifact declaration of what survives /compact, session end, reinstall, update
+        sparring_required: true
+      - name: Ecological Coexistence
+        why: How this organism coexists with other installed products
+        sparring_required: true
+      - name: Each Sub-Squad (per squad.yaml.lifecycle.fill.sections_walked)
+        why: Recursively fill each composed sub-squad
+        sparring_required: true
+        iteration: per_sub_squad
+      - name: Each Sub-Agent (per agent.yaml.lifecycle.fill.sections_walked)
+        why: Recursively fill each composed sub-agent not inside a squad
+        sparring_required: true
+        iteration: per_sub_agent
+      sparring_protocol: "Deep sparring on engine couplings, reflex-vs-judgment split, and state persistence. These are where systems fail silently in production."
+      research_injection_eligible: true
+  validate:
+    role: "Run structural + integrity + DNA at all three tiers + CLI preflight + anti-commodity + recursion proof + composition check. Systems are the type where P9 is fully recursive."
+    optional: false
+    inputs:
+    - workspace/{slug}/ (all files)
+    - workspace/{slug}/.meta.yaml
+    - this file
+    - squad.yaml (inherited checks per sub-squad)
+    - agent.yaml (inherited checks per sub-agent)
+    - skill.yaml (inherited checks per sub-skill)
+    - claude-code-ground-truth.md
+    - config.yaml
+    - quality-gates.yaml
+    - structural-dna.md
+    outputs:
+    - workspace/{slug}/.meta.yaml (state validated, scores, intelligence, recursion_proof_result)
+    - Validation report
+    blocks_when: []
+    consumer_status: partial
+    consumer_status_reason: "/validate reads dna_patterns per type but does not yet enforce system-specific checks (organismic_engines coupling verification, recursion_proof presence, multi-sub-part recursion)."
+    next_action: "/test {slug} (required for MCS-2+) OR /package {slug}"
+    type_specific:
+      stages_run:
+        mcs1: [1, 2, 3, 6]
+        mcs2: [1, 2, 3, 4, 5, 6, 7, 8]
+        mcs3: [1, 2, 3, 4, 5, 6, 7, 8]
+      recursion_modalities:
+        level_1_quick: "Validates the system level only — structural + integrity + DNA at the system's own files. Does NOT recursively validate sub-squads and sub-agents. Target: single session, ~20K tokens."
+        level_3_split: "Full recursive validation split across sessions. Each session validates one sub-squad tree and caches result in .meta.yaml{last_validated, last_validated_scores}. Next session picks up from where the previous left off. Target: 3-5 sessions for a 3-squad system."
+        level_3_cached: "Full recursive validation using cached results for unchanged sub-parts. Only sub-parts whose file mtime is newer than .meta.yaml.last_validated are re-validated. Target: single session if most sub-parts are cached."
+        level_3_full: "Full recursive validation in a single session, running all nested validates. Only viable for small systems (single sub-squad, few sub-agents). ~836K tokens for a 3-squad×4-agent×2-skill system, exceeds window."
+        choice_guidance: "Default to level_1_quick for MCS-1, level_3_split for MCS-2+, level_3_cached for iterative fixing during development."
+      per_stage_hooks:
+        stage_1_structural:
+          check: "Glob workspace/{slug}/ for CLAUDE.md + STATE.yaml + config/routing.yaml + README.md + install-manifest.yaml present. Glob for at least one of agents/ squads/ skills/ hooks.json output-style subparts."
+          blocking: true
+        stage_2_integrity:
+          check: "YAML parse on STATE.yaml, routing.yaml, install-manifest.yaml, each sub-part .meta.yaml. No placeholder patterns. No secret patterns."
+          blocking: true
+        stage_3_dna_tier1:
+          required_patterns: [D1, D2, D3, D4, D13, D14, D19]
+          recommended_patterns: [D20]
+          check_d1: "CLAUDE.md fragment has identity + activation protocol explicit"
+          check_d2: "CLAUDE.md fragment has anti-patterns section referencing AP-S1..S12"
+          check_d3: "CLAUDE.md fragment under 4000 chars OR uses @include composition"
+          check_d4: "recursion_proof section exists and declares blocks_publish: true"
+          check_d13: "README.md has what/install/usage/requirements sections"
+          check_d14: "Every active engine has a declared degradation path per the failure_modes section"
+          check_d19: "Critical constraints in the last 30% of CLAUDE.md fragment body"
+          check_d20: "CLAUDE.md fragment uses paths frontmatter for conditional activation where appropriate"
+          blocking: true
+        stage_4_dna_tier2:
+          required_patterns: [D5, D7, D16]
+          recommended_patterns: [D6, D8, D15, D17]
+          check_d5: "Discovery questions are walked in the declared order by /create"
+          check_d7: "System declares pre-execution checks (required_mcp_servers for habitat, required state files)"
+          check_d16: "No hardcoded paths; install_manifest uses relative + {slug} placeholders"
+          blocking: false
+        stage_5_dna_tier3:
+          required_patterns: [D9, D10, D11, D12, D18]
+          check_d9: "Every sub-squad orchestrator inherits squad.yaml D9 — Agent in tools, Write/Edit/NotebookEdit excluded"
+          check_d10: "Each sub-squad has handoff format declaration matching squad.yaml handoff_format_spec.canonical_form"
+          check_d11: "recursion_proof section runs a self-challenge pattern — the system questions its own validation result"
+          check_d12: "If any engine declares longitudinal or declarative memory, the memory scope is declared and files exist"
+          check_d18: "Each sub-agent is a distinct agent file; sub-squads use Task spawn which forks context natively"
+          coupling_check:
+            rule: "Every engine declared in organismic_engines has a non-empty couples_with field and a non-empty couples_rationale. Every reference in couples_with resolves to another declared engine. Reciprocity is default; asymmetry must be documented in couples_rationale."
+            blocking: true
+            consumer_status: aspirational
+            consumer_status_reason: "Wave 3 teaches /validate Stage 5 to parse organismic_engines and run the coupling check. Today this is coached via /create and /fill but not physically enforced at /validate time."
+          blocking: true
+        stage_6_cli_preflight:
+          check: "myclaude validate {slug} succeeds — manifest, secrets, file sizes"
+          blocking: true
+        stage_7_anti_commodity:
+          check: "Substance score + invisibility audit (word-bounded grep against substrate vocabulary) + quality_rubric application + AP-S1..S12 grep"
+          blocking: false
+          coaching_only: true
+        stage_8_value_intelligence:
+          check: "Value score, suggested price range, market position"
+          blocking: false
+          runs_at_mcs: [2, 3]
+      read_before_write_ratio: "Read-only skill — updates .meta.yaml only"
+      dogfood_check:
+        description: "P9 enforcement — /validate system applied to reference systems in templates/system/ AND to the Engine's own CLAUDE.md + STATE.yaml + config.yaml which together form a self-applied system check."
+        consumer_status: aspirational
+        consumer_status_reason: "Wave 3 teaches /validate to accept --target=engine for self-dogfood."
+      next_action_pass: "/test {slug} (required for MCS-2+) OR /package {slug}"
+      next_action_fail: "/validate --fix {slug}"
+  test:
+    role: "Sandbox-install the system bundle in worktree isolation, verify install_manifest multi-target dispatch, verify routing.yaml parses, simulate the 9 discovery answers against the scaffold, run 3 behavioral scenarios."
+    optional: true
+    inputs:
+    - workspace/{slug}/ (validated)
+    - this file
+    outputs:
+    - workspace/{slug}/.meta.yaml (test_result, last_tested, test_scenarios)
+    - Test report
+    blocks_when: []
+    consumer_status: aspirational
+    consumer_status_reason: "/test does not yet have multi-sub-part sandbox logic for systems. Wave 3 teaches /test to dry-run install_manifest against a worktree sandbox and verify symmetric uninstall."
+    next_action: "/package {slug}"
+    type_specific:
+      required_for_mcs: [2, 3]
+      optional_for_mcs: [1]
+      sandbox_isolation: worktree
+      type_specific_steps:
+      - step: install_manifest_dry_run
+        check: "Dry-run install_manifest against the sandbox .claude/ — verify every target path is valid, no collisions, every source file exists, every append kind target has BEGIN/END markers, every merge kind target has key tracking."
+      - step: routing_table_parse
+        check: "Every sub-squad's routing.yaml parses and every specialist id resolves to an installed agent file."
+      - step: hooks_fragment_parse
+        check: "hooks.json parses, every event binding is one of the 27 canonical events, every if matcher uses valid permission rule syntax."
+      - step: claude_md_fragment_load
+        check: "CLAUDE.md fragment parses as markdown, frontmatter paths (if present) are valid globs, @include references resolve, char count under 4000 OR composition used."
+      - step: recursion_proof_execution
+        check: "Run /validate --target=self against the sandboxed system. Verify the result matches the recursion_proof section's declared demonstration."
+      - step: uninstall_symmetric_dry_run
+        check: "Dry-run the install_manifest.lock reversal — verify every installed file is removable, every appended section is excisable, every merged key is revertible."
+      scenarios_applicable: true
+      scenarios:
+      - name: Happy Path
+        purpose: Normal invocation with the system's primary archetype use case
+        input_strategy: Trigger the primary use case of the declared archetype
+        on_fail: Primary routing or reflex binding is broken
+      - name: Edge Case
+        purpose: Partial failure — one sub-part fails mid-sequence
+        input_strategy: Inject a failing mock at one specialist spawn point
+        on_fail: Degradation path is weak, strengthen failure_modes
+      - name: Adversarial
+        purpose: Ecological conflict — install alongside another mock system that binds the same hook event
+        input_strategy: Install a second mock system and verify no cross-contamination
+        on_fail: Ecological coexistence declaration is insufficient
+      must_haves_verification: true
+      next_action_pass: "/package {slug}"
+  package:
+    role: "Strip WHY comments from ALL files in the organism bundle, compute install_manifest.lock hashes, generate vault.yaml + plugin.json (with full sub-part list) + agentskills.yaml, verify ecological declarations, stage .publish/."
+    optional: false
+    inputs:
+    - workspace/{slug}/ (validated, test_result pass for MCS-2+)
+    - creator.yaml
+    - this file
+    - config.yaml
+    outputs:
+    - workspace/{slug}/.publish/CLAUDE.md (stripped, renamed to {slug}.md)
+    - workspace/{slug}/.publish/STATE.yaml (copied)
+    - workspace/{slug}/.publish/config/routing.yaml (copied)
+    - workspace/{slug}/.publish/install-manifest.yaml (copied)
+    - workspace/{slug}/.publish/install-manifest.lock (computed)
+    - workspace/{slug}/.publish/hooks.json (if present, copied)
+    - workspace/{slug}/.publish/agents/ (stripped sub-agents)
+    - workspace/{slug}/.publish/squads/ (stripped sub-squads)
+    - workspace/{slug}/.publish/README.md (badges injected)
+    - workspace/{slug}/.publish/vault.yaml
+    - workspace/{slug}/.publish/plugin.json
+    - workspace/{slug}/.publish/agentskills.yaml
+    - workspace/{slug}/.publish/CHANGELOG.md
+    - workspace/{slug}/.publish/LICENSE.md
+    blocks_when: []
+    consumer_status: aspirational
+    consumer_status_reason: "/package does not yet generate plugin.json with system-level multi-sub-part lists. Wave 3 extends /package to consult install-manifest.yaml and generate the full plugin declaration."
+    next_action: "/publish {slug}"
+    type_specific:
+      strips:
+      - HTML WHY comments in ALL files
+      - "# WHY lines in ALL files"
+      - .meta.yaml
+      - domain-map.md
+      renames:
+      - from: CLAUDE.md
+        to: "{slug}.md"
+        reason: "Workspace file is CLAUDE.md for editorial clarity; installed fragment is renamed to match the slug so multiple systems coexist."
+      injects:
+      - field: marketplace_url
+        value: "https://myclaude.sh/p/{slug}"
+      - field: Attribution comment at end of CLAUDE.md fragment
+        value: "<!-- Published on myclaude.sh | Engine: Studio v3 -->"
+      - field: README badges
+      plugin_json_block: |
+        Plugin.json generated with both 'agents' field (listing every installed agent path) and 'claudeMd' field (pointing to the installed CLAUDE.md fragment) and 'hooks' field (pointing to the installed hooks.json) so that Claude Code loads all pieces simultaneously at install time.
+      agentskills_yaml_block: "Platforms: [claude-code]. Systems are Claude Code specific (multi-primitive composition requires native agents + skills + hooks + claude-md)."
+      step_6b_verify:
+      - All system files present in .publish/
+      - install-manifest.yaml references resolve to present source files
+      - No WHY comments remaining
+      - CLAUDE.md fragment under 4000 chars or modular composition present
+      - All sub-agent files pass individual agent step_6b_verify per agent.yaml
+      - All sub-squad files pass squad step_6b_verify per squad.yaml
+      - Body of each file under 500 lines
+  publish:
+    role: "Push to the marketplace + Anthropic plugin marketplace. Systems are distributed via vault.yaml + plugin.json with the full multi-sub-part declaration."
+    optional: false
+    inputs:
+    - workspace/{slug}/.publish/ (state packaged)
+    - myclaude CLI auth
+    - creator confirmation
+    outputs:
+    - Live marketplace listing
+    - Plugin marketplace listing
+    - workspace/{slug}/.meta.yaml (state published)
+    blocks_when:
+    - state != packaged
+    - test_result != pass (for MCS-2+)
+    - myclaude auth missing
+    - creator declines confirmation
+    - recursion_proof missing
+    consumer_status: aspirational
+    consumer_status_reason: "/publish distribution channel routing does not yet differentiate system from squad for plugin.json generation."
+    next_action: null
+    next_action_reason: terminal action
+    type_specific:
+      distribution_channels:
+      - channel: myclaude
+        primary: true
+        url_pattern: "https://myclaude.sh/p/{slug}"
+      - channel: anthropic-plugin
+        primary: true
+        plugin_json_block: "agents + claudeMd + hooks fields with full sub-part list"
+      - channel: agentskills_universal
+        primary: false
+        applicable: false
+        reason: "Multi-primitive composition is Claude Code specific."
+      confirmation_required: true
+      post_publish_actions:
+      - "Suggest: 'Use the system in your own daily work. Systems reveal coupling weaknesses only through real use.'"
+      - "Surface install command: myclaude install {slug}"
+      - "Schedule check-in 7 days post-publish"
+  status:
+    role: "Display the system in dashboard with archetype badge, active engines count, sub-part count, invocation count, recursion proof status."
+    optional: true
+    inputs:
+    - workspace/{slug}/.meta.yaml
+    - this file
+    - references/ux-vocabulary.md
+    outputs:
+    - Dashboard line
+    - System badge
+    blocks_when: []
+    consumer_status: aspirational
+    consumer_status_reason: "/status does not yet surface system archetypes or engine activation counts."
+    next_action: null
+    next_action_reason: read-only dashboard
+    type_specific:
+      ux_type_name: System
+      ux_type_name_source: references/ux-vocabulary.md
+      state_emoji_rules: Universal
+      portfolio_role_default: organism
+      portfolio_role_reason: "Systems are organisms in the creator's portfolio — they compose multiple sub-parts into one cohesive tool."
+
+# ===========================================================================
+# FLOW
+# ===========================================================================
+
+flow: |
+  ```mermaid
+  flowchart LR
+    THINK[/think optional/] -.->|organism unclear| MAP[/map/]
+    MAP -.->|engines decomposed| SCOUT[/scout/]
+    SCOUT -.->|existing compositions surveyed| CREATE[/create system/]
+    IMPORT[/import existing/] -.-> WORKSPACE
+    CREATE -->|archetype + engines + couplings + sub-parts| WORKSPACE[(workspace/slug/)]
+    WORKSPACE --> FILL[/fill/]
+    FILL -->|CLAUDE.md fragment + state + routing + sub-parts| VALIDATE[/validate/]
+    VALIDATE -->|fail| VALIDATE
+    VALIDATE -->|pass + recursion proof| TEST[/test/]
+    TEST -->|multi-sub-part sandbox + uninstall sim| PACKAGE[/package/]
+    PACKAGE -->|stripped + plugin.json multi-sub-part| PUBLISH[/publish/]
+    PUBLISH -->|live| MARKET[(marketplace)]
+    MARKET -.->|longitudinal usage feedback| SCOUT
+    STATUS[/status/] -.-> WORKSPACE
+    classDef writeSkill fill:#e1f5ff,stroke:#0277bd
+    classDef gate fill:#fff4e1,stroke:#ef6c00
+    classDef terminal fill:#e8f5e9,stroke:#2e7d32
+    classDef discovery fill:#f3e5f5,stroke:#6a1b9a
+    class CREATE,FILL,PACKAGE writeSkill
+    class STATUS,VALIDATE,TEST gate
+    class PUBLISH terminal
+    class IMPORT,THINK,MAP,SCOUT discovery
+  ```
+
+# ===========================================================================
+# FAILURE MODES
+# ===========================================================================
+
+failure_modes:
+- mode: engine_declared_without_couples_with
+  detection: /validate Stage 5 coupling_check
+  degradation: BLOCK MCS-2 — pile-of-drawers anti-pattern
+  recovery: Declare couples_with with rationale for every active engine
+- mode: recursion_proof_missing
+  detection: /validate Stage 3 check_d4
+  degradation: BLOCK — P9 not operationalized
+  recovery: Add recursion_proof section and demonstration file
+- mode: claude_md_fragment_exceeds_4000_chars_without_composition
+  detection: /validate Stage 3 check_d3 AND check_d20
+  degradation: BLOCK MCS-2 — ambient cost violation
+  recovery: "Split fragment via @include composition or move content to .claude/rules/ with paths scoping"
+- mode: install_manifest_missing
+  detection: /validate Stage 1 structural
+  degradation: BLOCK — system cannot be installed reversibly
+  recovery: Scaffold install-manifest.yaml from archetype
+- mode: hooks_fragment_binds_non_canonical_event
+  detection: /validate Stage 2 integrity
+  degradation: BLOCK — unknown hook event
+  recovery: Use one of the 27 canonical events from environmental_perception
+- mode: sub_squad_orchestrator_has_write_in_tools
+  detection: /validate Stage 5 D9
+  degradation: BLOCK MCS-2 — physical D9 missing
+  recovery: Remove Write/Edit from orchestrator tools per squad.yaml P2
+- mode: hereditary_register_mixed_with_declarative_register
+  detection: /validate Stage 7 anti-commodity
+  degradation: coaching — mnemonic layer collapse
+  recovery: Separate preloaded skill content (hereditary) from memory:project narrative (declarative)
+- mode: longitudinal_observer_writes_to_state_yaml_instead_of_memory
+  detection: /validate Stage 5 check_d12
+  degradation: coaching — register misuse
+  recovery: Observer writes narrative to memory:project, STATE.yaml is procedural only
+- mode: ecological_coexistence_undeclared
+  detection: /validate Stage 2 integrity
+  degradation: BLOCK MCS-2 — Q9 unanswered
+  recovery: Declare namespace, hook binding, fragment scope in CLAUDE.md fragment
+- mode: boot_initial_prompt_without_degradation_path
+  detection: /validate Stage 3 check_d14
+  degradation: BLOCK MCS-2 — fragile protocol without fallback
+  recovery: Add graceful degradation path to initialPrompt
+- mode: recursion_proof_demonstration_fails
+  detection: /validate Stage 3 check_d4 + recursion_proof self-run
+  degradation: BLOCK publish — P9 hypocritical
+  recovery: Fix underlying failure in the organism before claiming recursive integrity
+
+# ===========================================================================
+# INVARIANTS
+# ===========================================================================
+
+invariants:
+- Primary file is CLAUDE.md (renamed to {slug}.md at package time)
+- System install target is multi-file — {slug}/ directory holding CLAUDE.md, STATE.yaml, config/routing.yaml, install-manifest.yaml, README.md, plus sub-parts
+- Minimum file count — CLAUDE.md + STATE.yaml + config/routing.yaml + install-manifest.yaml + README.md + at least one of (hooks.json, agents/, squads/, output-style) = 6+ files
+- Every active engine in organismic_engines has a non-empty couples_with with non-empty rationale
+- At least 7 engines (the mandatory set E0 E1 E2 E4 E9 E10 E12) are active in every forged system
+- CLAUDE.md fragment under 4000 characters OR uses @include composition
+- install_manifest dispatches to at least 3 distinct native destinations (e.g., .claude/rules/, .claude/agents/, .claude/settings.local.json via merge)
+- Every sub-squad follows squad.yaml invariants independently
+- Every sub-agent follows agent.yaml invariants independently
+- routing.yaml MUST declare fallback at system level if more than one sub-squad
+- hooks.json bindings use only the 27 canonical hook events
+- No hardcoded absolute paths anywhere in the bundle
+- All Tier 3 patterns D9/D10/D11/D12/D18 are REQUIRED for systems at MCS-2+
+- recursion_proof section present with demonstration file referenced
+- Ecological coexistence (Q9) answered explicitly in CLAUDE.md fragment or README
+- namespace_strategy applied consistently across all sub-parts
+
+# ===========================================================================
+# SECURITY PROFILE
+# ===========================================================================
+
+security_profile:
+  aegis_applicable: true
+  reason: "Systems compose multiple primitives each with its own attack surface. A system installs a CLAUDE.md fragment (ambient instruction injection vector), a hooks fragment (settings.local.json merge — can change hook event handlers globally), multiple sub-agents and sub-squads (each with their own attack surfaces), and an install_manifest that dispatches to multiple native destinations. Systems are the MOST security-relevant type, above squads."
+  attack_surfaces:
+  - Each sub-agent's individual attack surfaces (per agent.yaml.security_profile)
+  - Each sub-squad's routing.yaml content (prompt injection vector)
+  - hooks.json content loaded into settings.local.json (can modify global hook behavior)
+  - CLAUDE.md fragment content (ambient instruction injection every turn)
+  - install_manifest targets (can specify unintended paths, can merge into sensitive files)
+  - install_manifest.lock hashes (integrity of the install chain)
+  - requiredMcpServers patterns (habitat-dependent phenotype, can hide malicious agents from inexperienced users)
+  - criticalSystemReminder_EXPERIMENTAL content (runtime constitution injection)
+  - memory scope files of sub-agents (cross-session persistence vector)
+  - "@include directives in the CLAUDE.md fragment (transitive inclusion chain)"
+  shell_execution: via any sub-agent that allows Bash, plus BashCommandHook bindings
+  file_io: via any sub-agent that allows Read/Write/Edit, plus PostToolUse hooks on file events
+  network_calls: via any sub-agent with WebFetch or mcpServers, plus HttpHook bindings
+  tool_invocation: controlled per sub-agent, plus the system-level hooks fragment
+  installation_trust_level: audit_required
+  installation_trust_reason: "Systems install multiple files to multiple native destinations including settings.local.json merges and CLAUDE.md rules. Every sub-part and the system-level fragments must be audited via /aegis before install. Systems should NEVER auto-install from untrusted sources. The install_manifest.lock is the audit trail."
+  recommended_audit_checks:
+  - Audit each sub-agent per agent.yaml.security_profile.recommended_audit_checks
+  - Audit each sub-squad per squad.yaml.security_profile.recommended_audit_checks
+  - Audit routing.yaml at system level for prompt injection patterns in triggers and synthesis
+  - Audit hooks.json bindings — flag any binding to Setup, SessionStart, PreCompact, ConfigChange, PermissionRequest as high-impact
+  - Audit install_manifest targets — flag any target outside the expected native destinations
+  - Audit install_manifest merge kind entries — flag merges into settings.local.json that change hook configuration globally
+  - Audit CLAUDE.md fragment @include directives — flag any include pointing outside the organism bundle
+  - Audit requiredMcpServers patterns — verify they match intended habitats, not unrelated user environments
+  consumer_status: aspirational
+  consumer_status_reason: "/aegis does not yet audit systems as a distinct type. Wave 3 teaches /aegis to treat systems specially with the attack surface list above."
+
+# ===========================================================================
+# MARKETPLACE TAXONOMY
+# ===========================================================================
+
+marketplace_taxonomy:
+  default_category: system
+  default_price: 35
+  default_license: MIT
+  pricing_rationale: "Systems justify premium-to-rare pricing because they encode organism-scale composition that is 10-20x more work to design than a single agent. Simple systems start at $25, complex apex organisms with all 13 engines can reach $150."
+  bundle_eligible: true
+  bundle_eligible_reason: "Systems compose with other systems into meta-systems (rare but valuable for enterprise orchestras), with bundles for multi-system distribution, with claude-md products for shared constitution."
+  composition_eligible_with:
+  - agent
+  - skill
+  - hooks
+  - claude-md
+  - squad
+  - system
+  - output-style
+  - workflow
+  composition_eligible_reason: "Systems compose with everything except bundle (which is itself a composition type) and statusline (voice-only)."
+  consumer_status: aspirational
+  consumer_status_reason: "/package today reads vault_defaults from config.yaml. Wave 3 teaches /package to consult this block first for systems."
+  natural_tags:
+    scope: by_archetype
+    by_archetype:
+      cognitive_organism:
+      - organism
+      - complete-stack
+      - multi-engine
+      - apex
+      defensive_perimeter:
+      - security
+      - audit
+      - compliance
+      - boundary
+      observatorium:
+      - observation
+      - longitudinal
+      - learning
+      - insights
+      stigmergic_workshop:
+      - context-reactive
+      - stigmergy
+      - ambient
+      - path-scoped
+      autonomic_agent_council:
+      - advisory-council
+      - multi-expert
+      - consultation
+      - council
+  pricing_strategy:
+    scope: by_archetype
+    by_archetype:
+      cognitive_organism:
+        default: premium-rare
+        recommended_range_usd: [35, 150]
+      defensive_perimeter:
+        default: premium
+        recommended_range_usd: [25, 75]
+      observatorium:
+        default: premium
+        recommended_range_usd: [25, 75]
+      stigmergic_workshop:
+        default: premium
+        recommended_range_usd: [25, 100]
+      autonomic_agent_council:
+        default: premium
+        recommended_range_usd: [35, 100]
+
+# ===========================================================================
+# DNA PATTERNS
+# ===========================================================================
 
 dna_patterns:
   tier1:
-    D1:  { required: true,  name: "Activation Protocol",    check: "grep activation/boot section + references/ ref" }
-    D2:  { required: true,  name: "Anti-Pattern Guard",     check: "grep anti-pattern section >=5 items" }
-    D3:  { required: true,  name: "Progressive Disclosure",  check: "references/ dir + CLAUDE.md <500 lines" }
-    D4:  { required: true,  name: "Quality Gate",            check: "grep quality gate >=3 criteria" }
-    D13: { required: true,  name: "Self-Documentation",      check: "README.md with what/install/usage/requirements" }
-    D14: { required: true,  name: "Graceful Degradation",    check: "error/fallback/degradation section" }
-    D19: { required: false, name: "Attention-Aware Authoring", check: "critical rules in last 30% of file" }
+    D1:
+      required: true
+      applicable: true
+      name: Activation Protocol
+      check: "CLAUDE.md fragment has identity + activation protocol; every sub-agent and sub-squad has activation protocol"
+    D2:
+      required: true
+      applicable: true
+      name: Anti-Pattern Guard
+      check: "CLAUDE.md fragment references AP-S1..S12; every sub-agent has its own anti-patterns per agent.yaml"
+    D3:
+      required: true
+      applicable: true
+      name: Progressive Disclosure
+      check: "CLAUDE.md fragment under 4000 chars OR @include composition; each sub-part under 500 lines; references/ used"
+    D4:
+      required: true
+      applicable: true
+      name: Quality Gate
+      check: "recursion_proof declared; each sub-squad has synthesis quality gate; each sub-agent has its own quality gate"
+    D13:
+      required: true
+      applicable: true
+      name: Self-Documentation
+      check: "README.md with what/install/usage/requirements; install instructions reference myclaude install"
+    D14:
+      required: true
+      applicable: true
+      name: Graceful Degradation
+      check: "Every engine declares a degradation path in failure_modes; every reflex has when-not-to-use"
+    D19:
+      required: true
+      applicable: true
+      name: Attention-Aware Authoring
+      check: "Critical constraints in the last 30% of CLAUDE.md fragment body; @include ordering preserves attention-recency priority"
   tier2:
-    D5:  { required: true,  name: "Question System",         check: "input classification or triage table" }
-    D6:  { required: true,  name: "Confidence Signaling",    check: "confidence levels in system output" }
-    D7:  { required: true,  name: "Pre-Execution Gate",      check: "precondition checks before routing" }
-    D8:  { required: true,  name: "State Persistence",       check: "state management (STATE.yaml or equivalent)" }
-    D15: { required: true,  name: "Testability",             check: "test scenarios with expected routing" }
-    D16: { required: true,  name: "Composability",           check: "no hardcoded paths, no common names, relative refs" }
-    D17: { required: false, name: "Hook Integration",        check: "hooks for system events" }
+    D5:
+      required: true
+      applicable: true
+      name: Question System
+      check: "Discovery questions walked in required_in_order; 9 questions present"
+    D6:
+      required: false
+      applicable: true
+      name: Confidence Signaling
+      check: "System synthesis step signals confidence in final reports (recommended for observatorium archetype)"
+    D7:
+      required: true
+      applicable: true
+      name: Pre-Execution Gate
+      check: "System declares pre-execution checks (required files, required state, required MCP habitat)"
+    D8:
+      required: true
+      applicable: true
+      name: State Persistence
+      check: "STATE.yaml at organism root; per-sub-part .meta.yaml; explicit survival matrix in state_persistence section"
+    D15:
+      required: true
+      applicable: true
+      name: Testability
+      check: "examples/ or scenarios/ directory with the 3 canonical scenarios (happy, edge, adversarial)"
+    D16:
+      required: true
+      applicable: true
+      name: Composability
+      check: "No hardcoded paths; install_manifest uses {slug} placeholders; no command name conflicts; ecological coexistence declared"
+    D17:
+      required: true
+      applicable: true
+      name: Hook Integration
+      check: "hooks.json declared when E4 or E5 is active; bound events from the canonical 27; permission rule syntax for matchers"
+    D20:
+      required: false
+      applicable: true
+      name: Cache-Friendly Design
+      check: "CLAUDE.md fragment under 4000 chars hard limit; frontmatter paths scoping when appropriate; no dynamic content in cached region"
   tier3:
-    D9:  { required: true,  name: "Orchestrate Don't Execute", check: "CLAUDE.md has routing table, no domain instructions" }
-    D10: { required: true,  name: "Handoff Spec",              check: "handoff template between components" }
-    D11: { required: true,  name: "Socratic Pressure",         check: "self-challenge at decision points" }
-    D12: { required: true,  name: "Compound Memory",           check: "memory config with project scope" }
-    D18: { required: true,  name: "Subagent Isolation",        check: "context:fork in agent/component definitions" }
-    D20: { required: false, name: "Cache-Friendly Design", check: "paths: frontmatter if generates rules files" }
+    D9:
+      required: true
+      applicable: true
+      name: "Orchestrate Don't Execute"
+      check: "Every sub-squad orchestrator has Agent in tools and excludes Write/Edit/NotebookEdit (inherited from squad.yaml)"
+    D10:
+      required: true
+      applicable: true
+      name: Handoff Specification
+      check: "Every sub-squad declares handoff_format_spec matching squad.yaml canonical_form; system-level handoffs between sub-squads declared"
+    D11:
+      required: true
+      applicable: true
+      name: Socratic Pressure
+      check: "recursion_proof runs self-challenge; observatorium archetype's observer uses self-challenge pattern; adviser sub-agents use self-challenge"
+    D12:
+      required: true
+      applicable: true
+      name: Compound Memory
+      check: "If any engine uses longitudinal memory (E11), memory scope is declared and files exist; hereditary register (skills preload) updates propagate to future spawns"
+    D18:
+      required: true
+      applicable: true
+      name: Subagent Isolation
+      check: "Each sub-agent is distinct agent file; Task spawns fork context natively; orchestrators do not share state with specialists except via handoff"
 
 mcs_expectations:
-  mcs1: "All Tier 1 PASS. Score >= 75%."
-  mcs2: "Tier 1+2 all required PASS. Score >= 85%."
-  mcs3: "ALL 18 patterns PASS. Score >= 92%. PRO validation required."
+  mcs1:
+    dna_required: [D1, D2, D3, D4, D13, D14, D19]
+    score_min: 75
+    blocks_publish: true
+    natural_ceiling: false
+  mcs2:
+    dna_required: [D1, D2, D3, D4, D5, D7, D8, D9, D10, D13, D14, D15, D16, D17, D18, D19]
+    dna_recommended: [D6, D11, D12, D20]
+    score_min: 85
+    blocks_publish: false
+    natural_ceiling: false
+  mcs3:
+    dna_required: [D1, D2, D3, D4, D5, D7, D8, D9, D10, D11, D12, D13, D14, D15, D16, D17, D18, D19]
+    dna_recommended: [D6, D20]
+    score_min: 92
+    blocks_publish: false
+    natural_ceiling: true
+    ceiling_reason: "Systems are the type where 19 of 20 DNA patterns are applicable (D20 is soft-recommended — applies when a system's CLAUDE.md fragment enters the ambient window). MCS-3 for systems means: all required patterns present + rubric top tier + maturity high + dogfood check passes + recursion proof demonstration passes + install_manifest uninstall test passes."
+    applicable: true
 
-required_files:
-  - "CLAUDE.md"
-  - "STATE.yaml"
-  - "README.md"
-  - "config/routing.yaml"
-
-template_files:
-  - source: "CLAUDE.md.template"
-    target: "CLAUDE.md"
-    dna_injected: [D1, D2, D4, D5, D7, D9, D10, D14]
-  - source: "CLAUDE.local.md.template"
-    target: "CLAUDE.local.md"
-    dna_injected: []
-    optional: true
-    note: "Private buyer-specific config (gitignored). [SOURCE: claudemd.ts:922-933]"
-  - source: "STATE.yaml.template"
-    target: "STATE.yaml"
-    dna_injected: [D8]
-  - source: "README.md.template"
-    target: "README.md"
-    dna_injected: [D13]
-  - source: "references/domain-knowledge.md.template"
-    target: "references/domain-knowledge.md"
-    dna_injected: [D3]
-  - source: "agents/specialist.md.template"
-    target: "agents/"
-    dna_injected: [D8, D11, D12, D18]
-  - source: "plugin.json.template"
-    target: ".claude-plugin/plugin.json"
-    dna_injected: [D16]
-    optional: true
-    note: "Generated by /package for marketplace distribution. Not required for CC native operation."
+# ===========================================================================
+# FRONTMATTER (for the system's primary orchestrator agent — the entry point)
+# ===========================================================================
+# Note: frontmatter here describes the primary orchestrator agent's frontmatter
+# if the system has one. The CLAUDE.md fragment itself is not an agent and has
+# no frontmatter in the agent sense — its own frontmatter is the claude-md
+# conditional activation paths if declared.
 
 frontmatter:
   required:
-    - name            # System invocation name [SOURCE: loadSkillsDir.ts]
-    - description     # Catalog display, token counted [SOURCE: loadSkillsDir.ts:100-105]
+  - name
+  - description
   recommended:
-    - tools           # Minimal tool list for system orchestrator
-    - model           # Force model for orchestrator (opus recommended) [SOURCE: AgentTool.ts]
-    - "argument-hint" # Usage hint for /help
+  - tools
+  - model
+  - memory
   optional:
-    - "allowed-tools" # Restrict tool access [SOURCE: loadSkillsDir.ts]
-    - "denied-tools"  # Block specific tools [SOURCE: loadSkillsDir.ts]
-    - memory          # user|project|local [SOURCE: AgentTool internals]
-    - permissionMode  # default|plan|dontAsk
-    - maxTurns        # Limit orchestrator iterations [SOURCE: AgentTool.ts]
-    - effort          # Reasoning effort [SOURCE: frontmatterParser.ts]
-    - skills          # Preloaded skill knowledge
-    - hooks           # System-scoped hooks [SOURCE: schemas/hooks.ts]
-    - whenToUse       # Auto-trigger conditions, token counted [SOURCE: loadSkillsDir.ts]
+  - disallowedTools
+  - maxTurns
+  - effort
+  - hooks
+  - permissionMode
+  - criticalSystemReminder_EXPERIMENTAL
+  - skills
+  - initialPrompt
+  - mcpServers
+  - requiredMcpServers
+  - omitClaudeMd
+  - isolation
+  orchestrator_required_tools_include:
+  - Agent
+  orchestrator_forbidden_tools:
+  - Write
+  - Edit
+  - NotebookEdit
+  orchestrator_recommended_model: opus
+  orchestrator_recommended_model_reason: "Organism-level synthesis benefits from model depth."
+  claude_md_fragment_frontmatter:
+    optional_paths: "Glob patterns for conditional activation — if present, the fragment is only loaded when matching files exist in the working context"
+    max_chars_hard: 4000
+    max_chars_hard_source: "references/claude-code-ground-truth.md §Layer 0 — matches config.yaml token_budgets.claude_md_char_hard"
+  field_source_refs:
+    name: loadAgentsDir.ts:404-409
+    description: loadAgentsDir.ts:411-414
+    tools: loadAgentsDir.ts:660
+    disallowedTools: loadAgentsDir.ts:677-681
+    hooks: loadAgentsDir.ts:424-440
+    skills: loadAgentsDir.ts:684
+    initialPrompt: loadAgentsDir.ts:123, 686-690
+    criticalSystemReminder_EXPERIMENTAL: runAgent.ts:711-714
+    claude_md_fragment: claudemd.ts:1-26
 
-# Token economics [SOURCE: loadSkillsDir.ts:100-105]
+# ===========================================================================
+# TEMPLATE FILES
+# ===========================================================================
+
+template_files:
+- source: CLAUDE.md.template
+  target: CLAUDE.md
+  dna_injected: [D1, D2, D4, D13, D14, D19]
+  why_comments: true
+- source: STATE.yaml.template
+  target: STATE.yaml
+  dna_injected: [D8]
+  why_comments: false
+- source: config/routing.yaml.template
+  target: config/routing.yaml
+  dna_injected: [D5, D7, D14]
+  why_comments: false
+- source: install-manifest.yaml.template
+  target: install-manifest.yaml
+  dna_injected: [D16]
+  why_comments: false
+- source: hooks.json.template
+  target: hooks.json
+  dna_injected: [D17]
+  why_comments: false
+  optional: true
+  required_when: engine_E4_or_E5_active
+- source: README.md.template
+  target: README.md
+  dna_injected: [D13]
+  why_comments: true
+- source: recursion_proof.md.template
+  target: recursion_proof.md
+  dna_injected: [D4, D11, D15]
+  why_comments: true
+
+# ===========================================================================
+# TOKEN ECONOMICS
+# ===========================================================================
+
 token_economics:
-  catalog_cost: "name + description + whenToUse → ~50-100 tokens in catalog"
-  invocation_cost: "Full CLAUDE.md + STATE.yaml + routing loaded on invoke"
-  ambient_cost: "Zero — systems are command-type, loaded on demand"
-  optimization: "CLAUDE.md as routing table. Components in agents/. Knowledge in references/."
+  catalog_cost_tokens: 400
+  catalog_cost_reason: "Systems have multiple sub-agents each with name + description in catalog (~50 tokens × N sub-agents + ~100 tokens for the CLAUDE.md fragment if it enters ambient window via paths scoping). An apex system with 8 sub-agents costs ~500 tokens always in the catalog."
+  catalog_cost_source: loadSkillsDir.ts:100-105
+  invocation_cost: per_sub_part_spawn
+  invocation_cost_reason: "Each sub-agent spawn is a full agent boot. Each sub-squad is an orchestrator + its specialists. A system-level invocation that activates 3 sub-squads × 4 specialists each costs ~12 full agent contexts."
+  ambient_cost: medium_to_critical
+  ambient_cost_reason: "CLAUDE.md fragment enters ambient every turn if present (up to 4000 chars hard limit). hooks.json bindings that match frequently touched events contribute ambient evaluation cost."
+  optimization_notes: |
+    Keep the CLAUDE.md fragment under 2000 chars when possible; use @include for modular
+    composition. Use paths frontmatter on the fragment to make it conditional. Use path-scoped
+    conditional skills for specialist knowledge that should be dormant until relevant files are
+    touched. Use requiredMcpServers to hide sub-agents from habitats where they do not apply.
+    The organism's metabolism at rest can approach zero if every non-core component is
+    conditional on file context or habitat.
+  budget_example: "Cognitive organism with 2 sub-squads, 6 sub-agents, 1 hooks fragment, 1 claude-md fragment: ambient ~500-2000 tokens/turn depending on fragment size, invocation cost ~15K per orchestrator turn scaled by specialist spawns."
 
-# Compact instructions applicability
+# ===========================================================================
+# COMPACT INSTRUCTIONS
+# ===========================================================================
+
 compact_instructions:
   applicable: true
-  location: "SYSTEM.md (CLAUDE.md) → ## Compact Instructions section"
-  preserves: "boot state, component registry, routing table, active operations, configuration"
+  location: "CLAUDE.md fragment → ## Compact Instructions section"
+  source_reference: compact/prompt.ts:133-143
+  preserves:
+  - organism identity and archetype
+  - active engine declarations with couples_with
+  - sub-part roster
+  - active routing decisions
+  - recursion proof demonstration reference
+  - ecological coexistence declaration
+  - STATE.yaml snapshot reference (not the content itself)
 
-canonical_refs:
-  description: "Mandatory section listing full paths to every external reference downstream consumers must read"
-  required: true
-  validation: "grep canonical_refs|canonical references in primary file"
+# ===========================================================================
+# STATE MACHINE HOOKS (universal Engine lifecycle states)
+# ===========================================================================
 
-discovery_questions:
-  - "What complex domain does this system operate in?"
-  - "How many distinct agents/components does it need?"
-  - "What is the orchestration pattern (hub-spoke, pipeline, mesh)?"
-  - "How do components communicate — what handoff protocol?"
-  - "What state must persist across sessions?"
-  - "What quality gates exist between system phases?"
-  - "How does the system handle component failure?"
-  - "What is the system's memory architecture?"
+state_machine_hooks:
+  source_file: quality-gates.yaml
+  source_section: states
+  scope: universal
+  type_specific_branches: []
+  regression_rules: "Universal — file edit after validation regresses to content"
+  publish_prerequisites_addendum:
+  - "test_result == pass (for MCS-2+ systems)"
+  - "recursion_proof demonstration passes"
+  - "install_manifest uninstall dry-run test passes"
+  publish_prerequisites_addendum_reason: "Systems at MCS-2+ require full multi-sub-part spawn simulation AND a passing recursion proof AND a passing uninstall test to guarantee reversibility and recursive integrity."
+
+# ===========================================================================
+# VALIDATION PIPELINE REFS
+# ===========================================================================
+
+validation_pipeline_refs:
+  stage_1: .claude/skills/validate/references/validation-stages/stage-1-structural.md
+  stage_2: .claude/skills/validate/references/validation-stages/stage-2-integrity.md
+  stage_3: .claude/skills/validate/references/validation-stages/stage-3-dna-tier1.md
+  stage_4: .claude/skills/validate/references/validation-stages/stage-4-dna-tier2.md
+  stage_5: .claude/skills/validate/references/validation-stages/stage-5-dna-tier3.md
+  stage_6: .claude/skills/validate/references/validation-stages/stage-6-cli-preflight.md
+  stage_7: .claude/skills/validate/references/validation-stages/stage-7-anti-commodity.md
+  stage_8: .claude/skills/validate/references/validation-stages/stage-8-value-intelligence.md
+  index: .claude/skills/validate/references/validation-stages/_index.md
+
+# ===========================================================================
+# LIFECYCLE SHARED REFS
+# ===========================================================================
+
+lifecycle_shared_refs:
+  ux_experience:
+    path: references/ux-experience-system.md
+    consumed_by: [/create, /fill, /validate, /package, /test, /help, /status]
+    sections_relevant_to_type:
+    - §1 Context Assembly
+    - §2.1 Experience Level Scaling
+    - §2.2 Archetype-Aware Insights
+    - §2.3 Moment Awareness
+    invisibility_audit_status: "PRE-EXISTING DEBT — Wave 4 scope"
+  ux_vocabulary:
+    path: references/ux-vocabulary.md
+    consumed_by: [/create, /fill, /validate, /package, /test, /help, /status]
+    purpose: "Translate internal engine names and archetype labels to user-facing organism vocabulary"
+    invisibility_audit_status: "PRE-EXISTING DEBT — Wave 4 scope"
+  engine_voice:
+    path: references/quality/engine-voice.md
+    consumed_by: [/create, /fill, /validate, /package, /test, /help, /status]
+    purpose: "Brand DNA, voice markers"
+    invisibility_audit_status: Acceptable
+  intelligence_layer:
+    path: references/intelligence-layer.md
+    consumed_by: [/validate, /package, /scout]
+    purpose: "Value scoring, pricing strategy, portfolio analysis"
+    invisibility_audit_status: "PRE-EXISTING DEBT — Wave 4 scope"
+  product_spec:
+    path: references/product-specs/system-spec.md
+    consumed_by: [/create, /validate]
+    purpose: "Canonical system spec — file structure, organism_state_machine, install_manifest multi-destination dispatch"
+    invisibility_audit_status: "unverified in S118c"
+  claude_code_ground_truth:
+    path: references/claude-code-ground-truth.md
+    consumed_by: [/create, /fill, /validate]
+    purpose: "Verified capability register — all claims about native Claude Code behavior verified against source, including the 27 canonical hook events and the 4-tier CLAUDE.md memory hierarchy"
+    invisibility_audit_status: "Clean — internal Engine documentation"
+  agent_codex:
+    path: product-dna/agent.yaml
+    consumed_by: [/create, /fill, /validate]
+    purpose: "Inheritance — each sub-agent in a system is an agent and follows agent.yaml's archetypes, rubric, anti-patterns, and lifecycle"
+    invisibility_audit_status: "N/A — internal inheritance"
+  squad_codex:
+    path: product-dna/squad.yaml
+    consumed_by: [/create, /fill, /validate]
+    purpose: "Inheritance — each sub-squad in a system is a squad and follows squad.yaml's routing_table_schema, handoff_format_spec, install_manifest, and lifecycle"
+    invisibility_audit_status: "N/A — internal inheritance"
+  skill_codex:
+    path: product-dna/skill.yaml
+    consumed_by: [/create, /fill, /validate]
+    purpose: "Inheritance — each preloaded skill in a system's hereditary register is a skill and follows skill.yaml"
+    invisibility_audit_status: "N/A — internal inheritance"
+
+# ===========================================================================
+# SCHEMA CONSUMER STATUS
+# ===========================================================================
+
+schema_consumer_status:
+  fully_wired_sections:
+  - "type, primary_file, install_target, template"
+  - dna_patterns
+  - mcs_expectations
+  - frontmatter (orchestrator sub-agent frontmatter applies)
+  - template_files
+  - discovery_questions.required_in_order (structure)
+  - organismic_engines (structure + coupling declarations)
+  - advanced_composition_patterns (for fully-wired patterns)
+  - architectural_dimensions
+  partially_wired_sections:
+  - lifecycle.create (scaffold does not yet generate system sub-parts)
+  - lifecycle.fill (no multi-sub-part fill walker)
+  - lifecycle.validate (coupling_check and recursion_modalities not consumed)
+  - lifecycle.test (multi-sub-part sandbox and uninstall dry-run not implemented)
+  - lifecycle.package (plugin.json multi-sub-part generation not implemented)
+  - lifecycle.import (system detection now present but full inheritance walker not implemented)
+  aspirational_sections:
+  - essence
+  - architectural_principles
+  - operational_modes
+  - freedom_levels
+  - coupling_declaration_requirement.enforced_by cross-references
+  - archetypes (the 5 organism shapes)
+  - anti_patterns_catalog
+  - failure_modes
+  - invariants
+  - security_profile
+  - marketplace_taxonomy
+  - hooks_fragment_spec
+  - claude_md_fragment_spec
+  - organism_state_machine
+  - recursion_proof
+  blocking_gaps_for_this_type:
+  - id: GAP-SYS-1
+    where: myclaude CLI (external)
+    issue: "install_manifest multi-destination dispatch is not consumed by the CLI. Systems currently install via manual file placement and the manifest serves as documentation."
+    wave_to_fix: 3
+    severity: MAJOR — system distribution relies on manual install until CLI ships install_manifest support
+  - id: GAP-SYS-2
+    where: .claude/skills/validate/references/validation-stages/stage-5-dna-tier3.md
+    issue: "The coupling_check rule (every active engine has couples_with) is declared in this codex but not yet consumed by /validate Stage 5. Wave 3 teaches /validate to parse organismic_engines and verify couplings."
+    wave_to_fix: 3
+    severity: MAJOR — systems can currently pass /validate without enforced coupling declarations
+  - id: GAP-SYS-3
+    where: .claude/skills/validate/SKILL.md
+    issue: "Recursion modalities (level_1_quick, level_3_split, level_3_cached, level_3_full) are declared in this codex but not yet consumed by /validate. Full recursive validation of a complex system currently exceeds single-session window without session-splitting support."
+    wave_to_fix: 3
+    severity: MAJOR — apex systems cannot currently be fully recursively validated in one session
+  - id: GAP-SYS-4
+    where: .claude/skills/test/SKILL.md
+    issue: "Multi-sub-part sandbox (dry-run install_manifest + uninstall symmetric test) is not yet implemented. /test currently tests individual files in isolation."
+    wave_to_fix: 3
+    severity: MAJOR — reversibility cannot be verified at test time
+  - id: GAP-SYS-5
+    where: "Aspirational flow in advanced_composition_patterns.longitudinal_self_observation"
+    issue: "The mechanism by which a PostToolUse AgentHook observer reads the parent agent's conversation (via SubagentStart additionalContexts, forkContextMessages, or another channel) is documented but not fully verified. Wave 3 runs experiments and updates the ground-truth with the exact mechanism."
+    wave_to_fix: 3
+    severity: MINOR — the pattern is usable with current primitives but the exact conversation-access channel is not canonicalized
+
+# ===========================================================================
+# INSTALL MANIFEST — multi-destination dispatch for organism bundles
+# ===========================================================================
+# Extends squad.yaml install_manifest with system-specific multi-destination
+# dispatch. A system ships a CLAUDE.md fragment, optional hooks fragment,
+# optional output-style, optional sub-squads, optional sub-agents, optional
+# sub-skills — each of these goes to a DIFFERENT native destination. The
+# install_manifest declares every target explicitly, the install-manifest.lock
+# records the hashes, and uninstall reverses the dispatch exactly.
+
+install_manifest:
+  rationale: "Systems are the most multi-targeted product type. A single organism can ship content to .claude/rules/ (claude-md fragment), .claude/settings.local.json (hooks fragment via merge), .claude/agents/ (sub-agents), .claude/squads/ (sub-squads), .claude/skills/ (preloaded specialist skills), .claude/output-styles/ (external voice), .claude/systems/{slug}/ (organism root with STATE.yaml and routing). install_manifest is the declarative contract that makes this dispatch auditable and reversible."
+  schema:
+    version: "integer — manifest schema version (current: 1)"
+    organism_root: "path — the system's own directory, typically .claude/systems/{slug}/"
+    targets:
+      type: list
+      item_schema:
+        source: "relative path inside the organism bundle (e.g., CLAUDE.md, hooks.json, agents/observer.md)"
+        target: "destination path using {slug} placeholder and one of the canonical native destinations"
+        kind: "one of: copy, merge, append"
+        kind_details:
+          copy: "Plain file copy to the target location. Overwrites only with --force."
+          merge: "For JSON files (settings.local.json, plugin.json). The source is merged into the target by key, with added keys tracked in install-manifest.lock for exact removal at uninstall."
+          append: "For text files (.claude/rules/{slug}.md if appending to an existing rules file, README.md badges). Appends with BEGIN/END markers for idempotent removal."
+    post_install_hint: "string — message shown after install (invocation instructions)"
+    pre_uninstall_checks: "optional list of checks before uninstall"
+  canonical_example: |
+    version: 1
+    organism_root: ".claude/systems/{slug}/"
+    targets:
+      - source: CLAUDE.md
+        target: ".claude/rules/{slug}.md"
+        kind: copy
+      - source: STATE.yaml
+        target: ".claude/systems/{slug}/STATE.yaml"
+        kind: copy
+      - source: config/routing.yaml
+        target: ".claude/systems/{slug}/config/routing.yaml"
+        kind: copy
+      - source: hooks.json
+        target: ".claude/settings.local.json"
+        kind: merge
+      - source: agents/observer.md
+        target: ".claude/agents/{slug}__observer.md"
+        kind: copy
+      - source: agents/orchestrator.md
+        target: ".claude/agents/{slug}__orchestrator.md"
+        kind: copy
+      - source: squads/review-squad/
+        target: ".claude/squads/{slug}__review-squad/"
+        kind: copy
+      - source: output-style.md
+        target: ".claude/output-styles/{slug}.md"
+        kind: copy
+    post_install_hint: |
+      Organism installed. Invoke via:
+        Task(subagent_type: "{slug}__orchestrator", prompt: "<your request>")
+      Or let the SessionStart hook auto-align on the next session start.
+  namespace_strategy:
+    default: "double-underscore prefix — {slug}__{role} — for agents and squads to prevent collision with other installed products"
+    alternative: "subdirectory — {slug}/{role} — for skills where native path namespace is supported"
+    source: "loadSkillsDir.ts:523-543 native namespace via pathSep; squad.yaml namespace_strategy as precedent"
+  idempotency_rules:
+  - "Install is idempotent — re-running with the same manifest produces no changes"
+  - "Uninstall is idempotent — re-running after first uninstall is a no-op"
+  - "append operations use BEGIN/END markers; uninstall removes content between markers exactly"
+  - "merge operations preserve unrelated keys; uninstall removes only keys the install added, tracked via install-manifest.lock"
+  manifest_lock:
+    description: "On install, myClaude writes install-manifest.lock listing every file created, every append marker position, every merged key, every hash. Uninstall reads this lock and reverses exactly."
+    schema:
+      installed_files: "list of absolute paths created"
+      appended_sections: "list of {file, start_marker, end_marker}"
+      merged_keys: "list of {file, key_path}"
+      install_timestamp: ISO 8601
+      manifest_version: integer
+      source_hashes: "per source file sha256"
+      target_hashes: "per target file sha256 at install time"
+  forward_compat_note: "If Claude Code ships native system-install support in a future release, install_manifest becomes a no-op and systems install natively. The bundle structure already matches the expected native layout."
+  consumer_status: aspirational
+  consumer_status_reason: "The myClaude CLI does not yet consume install_manifest for multi-destination dispatch. Wave 3 extends the CLI to read install_manifest and perform the multi-target install with lock generation. Until then, systems install via manual file placement and the manifest serves as documentation."
+
+# ===========================================================================
+# ORGANISM STATE MACHINE (system-specific lifecycle states)
+# ===========================================================================
+# Renamed from state_machine to organism_state_machine to avoid conceptual
+# collision with state_machine_hooks (which refers to the Engine-level
+# lifecycle states of the forged product: scaffold, content, validated, tested,
+# packaged, published). The organism_state_machine describes the RUNTIME
+# lifecycle states of an installed system as it operates — a different concept.
+
+organism_state_machine:
+  rationale: "A forged system has runtime states distinct from the Engine lifecycle states. The Engine lifecycle (scaffold → content → validated → tested → packaged → published) is ABOUT the forge. The organism state machine is about the RUNTIME — the states an installed system moves through as it is used."
+  states:
+  - name: installed
+    description: "install_manifest has been consumed, all files are in place, manifest-lock is written, the organism exists on disk but has not been invoked."
+    entry_trigger: "myclaude install {slug} completes successfully"
+    exit_trigger: "First invocation of any sub-part by the user OR first SessionStart hook fires"
+  - name: idle
+    description: "The organism is present, its claude-md fragment is loaded, its hooks are bound, but no active sub-agent is running."
+    entry_trigger: "Session start completes, no active Task spawn"
+    exit_trigger: "Sub-agent spawn OR matching hook event fires"
+  - name: active
+    description: "A sub-agent is currently running in a forked context. The organism is doing its work."
+    entry_trigger: "Task spawn of any sub-agent"
+    exit_trigger: "Sub-agent returns its final message"
+  - name: observing
+    description: "An E11 longitudinal observer sub-agent is writing to memory:project in background. Only applies to systems that declared E11."
+    entry_trigger: "PostToolUse AgentHook fires an observer"
+    exit_trigger: "Observer returns"
+  - name: hibernating
+    description: "/compact has dissolved the conversation context. The organism's disk state survives but the runtime state is gone."
+    entry_trigger: "/compact command"
+    exit_trigger: "Next user turn after compact — organism reconstitutes from STATE.yaml + .meta.yaml + claude-md fragment"
+  - name: uninstalling
+    description: "myclaude uninstall {slug} is running install_manifest.lock reversal."
+    entry_trigger: "myclaude uninstall {slug}"
+    exit_trigger: "All targets reversed, manifest-lock removed"
+  state_file: ".claude/systems/{slug}/STATE.yaml"
+  consumer_status: aspirational
+  consumer_status_reason: "The organism state machine is a declarative model the codex uses to describe runtime behavior. No skill currently consumes the model — Wave 3 teaches /status to surface the current organism state and /test to cycle through the states in sandbox."
+
+# ===========================================================================
+# HOOKS FRAGMENT SPEC
+# ===========================================================================
+
+hooks_fragment_spec:
+  rationale: "A system that declares E4 environmental perception or E5 cognitive reflex ships a hooks fragment (hooks.json) that install_manifest merges into the user's .claude/settings.local.json. This section declares the fragment format, event vocabulary, and merge semantics."
+  fragment_file: hooks.json
+  fragment_location_in_bundle: "workspace/{slug}/hooks.json"
+  install_target: .claude/settings.local.json
+  install_kind: merge
+  install_merge_strategy: "The fragment is a JSON object with event names as top-level keys and arrays of hook definitions as values. Merging means ADDING the system's hook definitions to the existing arrays for each event, tracking the added entries in install_manifest.lock for exact removal at uninstall time."
+  canonical_event_vocabulary:
+    source: references/claude-code-ground-truth.md §Layer 2 — 27 canonical HOOK_EVENTS
+    events_always_emitted: [SessionStart, Setup]
+    events_per_tool: [PreToolUse, PostToolUse, PostToolUseFailure]
+    events_per_turn: [UserPromptSubmit, Stop, StopFailure]
+    events_per_spawn: [SubagentStart, SubagentStop]
+    events_compact: [PreCompact, PostCompact]
+    events_permission: [PermissionRequest, PermissionDenied]
+    events_teams: [TeammateIdle]
+    events_task: [TaskCreated, TaskCompleted]
+    events_mcp: [Elicitation, ElicitationResult]
+    events_settings: [ConfigChange, InstructionsLoaded]
+    events_worktree: [WorktreeCreate, WorktreeRemove]
+    events_filesystem: [CwdChanged, FileChanged]
+    events_session_lifecycle: [SessionEnd]
+    events_notification: [Notification]
+  hook_types_available:
+  - BashCommandHook — shell command execution with timeout, async, asyncRewake options
+  - PromptHook — LLM prompt evaluation with model and timeout
+  - HttpHook — webhook POST with headers and allowedEnvVars whitelist
+  - AgentHook — full agent spawn with prompt, model, timeout, statusMessage
+  if_matcher_syntax: "Uses permission rule syntax — Bash(git *), Write(*.py), Read(**/*.md). The hook only evaluates if the tool call matches the pattern [SOURCE: schemas/hooks.ts:19-27]."
+  canonical_example_fragment: |
+    {
+      "SessionStart": [
+        {
+          "type": "agent",
+          "if": "SessionStart(*)",
+          "prompt": "Session homeostasis verifier — read STATE.yaml, align constitution for next spawn",
+          "model": "claude-haiku-4-5",
+          "timeout": 30,
+          "statusMessage": "Aligning organism"
+        }
+      ],
+      "PostToolUse": [
+        {
+          "type": "agent",
+          "if": "Write(**/*.md) OR Bash(git *)",
+          "prompt": "Longitudinal observer — write one narrative observation to memory:project",
+          "model": "claude-haiku-4-5",
+          "timeout": 60
+        }
+      ]
+    }
+  namespace_strategy: "Each hook entry the system adds is tracked by install_manifest.lock with the event name and entry index, so uninstall can remove exactly those entries without disturbing other systems' hooks bound to the same events."
+  validation_checks:
+  - Every bound event is in the canonical 27
+  - Every hook has a valid type (BashCommandHook, PromptHook, HttpHook, AgentHook)
+  - Every AgentHook has a prompt, model, and timeout
+  - Every if matcher uses valid permission rule syntax
+  - No hook binds to Setup or SessionStart without justification (these are always-emitted and expensive)
+  consumer_status: partial
+  consumer_status_reason: "The canonical event vocabulary is fully wired via the S118c ground-truth update. The install_manifest merge strategy is documented but the CLI does not yet consume it (GAP-SYS-1). /validate does not yet enforce the validation_checks list above — Wave 3."
+
+# ===========================================================================
+# CLAUDE_MD FRAGMENT SPEC
+# ===========================================================================
+
+claude_md_fragment_spec:
+  rationale: "A system ships a CLAUDE.md fragment that install_manifest appends into .claude/rules/{slug}.md (or the canonical project memory tier). The fragment carries the organism's constitutional content that is re-loaded every turn."
+  fragment_file: CLAUDE.md
+  fragment_location_in_bundle: "workspace/{slug}/CLAUDE.md"
+  install_target: ".claude/rules/{slug}.md"
+  install_kind: append
+  install_append_marker_format: "<!-- BEGIN system:{slug} -->...<!-- END system:{slug} --> wrapped around the fragment content, enabling idempotent removal at uninstall time."
+  memory_hierarchy_position:
+    tier: 3
+    tier_name: project
+    reason: "Systems install into the project memory tier because the organism is a project-level constitutional contribution. User-tier and managed-tier install are reserved for personal-global and organization-global products respectively."
+    source: "references/claude-code-ground-truth.md §Layer 0 — managed(1) < user(2) < project(3) < local(4), reverse priority"
+  max_chars_hard: 4000
+  max_chars_hard_source: "config.yaml token_budgets.claude_md_char_hard AND references/claude-code-ground-truth.md §Layer 0 MAX_MEMORY_CHARACTER_COUNT=40000 with Engine soft limit 4000 for ambient cost discipline"
+  frontmatter_conditional_activation:
+    field: paths
+    syntax: "Glob patterns in frontmatter make the fragment conditional — only loaded when matching files exist in the working context. Patterns ending in /** are normalized to /. Pattern ** alone means no-glob (always applies)."
+    source: "claudemd.ts:253-279 parseFrontmatterPaths"
+  at_include_directive:
+    syntax: "@path, @./relative, @~/home, @/absolute — resolved in leaf text nodes only, not inside code blocks or code spans"
+    composition_use: "Enables the system to split the fragment into modular sub-files (e.g., @./rules/observability.md, @./rules/coupling.md) that stay under the 4000 char individual limit while composing a richer constitution"
+    source: "claudemd.ts:18-26"
+  html_comment_stripping: "Block-level HTML comments <!-- ... --> are stripped from the fragment by the runtime BEFORE injection into the prompt. WHY comments at the block level are invisible to the model but visible to human readers of the source. /package exploits this by removing WHY comments from disk, matching what the runtime would have stripped anyway [SOURCE: claudemd.ts:281-334]."
+  canonical_example_fragment: |
+    ---
+    paths: [src/**/*.ts, src/**/*.tsx]
+    ---
+    # {organism-name}
+
+    This fragment is conditional — it loads only when TypeScript files are present
+    in the working context.
+
+    ## Identity
+    <one-line organism identity>
+
+    ## Active Engines
+    (list of the 7-13 active engines with their couples_with)
+
+    @./rules/coupling-declarations.md
+    @./rules/ecological-coexistence.md
+
+    ## Anti-Patterns (last 30% for attention-recency)
+    (AP-S1..S12 as applicable to this organism)
+  validation_checks:
+  - Fragment file exists and parses as markdown
+  - Frontmatter paths (if present) are valid glob patterns
+  - "@include references resolve to files inside the organism bundle"
+  - Char count under 4000 OR @include composition is used to split content
+  - No HTML comments contain sensitive information (they are visible in source)
+  - Critical constraints are in the last 30% of the fragment body (D19)
+  consumer_status: fully-wired
+  consumer_status_reason: "All mechanisms are verified native primitives per the S118c ground-truth Layer 0. /validate stage 3 check_d3 and check_d19 enforce the structural requirements. The install append with markers is a myClaude convention already declared in squad.yaml install_manifest — system extends to the project memory tier."
+
+# ===========================================================================
+# RECURSION PROOF — P9 operationalized
+# ===========================================================================
+
+recursion_proof:
+  rationale: "P9 Recursive Integrity is the principle that a system must pass its own validator when pointed at itself. For system type, this is not aspirational — it is a forge-time gate. The codex blocks publish if the recursion_proof section is absent or the declared demonstration cannot be verified."
+  rule: "Every forged system MUST ship a recursion_proof.md (or equivalent demonstration) that shows the output of /validate --target=self run against the system bundle, with a declared expected result (PASS or PASS with declared warnings) and a timestamp of the last successful run."
+  enforced_by:
+  - lifecycle.validate.type_specific.per_stage_hooks.stage_3_dna_tier1.check_d4
+  - lifecycle.publish.blocks_when
+  - mcs_expectations.mcs2.blocks_publish
+  blocks_publish: true
+  blocks_publish_reason: "Clause VII of the Engine constitution — the Engine passes its own /validate --target=engine before shipping. Systems, being organisms that compose multiple primitives, are the only type where recursive integrity can be both demanded and verified. Without the proof, the codex is hypocritical (AP-S9 structural_hypocrisy)."
+  demonstration_file_template: |
+    # Recursion Proof — {system-name}
+
+    ## Command
+    /validate --target=self --level=3
+
+    ## Expected Result
+    PASS (0 errors, X warnings — all declared below)
+
+    ## Last Run Timestamp
+    {ISO-8601 timestamp}
+
+    ## Declared Warnings (if any)
+    (enumerate every warning that is expected and accepted — anything unexplained fails the proof)
+
+    ## Substrate Verification
+    (for each of the 13 engines active in this organism, the proof verifies that:
+    - the engine is declared in organismic_engines
+    - couples_with is non-empty and rationale is declared
+    - the corresponding discovery question is answered in the CLAUDE.md fragment
+    - the native mechanisms declared for the engine are present in the sub-parts)
+  recursion_modalities_offered: [level_1_quick, level_3_split, level_3_cached, level_3_full]
+  recursion_modalities_source: lifecycle.validate.type_specific.recursion_modalities
+  self_challenge_requirement: "The recursion_proof demonstration MUST include one self-challenge — a specific question the creator asked themselves about the organism that could have failed the proof, and the answer that resolved it. This instantiates D11 Socratic Pressure at the organism level."
+  consumer_status: aspirational
+  consumer_status_reason: "The rule is declared; /validate does not yet run --target=self automatically against a forged system. Wave 3 teaches /validate to accept --target=self and to block /publish when the proof is missing or stale. Until then, the recursion_proof is coached via /create and /fill but enforced only by manual creator discipline."
+
+# ===========================================================================
+# ANTI-PATTERNS CATALOG — system-specific AP-S1..S12
+# ===========================================================================
+
+anti_patterns_catalog:
+  scope: "System-specific failure modes. Agent anti-patterns (AP-A1..A6) apply to each sub-agent. Squad anti-patterns (AP-SQ1..SQ6) apply to each sub-squad. Skill anti-patterns apply to each preloaded skill."
+  inherited_from_agent: "AP-A1 through AP-A6 from product-dna/agent.yaml apply to each sub-agent"
+  inherited_from_squad: "AP-SQ1 through AP-SQ6 from product-dna/squad.yaml apply to each sub-squad"
+  inherited_from_skill: "AP-D1 through AP-P3 from product-dna/skill.yaml apply to each preloaded skill"
+  orchestration_failures:
+    AP_S1_pile_without_couplings:
+      name: Pile Without Couplings
+      symptom: "Engines declared in organismic_engines with empty couples_with or missing rationale"
+      problem: "The organism is a set of drawers, not a set of organs. Each engine appears to do something, but the functional relationships are undeclared. When one engine changes behavior, the effect on others is unknowable."
+      severity: critical
+      fix: "Declare couples_with [E_x, E_y] for each active engine with a rationale explaining what useful flow the coupling produces"
+    AP_S2_undeclared_metabolism:
+      name: Undeclared Metabolism
+      symptom: "E1 declared but at_rest and in_operation token costs not specified"
+      problem: "The organism's ambient and per-invocation costs are unknown. Budget enforcement (Cláusula VIII) cannot be checked."
+      severity: high
+      fix: "Declare at_rest (ambient) and in_operation (per-spawn type) token estimates"
+    AP_S3_identity_in_prose_only:
+      name: Identity in Prose Only
+      symptom: "Constitution declared in CLAUDE.md fragment prose but not re-injected via criticalSystemReminder_EXPERIMENTAL on any sub-agent"
+      problem: "Identity drifts across turns because the model has to remember it rather than being reminded. D1 violation at the organism level."
+      severity: high
+      fix: "Install criticalSystemReminder_EXPERIMENTAL on the orchestrator sub-agent with a one-sentence constitution that is always current"
+    AP_S4_closure_without_perception:
+      name: Closure Without Perception
+      symptom: "E0 operational closure declared but E4 environmental perception has zero bound hook events"
+      problem: "The membrane is walled — the organism cannot sense what changes in its environment. The boundary becomes a coffin instead of a skin."
+      severity: high
+      fix: "Bind at least one event from the canonical 27 — SessionStart or PostToolUse are common starting points"
+    AP_S5_reflex_without_judgment_or_vice_versa:
+      name: Reflex Without Judgment OR Judgment Without Reflex
+      symptom: "E5 cognitive reflex declared with no E6 isolated judgment behind it (all responses are reflexes), OR E6 declared with no E5 (every routine goes through full deliberation)"
+      problem: "The brain-and-spine dimension is broken. Reflex-only systems are rigid; judgment-only systems are slow. The dual cognition is the point."
+      severity: medium
+      fix: "Declare explicit split — which threats are handled by reflex (hooks), which by judgment (sub-agent spawn)"
+    AP_S6_mnemonic_layer_collapse:
+      name: Mnemonic Layer Collapse
+      symptom: "Procedural and declarative registers of E3 mixed — STATE.yaml contains narrative prose OR memory:project contains structured state"
+      problem: "The two registers serve disjoint functions. Collapsing them produces a mixed-function file that is hard to query AND hard to narrate. AP-S6 is the organism-level analog of mixing facts and intuitions in a notebook."
+      severity: medium
+      fix: "Separate — STATE.yaml for structured facts (scores, phase, counts), memory:project for natural-language observations (patterns, insights)"
+    AP_S7_free_text_routing:
+      name: Free-Text Routing
+      symptom: "System composes multiple sub-squads but the system-level routing between them is declared in CLAUDE.md fragment prose rather than a system-level routing.yaml"
+      problem: "Cross-sub-squad routing cannot be audited, diffed, or replayed. Violates P4 contract-before-narrative at the system level."
+      severity: high
+      fix: "Create a system-level routing.yaml that declares which sub-squad handles which class of request, with fallback"
+    AP_S8_undisciplined_voice:
+      name: Undisciplined Voice
+      symptom: "E8 external voice declared but no output-style sub-part is composed, AND the sub-agent descriptions in the Task catalog are inconsistent in tone"
+      problem: "The organism's external identity is inconsistent. Users perceive it as multiple personalities rather than one organism."
+      severity: low
+      fix: "Compose an output-style sub-part OR explicitly declare voice characteristics in the CLAUDE.md fragment that sub-agent descriptions must match"
+    AP_S9_structural_hypocrisy:
+      name: Structural Hypocrisy
+      symptom: "System declares P9 recursive integrity but recursion_proof is missing OR the demonstration has never been run OR the declared modalities are not supported"
+      problem: "The codex demands recursive integrity but the forged artifact does not demonstrate it. The Engine's Clause VII violated at the organism level."
+      severity: critical
+      fix: "Ship recursion_proof.md with actual /validate --target=self output and a timestamp"
+    AP_S10_implicit_state:
+      name: Implicit State
+      symptom: "Engine E10 externalized persistent state declared but some piece of state lives only in memory (e.g., the system depends on the orchestrator remembering context across spawns without any file-backed persistence)"
+      problem: "Implicit state does not survive /compact, session end, or reinstall. The organism forgets and the user is confused about why."
+      severity: high
+      fix: "Move every state claim to an externalized file — STATE.yaml, .meta.yaml, memory scope, or install-manifest.lock"
+    AP_S11_self_blindness:
+      name: Self-Blindness
+      symptom: "System at apex quality tier declared without E11 longitudinal self-observation"
+      problem: "The organism operates but never learns about its own operation. Second-order recursion is absent. Apex quality requires the organism to observe itself."
+      severity: low
+      severity_note: "low because E11 is optional for most systems — becomes high only at MCS-3 apex tier"
+      fix: "Add E11 with a PostToolUse AgentHook observer writing to memory:project"
+    AP_S12_stability_confused_with_viability:
+      name: Stability Confused With Viability
+      symptom: "System celebrates its reversibility (install_manifest.lock hash-verified, bit-exact uninstall) as if it were a sign of health, with no evolution path declared"
+      problem: "Reversibility is an adjunct property, not a definition of health. A system that never drifts is a system that never evolves, and systems that do not evolve die when their environment shifts."
+      severity: low
+      fix: "Declare an evolution path in the CLAUDE.md fragment — how updates are shipped, how the constitution evolves, how hereditary memory (preloaded skills) is versioned"
+  namespace_failures:
+    AP_S13_global_namespace_collision:
+      name: Global Namespace Collision
+      symptom: "Sub-agent files named without system-slug prefix — e.g., observer.md instead of my-system__observer.md, OR system-level slash commands using common names like /start /stop /status"
+      problem: "Installation collides with existing agents in user's .claude/agents/ directory OR with other systems' slash commands"
+      severity: high
+      fix: "Apply namespace strategy consistently — {slug}__{role} prefix OR {slug}/{role} subdirectory for skills native namespace"
+  severity_definitions:
+    critical: "Breaks the organism's trust contract — must fix before publish"
+    high: "Significant degradation — fix recommended for MCS-2"
+    medium: "Suboptimal — fix for MCS-3"
+    low: "Polish"
+  consumer_status: aspirational
+  consumer_status_reason: "Wave 3 teaches /validate Stage 7 to grep against this catalog plus inherited catalogs from agent.yaml, squad.yaml, skill.yaml"

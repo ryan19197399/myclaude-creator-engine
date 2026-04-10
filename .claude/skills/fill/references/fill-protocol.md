@@ -97,6 +97,176 @@ Skip if no pitfalls match.
 
 ---
 
+## INTENT-AWARE CALIBRATION (runs before type coaching)
+
+**Purpose.** Tune the section walker, the tone, and the question shape to the product's
+declared nature before filling starts. A cognitive mind needs different questions than a
+procedural skill, even if both are "skills" at the frontmatter layer. This phase reads the
+`intent_declaration` block persisted by `/create` Step 11 and makes the section walker
+speak the language of the specific cognition being built.
+
+**Precondition.** `.meta.yaml → intent_declaration` is present AND
+`intent_declaration.mode ∈ {express, guided}`. When the mode is `legacy_fallback` OR the
+block is absent, skip this phase entirely and run with type-based defaults (the pre-Wave-4
+behavior). Emit the advisory note defined in SKILL.md step 2.
+
+**Inputs read:**
+```yaml
+intent_declaration:
+  engine_parsed:
+    depth: procedural | advisory | cognitive     # drives section roster + question type
+    nature: executor | advisor | orchestrator | observer  # drives tone + voice
+    delivery_mechanism: invoked_slash_command | invoked_task_spawn | ambient_constitutional | ambient_path_scoped | reflex_hook_binding | composed_system  # drives continuity awareness
+  matched_cell: null | <cell_id>                  # cross-reference for coaching examples
+```
+
+### Calibration Axis 1 — Section Roster by Depth
+
+Different depths need different sections emphasized during the walk. The section roster
+below **extends** the default SECTION PRIORITY ORDER; it does not replace it. Every section
+in the default roster still fires — but depth-specific sections are walked with additional
+rigor, and depth-irrelevant sections are walked lightly.
+
+| depth | Sections emphasized (walked with full sparring + elicitation) | Sections walked lightly |
+|---|---|---|
+| **procedural** | Identity, Activation Protocol, Core Instructions (step-by-step), Quality Gate (checkable criteria), Examples (3+ concrete), Edge Cases | Persona, Knowledge boundaries, Cognitive flow |
+| **advisory** | Identity, Persona (bounded), Core Judgment Rules, Confidence Signaling, Anti-Patterns, Examples (realistic judgment calls) | Step-by-step execution, Cognitive layers |
+| **cognitive** | Identity + Singularity Markers (≥3 concrete), Cognitive Flow (3-6 steps), Reasoning Patterns (≥3 with triggers), Knowledge Boundaries (explicit not-knowing), Examples (mapping patterns to outputs) | Quality Gate stays, but the walker prompts for reasoning gates specifically |
+
+**For cognitive depth:** walk the 5 references in canonical order —
+`cognitive-core.md → personality.md → knowledge-base.md → reasoning-engine.md → examples.md`
+— prompting for the C1-C7 cognitive DNA strands per `product-dna/minds.yaml → cognitive_dna_strands`
+rubric. The section walker elevates cognitive architecture prompts to front-of-queue; the
+creator is asked for singularity markers BEFORE being asked for examples, because examples
+without singularity markers become generic.
+
+### Calibration Axis 2 — Tone and Voice by Nature
+
+The creator-facing prose embedded in each section adopts a voice matching the product's
+nature. This is not cosmetic — the voice IS the contract between the product and its
+eventual invoker. A skill that promises to execute but speaks like an advisor will confuse
+the invoker at runtime.
+
+| nature | Voice register | Example question framing | Example output framing |
+|---|---|---|---|
+| **executor** | Imperative, active, present tense. "This skill DOES X." | *"When someone runs this skill, what happens — step by step?"* | Reports done actions: "Applied X. Produced Y. Done." |
+| **advisor** | Judgmental, conditional. "This mind RECOMMENDS X when Y." | *"What's your judgment rule here? When do you choose X over Y?"* | Reports judgments: "Verdict: X. Confidence: moderate. Rationale: ..." |
+| **orchestrator** | Routing, sequential. "This coordinates X → Y → Z." | *"How do the pieces hand off? What data crosses the boundary between them?"* | Reports routing: "Delegated to A → received B → routed to C." |
+| **observer** | Passive, ambient. "This watches for X and surfaces Y." | *"When should this fire automatically? What's the trigger?"* | Reports observations: "Detected X at {time}. Flagged because Y." |
+
+**Implementation.** During the SECTION WALKER, when composing creator questions for each
+section, select the framing column matching `nature`. When proposing section content
+(research-injection mode, inline WebSearch mode, or domain-map derivation), frame the
+proposed text in the matching voice. When showing quality signals, use the nature-aligned
+output framing.
+
+### Calibration Axis 3 — Continuity Awareness by Delivery Mechanism
+
+`delivery_mechanism` tells the walker how the product lives in a creator's session. This
+affects two concrete things: (a) whether the primary file needs to be ruthlessly compact,
+and (b) whether the Compact Instructions section matters.
+
+| delivery_mechanism | Primary file size target | Compact Instructions emphasis |
+|---|---|---|
+| `ambient_constitutional` (CLAUDE.md) | **<4K chars** (best practice — always loaded) | **Mandatory full** — survives session restart and `/compact` |
+| `ambient_path_scoped` (design-system, statusline, etc.) | <6K chars | Mandatory light — scoped loading means moderate compact risk |
+| `invoked_slash_command` (skill, workflow) | <8K chars | Mandatory — session compaction may fire mid-use |
+| `invoked_task_spawn` (agent, minds, squad) | <12K chars | Optional — fork context discards post-return anyway |
+| `reflex_hook_binding` (hooks) | <3K chars | Not applicable — hooks are event-triggered, no session context |
+| `composed_system` (system, bundle) | <5K chars primary + deep references/ | Mandatory — multi-component coordination needs compact survival |
+
+**Implementation.** The INSTRUCTION SIZE OPTIMIZATION phase (later in this protocol) uses
+the size target above. Auto-split triggers based on the delivery-mechanism-specific budget,
+not a single uniform threshold. The walker also surfaces a coaching line at the Compact
+Instructions section whose emphasis matches the table above — for `ambient_constitutional`
+products the walker refuses to proceed until Compact Instructions are substantive.
+
+### Section Priority Order — Calibrated by depth + nature
+
+The default SECTION PRIORITY ORDER (later in this file) is replaced by the calibrated order
+below when intent-aware calibration fires. The default order is a neutral fallback; the
+calibrated order is what the creator actually experiences when `/create` recorded an intent.
+
+**depth=procedural + nature=executor** (procedural skill, workflow):
+1. Identity / Purpose
+2. Activation Protocol (what triggers this, what's loaded)
+3. Core Instructions (step-by-step, imperative)
+4. Quality Gate (checkable criteria, never aspirational)
+5. Examples (3+ concrete input→output)
+6. Anti-Patterns (specific failure modes)
+7. Edge Cases / Graceful Degradation
+8. References / Knowledge
+9. Compact Instructions
+
+**depth=advisory + nature=advisor** (advisory skill, minds advisory, agent):
+1. Identity / Purpose
+2. Persona (bounded — what this advises on, what it does NOT advise on)
+3. Core Judgment Rules (how it decides)
+4. Confidence Signaling (how uncertainty is surfaced)
+5. Anti-Patterns (specific advisory failure modes — over-confidence, scope creep, etc.)
+6. Examples (realistic judgment calls with reasoning)
+7. Knowledge Boundaries (what the advisor does NOT know)
+8. Activation Protocol
+9. Compact Instructions
+
+**depth=cognitive + nature=advisor** (apex_cognitive_mind cell):
+1. Identity + Singularity Markers (≥3 concrete — this is the load-bearing section)
+2. Cognitive Flow (3-6 ordered steps)
+3. Reasoning Patterns (≥3 with named triggers)
+4. Knowledge Base + Boundaries
+5. Personality / Behavioral Matrix
+6. Activation Protocol
+7. Examples (mapping reasoning patterns to outputs)
+8. Quality Gate
+9. Anti-Patterns
+10. Compact Instructions
+(+ full 5-layer reference file walk in canonical order)
+
+**depth=procedural + nature=orchestrator** (squad, system, workflow with routing):
+1. Identity / Purpose
+2. Component Roster (which sub-parts compose this)
+3. Routing Logic (who decides which component fires)
+4. Handoff Specification (what data crosses boundaries)
+5. Activation Protocol
+6. Quality Gate (per component + composed)
+7. Examples (end-to-end scenarios)
+8. Anti-Patterns
+9. Compact Instructions
+
+**nature=observer** (hooks, claude-md, statusline, output-style):
+1. Identity / Purpose
+2. Trigger / Event Surface (what causes this to fire)
+3. Observation Logic (what to notice)
+4. Reporting Rules (how to surface)
+5. Anti-Patterns (false positives, noise, silence)
+6. Examples (trigger → observation → report)
+7. Activation Protocol
+8. Compact Instructions
+
+### Calibration Telemetry (written to .meta.yaml)
+
+Record the calibration decision in `.meta.yaml` so downstream tools (/validate, /status)
+and future sessions can audit:
+
+```yaml
+fill_config:
+  intent_aware: true                          # false if fallback path
+  calibration:
+    depth: procedural | advisory | cognitive | null
+    nature: executor | advisor | orchestrator | observer | null
+    delivery_mechanism: <enum value> | null
+    section_priority_used: "procedural_executor | advisory_advisor | cognitive_advisor | procedural_orchestrator | observer_generic | default_fallback"
+    size_budget_chars: <integer from table above>
+    compact_instructions_severity: "mandatory_full | mandatory_light | mandatory | optional | not_applicable"
+```
+
+`/validate` Stage 0 reads `fill_config.intent_aware` and `fill_config.calibration` as part
+of drift detection: if the filled content drifted from the calibration (e.g., a cognitive
+mind whose singularity markers section is empty), Stage 0 surfaces the drift as advisory
+coaching, never blocking.
+
+---
+
 ## TYPE-SPECIFIC COACHING (before section walk)
 
 ### If type=claude-md [SOURCE: claudemd.ts:9-10, :89-90, :254-268, cc-platform-contract.md §1.5, §1.7, §3.5]

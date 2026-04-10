@@ -4,7 +4,7 @@ description: >-
   Guide content filling for scaffolded products. Walks sections, asks domain questions,
   writes expertise into files. Use after /create in 'scaffold' state, or when the creator
   says 'fill', 'add content', or 'help me complete this'.
-argument-hint: "[product-slug]"
+argument-hint: "[product-slug] [--express]"
 allowed-tools:
   - Read
   - Write
@@ -35,12 +35,19 @@ Extract domain expertise from creator conversation and inject into product files
    - If not, glob `workspace/*/` and list products in scaffold/content state
    - If no products in scaffold/content state found → "No products ready to fill. Run `/create {type}` to scaffold one first."
    - If multiple products found, ask which one to fill
-2. Read `.meta.yaml` from product directory → get type, state, mcs_target
+1b. **Mode selection (Express vs Guided).** Read `creator.yaml → preferences.workflow_style`. Resolve the flow mode:
+    - `--express` flag OR `workflow_style == "autonomous"` → **Express mode**. Skip the three Discovery front-loaded questions, skip the Pitfall Check interactive prompt, skip Extraction Mode menu (default to Standard), skip the Deepening menu after each section, run the section walker with type defaults, and fall straight through to Completion. Interactive prompts are replaced by type-based defaults + one-line advisory notes. Proactive brainstorm prompts are suppressed.
+    - `workflow_style == "guided"` or missing → **Guided mode** (default). Run the full protocol as documented in fill-protocol.md.
+    Record `fill_config.mode: express | guided` in `.meta.yaml` so later skills can reason about the creator's chosen rhythm.
+2. Read `.meta.yaml` from product directory → get type, state, mcs_target, AND the `intent_declaration` block if present.
+   - **Intent-aware calibration:** If `intent_declaration` is present, extract `engine_parsed.{depth, nature, delivery_mechanism}`. These three fields drive section walker routing, tone calibration, and question shape — see `fill-protocol.md → INTENT-AWARE CALIBRATION` for the full rubric. Record `fill_config.intent_aware: true` in `.meta.yaml` when the calibration fires.
+   - **Legacy fallback:** If `intent_declaration` is absent (legacy product) OR if `intent_declaration.mode == legacy_fallback` with all engine_parsed fields null, fall back to type-based defaults. Emit one advisory line: *"This product lacks intent metadata — /fill will use type-based defaults. Re-run /create to unlock intent-aware filling."* Record `fill_config.intent_aware: false`.
 3. **Maintain creator persona**: Read `creator.yaml` → adapt language, depth, and examples to `profile.type` and `technical_level` throughout this skill's execution. A developer gets code examples; a domain expert gets plain language.
 4. **Load UX stack (in order)**:
+   - `references/quality/engine-voice-core.md` — the micro voice contract carried through every question, section signal, and sparring line in /fill. This is where the Creator spends the most time; the voice cannot drift.
    - `references/ux-experience-system.md` §1 Context Assembly (build creator context), §2.2 Archetype-Aware Insights (adapt emphasis to creator goals), §2.3 Moment Awareness (mid-fill coaching)
    - `references/ux-vocabulary.md` — translate terms in any creator-facing output
-   - `references/quality/engine-voice.md` — voice markers, brand DNA, sfumato constraints
+   - `references/quality/engine-voice.md` — full voice substrate. Load when composing section quality signals, sparring pressure, milestone celebrations, or brand moments.
    /fill is where the creator spends the MOST time. The experience must be warm coaching, not interrogation. Adapt: beginners get encouragement + examples. Experts get peer-level sparring. Celebrate section completions with progress visibility ("4/7 sections filled. Core identity locked in."). Hyper-personalize using creator.yaml fields — name, goals, expertise areas.
 5. Load product spec from `references/product-specs/{type}-spec.md`
 6. Load product DNA from `product-dna/{type}.yaml`
@@ -59,6 +66,23 @@ Extract domain expertise from creator conversation and inject into product files
     - If creator continues without scout, skip research injection steps in section walker
 11. **Structured input for choices**: If `creator.yaml → preferences.workflow_style = guided`, use `AskUserQuestion` for all choice points (enhance/replace/skip, deepening method selection, continue/save progress). Use plain text only for open-ended domain knowledge extraction.
 12. **Read fill-protocol.md**: Read `${CLAUDE_SKILL_DIR}/references/fill-protocol.md` now — it contains the full execution protocol for all phases below.
+12b. **SELF-CLONE branch (cognitive minds with sub_type=self only).**
+    If `.meta.yaml.type == "minds" AND .meta.yaml.minds_sub_type == "self"`:
+    - Load the SELF-CLONE content pack: Read `references/fill-content-packs/self-clone.md`
+    - The content pack replaces the standard Discovery, Extraction Mode, and generic Section Walk phases
+    - Follow the content pack's walker entry point (§1) which handles:
+      - Mode selection (distillation vs elicitation based on corpus density)
+      - Distillation pass (if applicable) with creator confirm/refine/reject per entry
+      - Gap elicitation with the ordered question sequences per dimension
+      - Dimensional routing (primary + secondary tagging)
+      - Typology mirror (post-elicitation, three-step protocol)
+      - Coherence diff generation
+      - Honesty floor gates (counter-proofs, signed incaptable list, uncapturable decisions)
+      - Writing populated content into the cognitive mind layer files
+    - After the SELF-CLONE walker completes, skip to Completion (step 13 standard flow is bypassed)
+    - The Sparring, Checkpointing, and Progress phases from the standard flow still apply during the walker — checkpoint after every two dimensions
+    - Record `fill_config.self_clone: true` in `.meta.yaml`
+    - **Do not run this branch for non-SELF cognitive minds or non-minds products** — all other types continue to step 13 unchanged
 13. Begin section-by-section guided extraction (see fill-protocol.md → DISCOVERY PHASE)
 
 ---

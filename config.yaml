@@ -106,6 +106,108 @@ secret_content_patterns:
 # Maps product type → template path + primary file + required files
 # ---------------------------------------------------------------------------
 routing:
+  # ---------------------------------------------------------------------------
+  # COMMON — shared contract consumed by every type block below.
+  # Sources: references/intent-topology.md §2, references/runtime-host-dag.md §2,
+  # references/capability-matrix.md §3.
+  # Consumers: /create (discovery mode axis walking), /validate Stage 0
+  # (Intent Coherence), scripts/codex-drift-check.py (enum validation).
+  # ---------------------------------------------------------------------------
+  common:
+    intent_topology_source: "references/intent-topology.md"
+    runtime_host_derivation_source: "references/runtime-host-dag.md"
+    decision_algorithm_source: "references/capability-matrix.md"  # §3 12-step walk
+    discriminators_source: "references/skill-vs-agent-discriminators.md"
+    composition_anatomy_source: "references/composition-anatomy.md"
+
+    # Canonical axis enumerations. These are the ONLY legal values any
+    # type's intent_topology block can reference. Any codex declaring a
+    # value not in these enums fails drift-check.
+    intent_topology_enums:
+      delivery_mechanism:
+        - "ambient_constitutional"    # claude-md
+        - "ambient_path_scoped"       # skill (paths:)
+        - "invoked_slash_command"     # skill (no paths:)
+        - "invoked_task_spawn"        # agent, minds, squad
+        - "reflex_hook_binding"       # hooks
+        - "composed_system"           # system
+      operational_nature:
+        - "executor"        # mutates state (Write, Edit, Bash)
+        - "advisor"         # read-only judgment + confidence signals
+        - "orchestrator"    # delegation-only (Agent tool)
+        - "observer"        # writes to memory, no user response
+      cognitive_depth:
+        - "procedural"      # no persona, no 5-layer
+        - "advisory"        # persona + bounded knowledge + confidence
+        - "cognitive"       # full 5-layer + 7 C1-C7 strands
+
+    # Locale-adaptive clause contract. Every forged product carries this
+    # runtime contract in its activation protocol. Injected by /create
+    # during W2.6, validated by codex-drift-check marker-grep rule.
+    locale_adaptive_clause:
+      required: true
+      source: "references/locale-adaptive-clause.md"
+      marker_open: "<<< LOCALE-ADAPTIVE CLAUSE (runtime contract, do not edit) >>>"
+      marker_close: "<<< END CLAUSE >>>"
+      localized_header: true   # /create emits a header comment in creator.language
+      localized_header_purpose: "Explain in the creator's native language why the clause below is in EN (runtime instructions parse most faithfully in EN) and reassure that the final output for end users will mirror their language."
+      consumer_status: "native" # W3.5 populated catalog; W3.6 wires /create substitution
+
+      # Localized header catalog (W3.5). /create reads creator.yaml → creator.language,
+      # looks up the matching entry below, and prepends the header as a comment above the
+      # canonical clause in §2 of references/locale-adaptive-clause.md. Each header
+      # explains the same idea in the creator's own language: "this clause is in English
+      # because it is a runtime contract for Claude; end-user output will always mirror
+      # the invoker's language." Fallback is used for any language not in the catalog.
+      localized_header_catalog:
+        pt-BR: |
+          Esta cláusula abaixo está em inglês porque é uma instrução de runtime para o Claude
+          (o modelo processa instruções estruturais com maior fidelidade em inglês). O output
+          final para quem usar este produto será sempre na língua da pessoa que invocar.
+        en: |
+          Runtime contract for Claude. Do not edit — the marker lines are load-bearing and
+          validated by codex-drift-check. End-user output always mirrors the invoker's language.
+        es: |
+          Esta cláusula está en inglés porque es una instrucción de runtime para Claude
+          (el modelo procesa instrucciones estructurales con mayor fidelidad en inglés).
+          El output final para quien use este producto será siempre en el idioma del invocador.
+        fr: |
+          Cette clause est en anglais car c'est une instruction d'exécution pour Claude
+          (le modèle traite les instructions structurelles avec plus de fidélité en anglais).
+          La sortie finale pour l'utilisateur sera toujours dans la langue de l'invocateur.
+        de: |
+          Diese Klausel ist auf Englisch, weil sie eine Laufzeit-Anweisung für Claude ist
+          (das Modell verarbeitet strukturelle Anweisungen am zuverlässigsten auf Englisch).
+          Die endgültige Ausgabe für den Benutzer wird immer in dessen Sprache sein.
+        it: |
+          Questa clausola è in inglese perché è un'istruzione di runtime per Claude
+          (il modello elabora le istruzioni strutturali con maggiore fedeltà in inglese).
+          L'output finale per chi usa questo prodotto sarà sempre nella lingua dell'invocatore.
+        ja: |
+          このclauseは英語です。Claudeへのランタイム命令であり、モデルは構造的命令を英語で最も忠実に処理するためです。
+          このプロダクトを使用するユーザーへの最終出力は、常にそのユーザーの言語で表示されます。
+        zh: |
+          以下条款为英文，因为这是给 Claude 的运行时指令
+          （模型以英文处理结构化指令时最为准确）。
+          本产品的最终输出将始终使用调用者的语言。
+        ko: |
+          아래 조항은 영어로 작성되어 있습니다. 이는 Claude에 대한 런타임 명령이기 때문입니다
+          (모델은 구조적 명령을 영어로 가장 정확하게 처리합니다).
+          이 제품을 사용하는 사용자에게 제공되는 최종 출력은 항상 해당 사용자의 언어로 표시됩니다.
+        fallback: |
+          Runtime contract for Claude. The English text below tells Claude to mirror
+          the invoker's language in all user-facing output.
+
+    # Onboard language confirmation contract.
+    # The /onboard skill scans for language signals (CLAUDE.md locale, shell locale, first-message
+    # heuristic) and ALWAYS confirms if confidence is low or asks once if scan yields no signal.
+    onboard_language_policy:
+      scan_first: true
+      confirm_if_low_confidence: true
+      store_confidence: true          # creator.yaml gains language_confidence: high | low
+      mirror_mid_session: true        # if creator switches language mid-session, mirror immediately without config change
+      consumer_status: "fully-wired"  # /onboard Phase 2.5c runs the language confirmation gate and persists language_confidence
+
   skill:
     template: "templates/skill/"
     primary_file: "SKILL.md"
@@ -128,6 +230,58 @@ routing:
         - "reference material after synthesis"
       ambient_cost: "low"  # <2K chars primary file recommended
 
+    # Intent topology extension — mirrors product-dna/skill.yaml intent_topology.
+    # Source of truth is the codex; this block is the routing-layer projection.
+    intent_topology:
+      source: "product-dna/skill.yaml#intent_topology"
+      declaration_mode: "full"
+      delivery_mechanism_legal: ["ambient_path_scoped", "invoked_slash_command"]
+      delivery_mechanism_default: "invoked_slash_command"
+      operational_nature_legal: ["executor", "advisor"]
+      operational_nature_default: "executor"
+      cognitive_depth_legal: ["procedural", "advisory", "cognitive"]
+      cognitive_depth_default: "procedural"
+      cognitive_depth_source: "product-dna/skill.yaml#depth_discriminator"
+      locale_adaptive_clause_required: true
+
+    # Depth-routed scaffold paths — mirrors routing.minds.depth structure.
+    # /create reads depth from discovery Q1 and picks the matching template/required_files set.
+    depth:
+      procedural:
+        template: "templates/skill/"
+        required_files: ["SKILL.md", "README.md", "references/"]
+        dna_required: [1, 2, 3, 4, 13, 14, 19]
+        strands_required: []
+        target_lines: "<500 primary"
+        mcs_ceiling: 3
+      advisory:
+        template: "templates/skill/"   # shared base template; advisory subtype has no dedicated template yet
+        template_status: "base_template_fallback"
+        required_files: ["SKILL.md", "README.md", "references/"]
+        dna_required: [1, 2, 3, 4, 6, 13, 14, 19]
+        dna_recommended: [5, 11, 15]
+        strands_recommended: ["C1", "C5", "C6"]
+        target_lines: "200-400 primary"
+        mcs_ceiling: 2
+      cognitive:
+        template: "templates/skill/cognitive/"
+        template_status: "native"              # dedicated cognitive skill template exists on disk
+        template_fallback: null                # native path is authoritative
+        required_files:
+          - "SKILL.md"
+          - "references/cognitive-core.md"
+          - "references/personality.md"
+          - "references/knowledge-base.md"
+          - "references/reasoning-engine.md"
+          - "README.md"
+          - "examples/examples.md"
+        dna_required: [1, 2, 3, 4, 5, 6, 11, 13, 14, 15, 19]
+        strands_required: ["C1", "C2", "C3", "C4", "C5", "C6", "C7"]
+        target_lines_total: "800-1200"
+        mcs_ceiling: 3
+        rubric_source: "product-dna/minds.yaml#cognitive_dna_strands"
+        runtime_shape_note: "Cognitive SKILL runs in session_root (shares parent working memory, amplifies in-progress thinking). Cognitive MINDS runs in agent_spawn (isolated fork, own memory, returns structured report). Same 5-layer architecture, different runtime shapes. See references/intent-topology.md Cells 1 and 2 (reasoning_skill_cognitive, perspective_skill_cognitive) vs Cell 3 (apex_cognitive_mind)."
+
   agent:
     template: "templates/agent/"
     primary_file: "AGENT.md"
@@ -135,7 +289,7 @@ routing:
       - "AGENT.md"
       - "README.md"
       - "references/"
-    install_target: ".claude/skills/{slug}/"
+    install_target: ".claude/agents/{slug}.md"
     dna_required: [1, 2, 3, 4, 5, 6, 7, 8, 11, 13, 14, 15, 16]
     context_contract:
       needs_in_window:
@@ -151,6 +305,25 @@ routing:
         - "reference material after synthesis"
       ambient_cost: "low"
 
+    intent_topology:
+      source: "product-dna/agent.yaml#intent_topology"
+      declaration_mode: "full"
+      delivery_mechanism_legal: ["invoked_task_spawn"]
+      delivery_mechanism_default: "invoked_task_spawn"
+      operational_nature_legal: ["executor", "advisor", "orchestrator"]
+      operational_nature_default: "advisor"
+      cognitive_depth_legal: ["procedural", "advisory", "cognitive"]
+      cognitive_depth_default: "advisory"
+      archetype_to_nature_mapping:
+        scout: "advisor"
+        architect: "advisor"
+        adviser: "advisor"
+        generalist: "executor"
+        specialist: "executor"
+        fork_heir: "executor"
+        orchestrator: "orchestrator"
+      locale_adaptive_clause_required: true
+
   squad:
     template: "templates/squad/"
     primary_file: "SQUAD.md"
@@ -159,7 +332,7 @@ routing:
       - "README.md"
       - "references/"
       - "agents/"
-    install_target: ".claude/skills/{slug}/"
+    install_target: ".claude/squads/{slug}/"
     dna_required: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 18]
     context_contract:
       needs_in_window:
@@ -173,6 +346,16 @@ routing:
         - "individual agent reasoning"
         - "inter-agent handoff payloads after synthesis"
       ambient_cost: "medium"  # orchestration logic always loaded
+
+    intent_topology:
+      source: "product-dna/squad.yaml#intent_topology"
+      declaration_mode: "derived"
+      delivery_mechanism_fixed: "invoked_task_spawn"
+      operational_nature_fixed: "orchestrator"
+      cognitive_depth_applicable: "per_sub_agent"
+      runtime_host_derived: "[agent_spawn]"
+      locale_adaptive_clause_required: true
+      locale_adaptive_clause_propagates_to_sub_agents: true
 
   workflow:
     template: "templates/workflow/"
@@ -263,7 +446,7 @@ routing:
       - "STATE.yaml"
       - "README.md"
       - "config/routing.yaml"
-    install_target: ".claude/commands/{slug}/"
+    install_target: ".claude/systems/{slug}/"
     dna_required: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 18]
     context_contract:
       needs_in_window:
@@ -277,6 +460,18 @@ routing:
         - "individual agent reasoning"
         - "inter-component handoffs after synthesis"
       ambient_cost: "medium"  # orchestration logic always loaded
+
+    intent_topology:
+      source: "product-dna/system.yaml#intent_topology"
+      declaration_mode: "derived"
+      delivery_mechanism_fixed: "composed_system"
+      operational_nature_inherited: true
+      operational_nature_inherited_from: "sub-parts (agents, squads, hooks, output-style, claude-md fragment)"
+      cognitive_depth_applicable: "per_sub_part"
+      runtime_host_derived: "varies-by-composed-parts"
+      locale_adaptive_clause_required: true
+      locale_adaptive_clause_propagates_to_sub_parts: true
+      stage_0_validation_note: "Stage 0 Intent Coherence for system type must recursively validate each sub-part's intent_declaration, not just the system's top-level declaration."
 
   bundle:
     template: "templates/bundle/"
@@ -358,6 +553,18 @@ routing:
         - "internal cognitive processing"
         - "reference material after synthesis"
       ambient_cost: "low"
+
+    intent_topology:
+      source: "product-dna/minds.yaml#intent_topology"
+      declaration_mode: "derived"
+      delivery_mechanism_fixed: "invoked_task_spawn"
+      operational_nature_fixed: "advisor"
+      cognitive_depth_source: "product-dna/minds.yaml#depth_discriminator"
+      cognitive_depth_legal: ["advisory", "cognitive"]
+      cognitive_depth_default: "advisory"
+      runtime_host_derived: "[agent_spawn]"
+      locale_adaptive_clause_required: true
+
     # Minds depth routing (advisory is default, cognitive is 5-layer premium)
     depth:
       advisory:
@@ -394,6 +601,17 @@ routing:
       strips_from_window:
         - "style processing internals"
       ambient_cost: "low"
+
+    intent_topology:
+      source: "product-dna/output-style.yaml#intent_topology"
+      declaration_mode: "derived"
+      delivery_mechanism_fixed: "ambient_constitutional"
+      operational_nature_fixed: "advisor"
+      cognitive_depth_applicable: false
+      cognitive_depth_applicable_reason: "Output styles are declarative formatting contracts, not cognitive architectures."
+      runtime_host_derived: "[session_root]"
+      locale_adaptive_clause_required: true
+
     package_rename:
       from: "OUTPUT-STYLE.md"
       to: "{slug}.md"
@@ -619,3 +837,109 @@ gates:
     guided: { confirm_create: true, confirm_fill_discovery: true, confirm_package: true }
     autonomous: { confirm_create: false, confirm_fill_discovery: false, confirm_package: false }
     # confirm_publish is ALWAYS true regardless of profile
+
+# ---------------------------------------------------------------------------
+# TOKEN BUDGETS
+# Clause VIII — Every Token Earns Its Place. These budgets are enforced at
+# forge time and audited at validate time. Always-loaded content is charged
+# on every turn — its ROI must justify the per-turn cost.
+# ---------------------------------------------------------------------------
+token_budgets:
+  ambient_max_tokens: 4000          # Files always loaded (CLAUDE.md, claude-md products)
+  per_operation_max_tokens: 15000   # Load-on-demand per skill invocation
+  total_ceiling_pct: 0.70           # Never exceed 70% of window
+  primary_file_char_soft: 4000      # Platform-recommended soft limit
+  primary_file_char_warn: 40000     # Platform warns at this size
+  skill_md_line_soft: 150           # Hub-and-Spoke limit for skill primary files
+  claude_md_char_hard: 4000         # Hard limit for claude-md products (always-loaded)
+  memory_md_line_max: 200           # Platform-enforced memory file limit
+  memory_md_byte_max: 25000         # Platform-enforced memory byte limit
+
+# ---------------------------------------------------------------------------
+# CERTAINTY BANDS
+# Clause V (Value Hierarchy) + Clause IV (Named Trade-Offs). Forged resources
+# that emit claims use these bands to signal confidence to end users.
+# ---------------------------------------------------------------------------
+certainty_bands:
+  - { label: "verified",    min: 0.95, guidance: "Claim is backed by direct source or executed test." }
+  - { label: "high",        min: 0.85, guidance: "Strong supporting evidence; minor gaps acknowledged." }
+  - { label: "moderate",    min: 0.65, guidance: "Supported but with meaningful uncertainty." }
+  - { label: "low",         min: 0.40, guidance: "Speculative or pattern-based inference." }
+  - { label: "uncertain",   min: 0.00, guidance: "Insufficient information — mark as stance, not knowledge." }
+
+# ---------------------------------------------------------------------------
+# BIAS CATALOG
+# Clause III (Safety Floor) + Clause I (Source Fidelity). Forged resources
+# that reason or recommend must check against this catalog before delivering.
+# Names are user-facing — no academic jargon.
+# ---------------------------------------------------------------------------
+bias_catalog:
+  - { id: "anchoring",          description: "First number or frame dominates subsequent reasoning." }
+  - { id: "base-rate-neglect",  description: "Ignoring how common something actually is in the population." }
+  - { id: "confirmation",       description: "Seeking evidence that supports the current belief." }
+  - { id: "recency",            description: "Overweighting recent events over long-run patterns." }
+  - { id: "availability",       description: "Mistaking vivid or memorable examples for frequent ones." }
+  - { id: "overconfidence",     description: "Reporting certainty higher than evidence supports." }
+  - { id: "conjunction",        description: "Rating specific stories as more likely than general ones." }
+  - { id: "survivorship",       description: "Studying only the winners and missing the silent failures." }
+
+# ---------------------------------------------------------------------------
+# SOURCE TIERS
+# Clause I (Source Fidelity). When a resource cites evidence, it tags the
+# source tier so downstream consumers can weight it.
+# ---------------------------------------------------------------------------
+source_tiers:
+  - { tier: 1, label: "primary",       description: "Direct observation, executed test, or official spec." }
+  - { tier: 2, label: "secondary",     description: "Established documentation, peer review, or trusted authority." }
+  - { tier: 3, label: "synthesis",     description: "Curated summary or analysis of primary/secondary sources." }
+  - { tier: 4, label: "community",     description: "Widely-held community knowledge without single authority." }
+  - { tier: 5, label: "inference",     description: "Reasoning without explicit source — mark as stance." }
+
+# ---------------------------------------------------------------------------
+# OPERATIONAL MODES
+# Clause VI (Discovery Before Structure). Skills detect which mode the
+# creator is in and calibrate behavior accordingly.
+# ---------------------------------------------------------------------------
+operational_modes:
+  discovery:
+    description: "Creator has unclear intent or open problem. Observation and question before structure."
+    entry_skills: ["/scout", "/think", "/explore"]
+    read_write_ratio_min: 3.0
+    default_for: ["new creators", "ambiguous input", "domain exploration"]
+  structure:
+    description: "Creator has clear intent and known type. Scaffold and execute."
+    entry_skills: ["/create", "/fill", "/validate", "/package", "/publish"]
+    read_write_ratio_min: 2.0
+    default_for: ["experienced creators", "explicit type request", "resume in progress"]
+
+# ---------------------------------------------------------------------------
+# FREEDOM LEVELS
+# Calibration dial for how much autonomy a forged resource exercises vs
+# how much it defers to the creator. Set per product at forge time.
+# ---------------------------------------------------------------------------
+freedom_levels:
+  - { level: 1, label: "scripted",     description: "Resource follows exact steps, no deviation." }
+  - { level: 2, label: "guided",       description: "Resource proposes next step; creator confirms each." }
+  - { level: 3, label: "collaborative", description: "Resource makes routine decisions; escalates on ambiguity." }
+  - { level: 4, label: "autonomous",   description: "Resource executes end-to-end; reports on completion." }
+  - { level: 5, label: "delegated",    description: "Resource operates independently; creator audits outputs." }
+
+# ---------------------------------------------------------------------------
+# REFERENCE AXES
+# Clause VIII (Token ROI). Navigation shapes for references/ content.
+# Governs whether a reference file lives in ambient, on-demand, or archive.
+# ---------------------------------------------------------------------------
+reference_axes:
+  axis_frequency:
+    ambient: "Loaded on every turn. Reserved for content used in ≥70% of sessions."
+    on_demand: "Loaded by skill when needed. Reserved for content used in 10-70% of sessions."
+    archive: "Historical only. Reserved for content used in <10% of sessions."
+  axis_criticality:
+    blocking: "Skill cannot function without this content."
+    enhancing: "Skill functions without this content but produces better output with it."
+    contextual: "Content only relevant under specific conditions."
+  placement_rule: |
+    A reference file's placement = f(frequency × criticality).
+    High frequency + blocking → ambient (with token budget audit).
+    Low frequency + enhancing → on-demand.
+    Low frequency + contextual → archive or skill-specific scope.

@@ -27,6 +27,7 @@ Extract domain expertise from conversation and structure it for product creation
 2. If `$ARGUMENTS` provided, use as domain topic seed
 3. If previous `domain-map.md` exists in workspace, load as context
 4. Begin structured knowledge extraction
+5. **Load voice identity:** Load `references/quality/engine-voice-core.md`. Every user-facing line in this skill honors the ✦ signature, three tones, and six anti-patterns.
 
 ---
 

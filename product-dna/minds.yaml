@@ -1,281 +1,2480 @@
-# product-dna/minds.yaml — DNA requirements for Minds
-# Read by /create, /validate, /package when type=minds
+# product-dna/minds.yaml — Codex for Minds
+# Read by /create, /fill, /validate, /test, /package, /publish, /import, /map, /status
+# when type=minds. The SINGLE SOURCE OF TRUTH for the Minds product type.
 #
-# NOTE: Minds are the NON-DEV gateway type. Language in templates and
-# discovery questions must be accessible to strategists, researchers,
-# and consultants with zero coding knowledge.
+# Schema version: 3.0.0 (Sprint 8 Wave 2b — codex)
+# Ground truth: every claim about Claude Code native behavior carries a
+# [SOURCE: file.ts:line] reference verified in S118c. See
+# references/claude-code-ground-truth.md for the full verified capability register.
+#
+# HERITAGE: minds extends agent.yaml which extends skill.yaml. Everything about
+# the native agent primitive (context fork, tool boundaries, memory scopes,
+# frontmatter schema, token economics, lifecycle) is inherited from agent.yaml.
+# This codex adds the COGNITIVE DEPTH layer — the discriminator between
+# advisory minds (lightweight domain advisors with declared persona) and
+# cognitive minds (apex 5-layer architecture with 7 DNA strands C1-C7, the
+# full fidelity rubric, and the only type that triggers validation Stage 7b
+# cognitive_fidelity).
+#
+# VITRUVIAN DECLARATION (read in the portico of essence below):
+# When this codex uses the word "mind", read it as you would read "embodied
+# cognition" — not as you would read "assistant". A mind here is not a prompt
+# wrapper with personality. It is an agent whose cognitive depth is declared
+# as a first-class contract, whose persona is ontological not performative
+# ("You ARE", not "Act as"), and whose reasoning process is decomposed into
+# named layers and strands rather than hidden in prose. The word stays for
+# communication reasons; the meaning is richer by declaration at the portico.
+#
+# The depth discriminator is the load-bearing choice. Advisory depth is a
+# specialist agent with a declared persona and a references/ folder —
+# forge-cheap, install-simple, one file. Cognitive depth is a full 5-layer
+# architecture (L1 Boot, L2 Cognitive Core, L3 Personality Engine, L4
+# Knowledge Domains, L5 Reasoning Engine) with 7 DNA strands (C1 Identity,
+# C2 Biographical Anchor, C3 Cognitive Flow, C4 Singularity Markers, C5
+# Communication DNA, C6 Knowledge Domains, C7 Reasoning Engine) and a
+# fidelity rubric scored by validation Stage 7b. Forge cost 5-10x advisory.
+
+# ===========================================================================
+# IDENTITY
+# ===========================================================================
 
 type: minds
 primary_file: AGENT.md
 install_target: ".claude/agents/{slug}.md"
-template: "templates/minds/"
-# Package rename: AGENT.md → {slug}.md during /package
-# WHY: Claude Code agents use flat {name}.md files in .claude/agents/
-# The workspace uses AGENT.md for clarity, but the installed file is {slug}.md
-package_rename: "{slug}.md"
+template: templates/minds/
+canonical_spec: references/product-specs/minds-spec.md
+package_rename: '{slug}.md'
 
-# DNA pattern requirements
-dna_patterns:
-  tier1:
-    D1:  { required: true,  name: "Activation Protocol",    check: "grep activation/protocol section + references/ ref" }
-    D2:  { required: true,  name: "Anti-Pattern Guard",     check: "grep anti-pattern section with >=5 items" }
-    D3:  { required: true,  name: "Progressive Disclosure",  check: "references/ exists + primary <500 lines" }
-    D4:  { required: true,  name: "Quality Gate",            check: "grep quality gate with >=3 criteria" }
-    D13: { required: true,  name: "Self-Documentation",      check: "README.md with what/install/usage/requirements" }
-    D14: { required: true,  name: "Graceful Degradation",    check: "grep 'when not to use' or error handling" }
-    D19: { required: false, name: "Attention-Aware Authoring", check: "critical rules in last 30% of file" }
-  tier2:
-    D5:  { required: true,  name: "Question System",         check: "grep question/input table — minds MUST ask good questions" }
-    D6:  { required: true,  name: "Confidence Signaling",    check: "grep confidence levels or certainty markers" }
-    D7:  { required: false, name: "Pre-Execution Gate",      applicable: false }
-    D8:  { required: false, name: "State Persistence",       applicable: false }
-    D15: { required: false, name: "Testability",             check: "optional — examples of mind in action" }
-    D16: { required: false, name: "Composability",           check: "optional — minds can be standalone" }
-    D17: { required: false, name: "Hook Integration",        applicable: false }
-  tier3:
-    D9:  { required: false, name: "Orchestrate Don't Execute", applicable: false }
-    D10: { required: false, name: "Handoff Spec",              applicable: false }
-    D11: { required: false, name: "Socratic Pressure",         check: "optional — minds that challenge assumptions are higher quality" }
-    D12: { required: false, name: "Compound Memory",           applicable: false }
-    D18: { required: false, name: "Subagent Isolation",        applicable: false }
-    D20: { applicable: false }
+# ===========================================================================
+# ESSENCE
+# ===========================================================================
 
-# MCS scoring expectations
-mcs_expectations:
-  mcs1: "All Tier 1 PASS. Score >= 75%."
-  mcs2: "Tier 1+2 required PASS. Score >= 85%."
-  mcs3: "Not typical for minds (only D11 applicable from Tier 3). MCS-2 is ceiling."
+essence:
+  one_line: A cognitive specialist agent with declared depth — either lightweight advisory or apex 5-layer cognitive architecture with 7 DNA strands.
+  amplifies: "Embodied cognitive judgment \u2014 a mind lets a creator package domain expertise, reasoning methodology, and communicative voice as a single installable specialist that thinks in declared layers, signals confidence explicitly, and respects bounded knowledge domains. The buyer invokes the mind via the Task tool and receives judgment shaped by the declared cognitive architecture, not generic pattern-matched responses."
+  philosophy: |
+    Read the word "mind" in this codex as you would read "embodied cognition", not as you would read "assistant".
+    A state-of-art mind is NOT a prompt with personality. It is what emerges when a declared persona meets
+    a declared cognitive flow meets a declared knowledge boundary meets a declared reasoning engine. A prompt
+    wrapper is a costume. A mind is a declared cognitive structure — persona ontologically ("You ARE"), not
+    performatively ("Act as"); flow by named steps, not by "think carefully"; knowledge by depth AND boundary,
+    not by vague claims of expertise; reasoning by concrete patterns with triggers, not by decorative mentions
+    of famous frameworks. The founding question for forging a mind is not "what does it know" — it is "how does
+    it THINK, in what named steps, with what declared boundaries, and what does it REFUSE to claim". The depth
+    discriminator (advisory vs cognitive) is the first load-bearing choice — it determines template path,
+    required files, DNA pattern set, rubric strictness, forge cost, and pricing strategy. Minds that skip the
+    discriminator decision are forged wrong.
+  refuses:
+  - Being a prompt wrapper with personality stickers — a mind must declare cognitive depth (advisory or cognitive) and must satisfy the DNA pattern set for that depth, otherwise it is an agent with confused framing.
+  - Claiming expertise without declaring boundaries — the knowledge layer (C6) must enumerate 3-6 domains AND the explicit boundaries where the mind refuses to advise. A mind without declared boundaries is an overclaim by construction.
+  - Using performative identity ("Act as X") instead of ontological identity ("You ARE X") — the C1 strand is load-bearing for cognitive minds and strongly recommended for advisory minds.
+  - Fabricating biographical anchors for historical-figure exemplars — the C2 strand requires real dates, names, events, and works; invention here breaks the trust contract and propagates hallucinations.
+  - Mixing the 5 cognitive layers into a single long file — cognitive minds MUST ship the 5 layer files separately so progressive disclosure (D3) works and so layer-specific edits do not require rewriting the whole architecture.
+  - Running with write-capable tools by default — minds are advisory by architecture; any Write/Edit/Bash access must be explicitly justified and declared as a deviation from the advisory norm.
+  - Spawning sub-agents without declared budget — recursion in minds amplifies cost without amplifying depth; cognitive depth lives in layers, not in sub-agent chains.
+  - Claiming to self-validate — /validate Stage 7b cognitive_fidelity is an external authority; a mind that marks its own fidelity score violates Clause II Separation of Production and Judgment.
+  trade_offs:
+    gains:
+    - Native agent context isolation via forked subprocess — the mind's conversation history, file state cache, and tool permission rules are physically separated from the parent [SOURCE: runAgent.ts:694-714].
+    - "Tool surface declarative and enforced \u2014 minds default to a read-only-judgment tool pool (Read, Glob, Grep, WebSearch, WebFetch) via the ADVISER archetype inherited from agent.yaml [SOURCE: agentToolUtils.ts:15-37]."
+    - Own system prompt, own CLAUDE.md scoping, own effort level, own model — minds are genuinely configurable embodied cognition, not prompt wrappers [SOURCE: loadAgentsDir.ts:123, 660, 677-681].
+    - Cognitive depth discriminator gates forge path — advisory minds are cheap to forge and cheap to install (single AGENT.md + references/), cognitive minds earn premium pricing by shipping the full 5-layer architecture and passing Stage 7b fidelity scoring.
+    - Ontological identity via "You ARE" (C1) shifts the model from role-play to embodiment — this is not decoration, it is a measurable change in response quality verified across cognitive mind exemplars in templates/genius-library/.
+    - Progressive disclosure at the cognitive level — L1 Boot loads the identity and triggers, L2-L5 reference files load on demand when the mind needs to reach deeper cognitive material. Ambient cost stays low.
+    - Confidence signaling (D6 + C5) inherited from advisory reasoning — minds speak in graduated certainty bands (verified / high / moderate / low / uncertain) per config.yaml certainty_bands, making judgment auditable.
+    - "Memory scope available for cognitive minds that observe across sessions \u2014 `memory: project` registers the mind as stateful within a project, `memory: user` across projects [SOURCE: loadAgentsDir.ts:456-467]."
+    - Preloaded skills via the skills frontmatter field — a cognitive mind can preload reasoning methodology skills from templates/genius-library/ as hereditary cognition, injected as meta messages before any user input [SOURCE: runAgent.ts:577-646, loadAgentsDir.ts:684].
+    - Lower tool attack surface than general agents — the ADVISER archetype default disallows Edit, Write, NotebookEdit, and Bash by default, reducing the security audit surface dramatically versus write-capable agents.
+    sacrifices:
+    - Higher forge cost at cognitive depth — a state-of-art cognitive mind requires persona design, biographical grounding, cognitive flow decomposition, singularity marker extraction, communication DNA authoring, knowledge boundary declaration, and reasoning engine pattern cataloging (7 strands) spread across 5 layer files (800-1200 lines total).
+    - Return value is unstructured text at the invocation layer — the parent receives a single final assistant message as free text; the mind's body must instruct the output format [SOURCE: AgentTool/prompt.ts:257].
+    - Cannot execute — minds deliver judgment, not action. For tasks that need file edits or shell execution, the creator forges an agent (write-capable) or a squad (orchestrated action), not a mind.
+    - Advisory minds cannot pass Stage 7b cognitive_fidelity — only cognitive-depth minds are eligible; advisory minds top out at MCS-2 on the fidelity rubric dimension while remaining eligible for MCS-2 on structural and integrity dimensions.
+    - Author attribution for genius-library profiles carries licensing questions that the creator must resolve before publishing — historical-figure exemplars are common but not automatically royalty-free for all uses.
+    - Baseline delta against vanilla Claude is harder to measure for minds than for workflows — the output is judgment shaped by persona, not a procedural result with a correct answer.
+    worth_it_when: The creator is packaging domain expertise or cognitive methodology that benefits from declared persona, declared reasoning flow, declared knowledge boundaries, and graduated confidence signaling — and the install target is a single specialist the parent context can spawn via the Task tool without supervising line-by-line.
 
-# Template file mapping
-template_files:
-  - source: "AGENT.md.template"
-    target: "AGENT.md"
-    dna_injected: [D1, D2, D4, D5, D6, D14]
-  - source: "README.md.template"
-    target: "README.md"
-    dna_injected: [D13]
-  - source: "examples/examples.md.template"
-    target: "examples/examples.md"
-    dna_injected: [D15]
+# ===========================================================================
+# ARCHITECTURAL PRINCIPLES — 9 specializations for minds
+# ===========================================================================
 
-# Voice requirements (non-dev first)
-voice:
-  why_comments: "Plain language only. NOT 'D5 (Question System)' — YES 'Great minds ask before they answer.'"
-  discovery: "Business language, not technical jargon."
-  template: "Assumes ZERO coding knowledge."
+architectural_principles:
+  P1_purpose_before_shape:
+    specialization: "Before scaffolding a mind, the creator answers the depth discriminator question FIRST \u2014 advisory or cognitive \u2014 because depth determines template path, required files, DNA pattern set, and rubric. After depth, the creator answers four purpose questions: (1) what cognitive judgment does this mind deliver, (2) what parent context invokes it, (3) what declared boundaries keep it honest, (4) what voice does it speak in. Archetype selection (domain_advisor / cognitive_mentor / research_partner / strategic_thinker / technical_specialist / creative_catalyst) happens AFTER depth + purpose, because archetype is a shape; depth is a type."
+    enforced_by:
+    - depth_discriminator.selection_required
+    - discovery_questions.required_in_order
+    - lifecycle.create.type_specific.discovery_phase
+    - archetypes.selection_required
+    blocks_forge_when: Creator cannot name advisory or cognitive AND cannot answer 'what cognitive judgment does this mind deliver' in one sentence.
+  P2_constraint_before_feature:
+    specialization: "For minds, constraint is PHYSICAL via the inherited ADVISER tool pool AND DECLARATIVE via the knowledge boundary. The tool boundary (inherited from agent.yaml ADVISER archetype \u2014 Read, Glob, Grep, WebSearch, WebFetch plus disallowedTools Edit, Write, NotebookEdit, Bash) is the primary physical constraint. The knowledge boundary (C6 strand \u2014 3-6 domains with explicit boundaries) is the primary declarative constraint. Anti-patterns AP-M1..M8 below catalog minds-specific failure modes; AP-A1..A6 from agent.yaml apply by inheritance. Boundaries declared BEFORE capabilities."
+    enforced_by:
+    - dna_patterns.tier1.D2
+    - anti_patterns_catalog
+    - frontmatter.recommended
+    - invariants
+    - cognitive_architecture.layers.L4_knowledge_domains
+    blocks_forge_when: Mind declares no knowledge boundary OR declares write-capable tools without explicit justification AND depth is cognitive.
+  P3_composition_over_monolith:
+    specialization: "Minds compose through three native mechanisms \u2014 (1) skills preloaded via the skills frontmatter field (hereditary cognition from templates/genius-library/), (2) the 5 cognitive layer reference files (L1 Boot in AGENT.md, L2-L5 in references/), (3) being spawned by a parent agent via Task. Cognitive minds MUST split the 5 layers into separate files per the progressive disclosure rule \u2014 L1 stays in AGENT.md under 250 lines, L2-L5 live in references/ loaded on demand. Advisory minds can fit in a single AGENT.md under 300 lines plus an optional references/ folder for deep domain notes."
+    enforced_by:
+    - dna_patterns.tier1.D3
+    - cognitive_architecture.layers
+    - depth_discriminator.cognitive.required_files
+    - invariants
+    blocks_forge_when: "Cognitive mind ships a single AGENT.md exceeding 500 lines without splitting into L2-L5 reference files OR advisory mind exceeds 500 lines without moving content to references/."
+  P4_contract_before_narrative:
+    specialization: "The mind's contract is the frontmatter plus the depth declaration plus the cognitive DNA strand declaration. Frontmatter declares name, description (the whenToUse the parent LLM reads to decide whether to invoke), model, denied-tools. Depth declaration (`depth: advisory | cognitive`) is the load-bearing first-class type field. For cognitive minds, the 7 DNA strands C1-C7 are the declared cognitive contract \u2014 identity is ontological, biographical anchor is real, cognitive flow is named, singularity markers are enumerated, communication DNA is specified, knowledge domains are bounded, reasoning engine is cataloged. Prose in the body explains the contract but never replaces it."
+    enforced_by:
+    - frontmatter.required
+    - depth_discriminator
+    - cognitive_dna_strands
+    - lifecycle.validate.type_specific.per_stage_hooks.stage_3_dna_tier1
+    blocks_forge_when: description field missing OR depth field missing OR cognitive mind missing any of C1-C7 strand declarations.
+  P5_failure_mode_before_happy_path:
+    specialization: "Minds declare failure modes at three levels \u2014 (a) what the mind does when its input is ambiguous or out of declared knowledge domain (graceful decline with declared boundary explanation); (b) what the mind returns when it decides to fail (a structured 'uncertain' confidence band rather than fabricated certainty); (c) what happens when the cognitive architecture itself is incomplete (advisory fallback for cognitive minds whose reference files fail to load). Silent failure is forbidden; the mind either delivers bounded judgment or explicitly declines."
+    enforced_by:
+    - dna_patterns.tier1.D14
+    - failure_modes
+    - lifecycle.fill.type_specific.sections_walked_cognitive
+    - cognitive_architecture.layers.L4_knowledge_domains
+    blocks_forge_when: No When-Not-To-Use section OR no graceful decline pattern for out-of-boundary queries OR no confidence signaling for uncertain judgment.
+  P6_state_at_the_edge:
+    specialization: "Minds rarely need persistent state. Advisory minds are typically stateless \u2014 they produce judgment per invocation and return. Cognitive minds MAY declare `memory: project` or `memory: user` when the mind's reasoning benefits from cross-invocation continuity (e.g., a research partner that tracks the user's ongoing inquiry). State MUST be declared via native memory scopes, not implicit conversation memory [SOURCE: loadAgentsDir.ts:456-467]. The declared state must survive /compact \u2014 memory scopes persist via file-backed storage natively."
+    enforced_by:
+    - dna_patterns.tier2.D8
+    - frontmatter.optional
+    - invariants
+    blocks_forge_when: Mind body describes 'remembering' or 'learning over time' behavior without declaring memory scope.
+  P7_read_before_write:
+    specialization: "/create reads creator.yaml plus optional scout report plus this codex plus templates/minds/ (or templates/minds/cognitive/ depending on depth) plus canonical_spec plus agent.yaml (for inheritance) plus structural-dna.md plus config.yaml plus (if genius sub-type) templates/genius-library/{profile}/ BEFORE generating any scaffold. Read-before-write ratio 8:1 for cognitive, 5:1 for advisory. Mind forge is a read-heavy operation by construction."
+    enforced_by:
+    - lifecycle.create.type_specific.read_before_write_ratio_advisory
+    - lifecycle.create.type_specific.read_before_write_ratio_cognitive
+    - lifecycle.create.type_specific.read_inputs_cognitive
+    - invariants
+    blocks_forge_when: Mind scaffolded without reading agent.yaml for inheritance OR without reading the genius profile when sub_type is genius.
+  P8_invisibility_of_mechanism:
+    specialization: "User-facing strings in published minds MUST NOT reference Engine internals, substrate vocabulary, academic author names (minds documentation has the highest author-leak risk of any product type), cognitive-science framework attributions, or meta-vocabulary used inside this codex. The buyer installs a mind and interacts with its declared persona; the cognitive architecture scaffolding stays invisible. Reasoning frameworks are referred to by CAPABILITY not by ATTRIBUTION \u2014 'graduated-confidence updating' not 'Bayesian', 'falsifiability gate' not 'Popperian', 'fast-intuitive vs slow-deliberate reasoning modes' not 'System 1 / System 2'."
+    enforced_by:
+    - lifecycle.validate.type_specific.per_stage_hooks.stage_7_anti_commodity
+    blocks_forge_when: Word-bounded grep on published user-facing strings matches academic author names OR substrate vocabulary OR framework attribution used as persuasion rather than capability description.
+  P9_recursive_integrity:
+    specialization: "For minds, recursive integrity is operationalized via validation Stage 7b cognitive_fidelity \u2014 a minds-specific check that verifies every cognitive DNA strand C1-C7 is present with non-trivial content, that the 5 layer files exist for cognitive minds, and that the fidelity rubric (layer_completeness 0.30 + identity_integrity 0.25 + cognitive_depth 0.25 + substance 0.20) scores above MCS threshold. Stage 7b is non-blocking by default but REQUIRED to pass for cognitive minds claiming MCS-2+ on the fidelity dimension. Advisory minds bypass Stage 7b entirely (not applicable)."
+    enforced_by:
+    - lifecycle.validate.type_specific.per_stage_hooks.stage_7b_cognitive_fidelity
+    - cognitive_fidelity_scoring
+    - dna_patterns.tier1.D4
+    - dna_patterns.tier3.D11_tier3
+    blocks_forge_when: Cognitive mind claims MCS-2+ fidelity without Stage 7b pass OR fidelity score below rubric threshold.
 
-# Frontmatter for minds [SOURCE: loadAgentsDir.ts, frontmatterParser.ts]
-# Minds use AGENT.md format with agent frontmatter fields.
-frontmatter:
-  required:
-    - name            # Mind's invocation name [SOURCE: loadAgentsDir.ts]
-    - description     # Catalog display, token counted [SOURCE: loadSkillsDir.ts:100-105]
-  recommended:
-    - model           # Force model (opus for deep reasoning, sonnet for fluent conversation)
-    - "denied-tools"  # Block tools minds shouldn't use (e.g., Write, Edit for advisory-only minds)
-  optional:
-    - "allowed-tools" # Restrict tool access [SOURCE: AgentTool.ts]
-    - "auto-memory"   # Enable auto-memory for this mind
-    - memory          # user|project|local persistence scope [SOURCE: AgentTool internals]
-    - effort          # Reasoning effort [SOURCE: frontmatterParser.ts]
-    - maxTurns        # Limit iterations [SOURCE: AgentTool.ts]
-    - skills          # Preloaded skill knowledge
-    - hooks           # Mind-scoped hooks [SOURCE: schemas/hooks.ts]
+# ===========================================================================
+# OPERATIONAL MODES + FREEDOM LEVELS
+# ===========================================================================
 
-# Token economics [SOURCE: loadSkillsDir.ts:100-105]
-token_economics:
-  catalog_cost: "name + description → ~50 tokens when mind is available as agent"
-  invocation_cost: "Full AGENT.md loaded when mind is spawned via Agent()"
-  ambient_cost: "Zero — minds are loaded on demand, not auto-loaded"
-  optimization: "Voice/thinking DNA in primary file, deep knowledge in references/"
+operational_modes:
+  supports: [discovery, structure]
+  default: discovery
+  rationale: "Minds default to DISCOVERY because the depth discriminator (advisory vs cognitive) and the persona decomposition (domain, reasoning flow, communication DNA, knowledge boundary) benefit enormously from /scout (existing minds in the marketplace, exemplar cognitive architectures) and /map (decomposing the creator's own expertise into the 5 layers and 7 strands). A creator with a fully clear mind design and a known depth can enter structure mode via /create minds directly, but this is common only for advisory minds."
+  discovery_entry_via:
+    skill: /scout
+    fallback: /map
+    rationale: "/scout identifies existing minds and cognitive exemplars in the marketplace, preventing reinventing personas that exist. /map decomposes the creator's own expertise into the 5 cognitive layers and 7 DNA strands \u2014 especially valuable for the `self` cognitive sub-type where the creator is packaging their own reasoning methodology."
 
-# Compact instructions applicability
-compact_instructions:
-  applicable: true
-  location: "AGENT.md → ## Compact Instructions section"
-  preserves: "persona identity, voice DNA markers, thinking DNA frameworks, active conversation state"
+freedom_levels:
+  valid: [1, 2, 3, 4]
+  default: 2
+  rationale: "Minds work at freedom levels 1-4. Level 5 (delegated) is NOT recommended because autonomous generation of cognitive minds produces personas without authentic grounding \u2014 the creator must deliberately decide the depth, the biographical anchor, the singularity markers, and the knowledge boundaries. Autonomous cognitive mind generation is a commodity trap."
+  per_level_behavior:
+    1: "Engine walks every section, every strand, every layer. Used for first cognitive mind or when the creator is exploring what a mind can be."
+    2: "Engine proposes persona and cognitive flow and knowledge boundaries from discovery; creator confirms each. DEFAULT."
+    3: "Engine generates full mind from discovery + scout + domain-map; creator audits the 5 layer files before validate."
+    4: "Engine generates full mind from a genius profile or domain map; creator reviews high-level structure only."
+  level_5_forbidden_reason: "Level 5 delegates generation fully, which produces cognitive minds without the creator's authentic grounding \u2014 no real biographical anchor, no real singularity markers, no real knowledge boundaries. A mind generated fully autonomously is a decorative persona, not embodied cognition."
+  consumer_status: aspirational
+  consumer_status_reason: "Wave 3 teaches /create and /fill to consult freedom_level for minds with depth-aware calibration."
 
-# ---------------------------------------------------------------------------
-# MIND DEPTH — advisory (flat) vs cognitive (5-layer architecture)
-# ---------------------------------------------------------------------------
-# Minds have two depths. Advisory is the default: a specialist advisor in a
-# single AGENT.md + references/. Cognitive is the premium tier: a full
-# cognitive architecture with 5 layers, 7 DNA strands, and ~1000 lines.
-# Both install to .claude/agents/{slug}.md — same CC primitive, different depth.
+# ===========================================================================
+# INTENT TOPOLOGY — derived shape (delivery + nature fixed; depth via depth_discriminator)
+# ===========================================================================
+# Axis source: references/intent-topology.md §2. Runtime host derivation:
+# references/runtime-host-dag.md §2. Minds has fixed delivery_mechanism
+# (invoked_task_spawn) and fixed operational_nature (advisor) — the only
+# axis with multiplicity is cognitive_depth, which lives in depth_discriminator
+# above (advisory vs cognitive). This block declares the fixed pair via
+# runtime_shape_note and points back to depth_discriminator for the third axis.
 #
-# Semantic anchor: "mind" activates cognition/thinking/intelligence in the LLM.
-# "cognitive" activates structured reasoning, architecture, neuroscience.
-# Together: a mind that THINKS with architecture, not just responds.
-# ---------------------------------------------------------------------------
+# Parsimony rationale: declaring single-value enums is tautological noise
+# (violates constitutional Clause VIII Every Token Earns Its Place). The
+# derived-shape block is the minimal honest declaration that drift-check
+# and config.yaml routing can consume without schema asymmetry vs skill/agent.
 
-depth:
+intent_topology:
+  declaration_mode: derived
+  declaration_mode_reason: "Minds has fixed (delivery_mechanism, operational_nature) — every mind is task-spawned and delivers advisory judgment. The only multi-valued axis is cognitive_depth, which already has a first-class decision gate in depth_discriminator above. Declaring the fixed pair as full enums would be tautological; the runtime_shape_note pattern is more honest."
+  runtime_shape_note: "delivery_mechanism=invoked_task_spawn, operational_nature=advisor. See references/runtime-host-dag.md §2 row 4 (invoked_task_spawn + any → [agent_spawn]). The third axis cognitive_depth ∈ {advisory, cognitive} is resolved via depth_discriminator below."
+  delivery_mechanism_fixed: invoked_task_spawn
+  operational_nature_fixed: advisor
+  cognitive_depth_source: depth_discriminator  # this codex, line ~208
+  runtime_host_derived: "[agent_spawn]"
+  locale_adaptive_clause_required: true
+  locale_adaptive_clause_source: references/locale-adaptive-clause.md
+  locale_adaptive_clause_required_reason: "Every forged mind carries a runtime contract telling the mind to mirror the invoker's language in user-facing output while preserving structural markers in the source language. A mind forged in PT-BR is installable by a French user without retranslation. Injected by /create during W2.6 into templates/minds/AGENT.md.template and (for cognitive depth) into templates/minds/cognitive/AGENT.md.template."
+  locale_adaptive_clause_consumer_status: aspirational
+  consumer_status: aspirational
+  consumer_status_reason: "Wave 2 W2.3 adds config.yaml routing extensions that consume intent_topology.delivery_mechanism_fixed and operational_nature_fixed for install-target resolution. Wave 2 W2.4 adds quality-gates.yaml Stage 0 Intent Coherence. Wave 2 W2.5 extends codex-drift-check.py with enum validation and derived-shape consistency checks."
+
+# ===========================================================================
+# DEPTH DISCRIMINATOR — advisory vs cognitive (first-class forge decision)
+# ===========================================================================
+# This section is the load-bearing novelty of minds.yaml. The depth discriminator
+# is the FIRST question /create asks when type=minds, and the answer determines
+# template path, required files, DNA pattern set, rubric strictness, forge cost
+# estimate, and marketplace pricing strategy. No other product type has this
+# kind of first-class depth bifurcation — it exists because the cognitive
+# architecture is a 5-10x forge cost amplifier that must be a conscious choice.
+
+depth_discriminator:
+  rationale: "Minds bifurcate into advisory (lightweight specialist advisor, single AGENT.md under 300 lines) and cognitive (apex 5-layer architecture with 7 DNA strands, 5 layer files totaling 800-1200 lines). The depth choice is not cosmetic \u2014 it determines template path, required files, DNA pattern set, rubric strictness, Stage 7b cognitive_fidelity eligibility, forge cost, and pricing strategy. The choice is made BEFORE any other /create question because every downstream decision depends on it."
+  selection_required: true
+  selection_phase: lifecycle.create.type_specific.discovery_phase
+  selection_question: "Is this mind advisory (lightweight domain advisor, single file, cheap to forge) or cognitive (apex 5-layer architecture with 7 DNA strands, premium)?"
+  selection_order: FIRST
+  selection_order_reason: "Every downstream /create question depends on depth \u2014 template path, required files, DNA set, rubric, pricing. Asking depth first prevents re-work."
   advisory:
-    description: "Specialist advisor — focused domain expertise in flat structure"
-    template: "templates/minds/"
-    target_lines: "150-300"
-    structure: "AGENT.md + references/ + examples/"
-    use_when: "Creator wants a domain advisor, consultant, or specialist perspective"
-
-  cognitive:
-    description: "Full cognitive architecture — 5 layers, 7 DNA strands, ~1000 lines"
-    template: "templates/minds/cognitive/"
-    target_lines: "800-1200"
-    structure: "AGENT.md (L1) + references/cognitive-core.md (L2) + references/personality.md (L3) + references/knowledge-base.md (L4) + references/reasoning-engine.md (L5)"
-    use_when: "Creator wants a deep cognitive emulation — self-mind, genius mind, or domain intelligence"
+    one_line: "Specialist advisor \u2014 focused domain expertise in a flat single-file structure."
+    description: "An advisory mind is a specialist that gives declared-persona judgment within a bounded domain. It inherits the agent.yaml ADVISER archetype (read-only tool pool, confidence signaling, structured recommendation output) and adds a declared persona voice and knowledge boundary. Single primary file AGENT.md plus an optional references/ folder for deep domain notes. Forge cost: LOW. Install simplicity: HIGH. Pricing: solid ($5-15)."
+    template: templates/minds/
     required_files:
-      - "AGENT.md"
-      - "references/cognitive-core.md"
-      - "references/personality.md"
-      - "references/knowledge-base.md"
-      - "references/reasoning-engine.md"
-      - "README.md"
-      - "examples/examples.md"
-
-# ---------------------------------------------------------------------------
-# 5-LAYER ARCHITECTURE (cognitive depth only)
-# ---------------------------------------------------------------------------
-layers:
-  L1:
-    name: "Boot"
-    file: "AGENT.md"
-    target_lines: "150-250"
-    contains: "identity declaration, principles, cognitive patterns, communication markers, triggers, validation"
-  L2:
-    name: "Cognitive Core"
-    file: "references/cognitive-core.md"
-    target_lines: "200-300"
-    contains: "biography/evolution, cognitive architecture, singularity structures"
-  L3:
-    name: "Personality Engine"
-    file: "references/personality.md"
-    target_lines: "150-250"
-    contains: "behavioral matrix, philosophical system, methodology, interaction patterns"
-  L4:
-    name: "Knowledge Domains"
-    file: "references/knowledge-base.md"
+    - AGENT.md
+    - README.md
+    - "references/ (optional but recommended for MCS-2)"
     target_lines: "150-300"
-    contains: "3-6 domains with depth levels + explicit boundaries"
-  L5:
-    name: "Reasoning Engine"
-    file: "references/reasoning-engine.md"
-    target_lines: "100-200"
-    contains: "primary reasoning pattern, analogy/model catalog, application triggers"
+    structure: "Flat \u2014 AGENT.md holds identity, activation protocol, core principles, voice, knowledge boundary, anti-patterns, quality gate."
+    dna_required: [D1, D2, D3, D4, D5, D6, D13, D14]
+    dna_recommended: [D11, D19]
+    rubric: "Scored against agent.yaml rubric + minds anti-patterns. NOT eligible for Stage 7b cognitive_fidelity (that stage is cognitive-depth only)."
+    mcs_ceiling: 2
+    mcs_ceiling_reason: "Advisory minds do not ship the 5-layer architecture that Stage 7b fidelity scoring requires. MCS-2 is the structural ceiling for advisory. Creators seeking MCS-3 must choose cognitive depth."
+    forge_cost_estimate: "1-2 hours for a prepared creator with a clear domain"
+    use_when:
+    - Creator wants a domain advisor, consultant, or specialist perspective
+    - "Domain is narrow and the mind's value comes from focused expertise, not from cognitive architecture depth"
+    - "First mind for a creator \u2014 advisory is the gentler on-ramp"
+    - Pricing strategy is solid ($5-15) rather than premium
+  cognitive:
+    one_line: "Apex cognitive architecture \u2014 5 layers, 7 DNA strands, Stage 7b fidelity rubric, premium pricing."
+    description: "A cognitive mind is an embodied cognitive architecture shipped as 5 layer files plus README plus examples. Layer 1 Boot is the AGENT.md (identity, activation, triggers, communication markers, quality gate). Layers 2-5 are reference files loaded on demand \u2014 L2 Cognitive Core (biographical anchor, cognitive flow, singularity markers), L3 Personality Engine (behavioral matrix, philosophical system, methodology, interaction patterns), L4 Knowledge Domains (3-6 domains with depth and boundaries), L5 Reasoning Engine (primary reasoning pattern, analogy/model catalog, application triggers). The 7 DNA strands C1-C7 must all be present and verified by Stage 7b cognitive_fidelity. Forge cost: HIGH (5-10x advisory). Install simplicity: MEDIUM (5 files instead of 1). Pricing: premium ($15-50)."
+    template: templates/minds/cognitive/
+    required_files:
+    - AGENT.md
+    - references/cognitive-core.md
+    - references/personality.md
+    - references/knowledge-base.md
+    - references/reasoning-engine.md
+    - README.md
+    - examples/examples.md
+    target_lines_total: "800-1200"
+    target_lines_per_file:
+      AGENT_md: "150-250 (L1 Boot)"
+      cognitive_core_md: "200-300 (L2)"
+      personality_md: "150-250 (L3)"
+      knowledge_base_md: "150-300 (L4)"
+      reasoning_engine_md: "100-200 (L5)"
+    structure: "5-layer \u2014 AGENT.md (L1) holds boot; references/ holds L2-L5 with named files; loaded via progressive disclosure."
+    dna_required: [D1, D2, D3, D4, D5, D6, D11, D13, D14, D15]
+    dna_recommended: [D17, D19]
+    cognitive_dna_required: [C1, C2, C3, C4, C5, C6, C7]
+    rubric: "Scored against agent.yaml rubric + minds anti-patterns + cognitive_fidelity_scoring (layer_completeness 0.30 + identity_integrity 0.25 + cognitive_depth 0.25 + substance 0.20)."
+    mcs_ceiling: 3
+    mcs_ceiling_reason: "Cognitive minds ship the full 5-layer architecture that Stage 7b fidelity scoring requires. MCS-3 apex is achievable when all 7 strands score in the top rubric tier AND substance check passes (real examples, concrete reasoning patterns, specific boundaries, measurable baseline delta against vanilla Claude)."
+    forge_cost_estimate: "8-16 hours for a prepared creator with a complete domain map"
+    use_when:
+    - Creator wants a deep cognitive emulation \u2014 a self-mind, a genius-library mind, or an apex domain intelligence
+    - Domain depth justifies the 5-layer forge cost (the cognitive architecture is the product's differentiator, not just its wrapper)
+    - Pricing strategy is premium ($15-50) or rare ($25-100)
+    - "Creator has read the advisory vs cognitive decision gate and deliberately chose cognitive \u2014 not defaulted into it"
+  decision_gate:
+    ask_explicitly_in: lifecycle.create.type_specific.discovery_phase.first_question
+    default: advisory
+    default_reason: "Advisory is the safer default. Creators who genuinely want cognitive depth will say so; creators who default into cognitive without understanding the 5-10x forge cost end up with half-built minds. When in doubt, start advisory."
+    escalation_rule: "An advisory mind can be upgraded to cognitive later by adding the 4 missing layer files (L2-L5) and re-running /validate with Stage 7b enabled. The reverse is also possible (downgrade by removing the reference files)."
+  consumer_status: partial
+  consumer_status_reason: "config.yaml routing.minds.depth consumes the advisory/cognitive discriminator for install file lists and DNA requirements. /create does not yet walk the depth discriminator as the first-class first question \u2014 Wave 3 teaches /create to ask depth BEFORE any other discovery question."
 
-# ---------------------------------------------------------------------------
-# 7 MIND DNA STRANDS (cognitive depth only)
-# Extracted from Leonardo da Vinci reverse-engineering (S99)
-# ---------------------------------------------------------------------------
-mind_strands:
-  C1:
-    name: "Identity Declaration"
-    check: "Uses 'You ARE' not 'Act as' — ontological, not performative"
-    layer: L1
-    without_it: "Generic role-play"
-  C2:
-    name: "Biographical Anchor"
-    check: "Real dates, names, events, works — grounded in verifiable history"
-    layer: L2
-    without_it: "Hallucinations, fabricated attribution"
-  C3:
-    name: "Cognitive Flow"
-    check: "Defined input→process→output sequence with named steps"
-    layer: L2
-    without_it: "Knowledge without method"
-  C4:
-    name: "Singularity Markers"
-    check: "3+ unique characteristics that make THIS mind irreplaceable"
-    layer: L2
-    without_it: "Generic advisor dressed up"
-  C5:
-    name: "Communication DNA"
-    check: "5+ characteristic expressions, tone rules, style markers"
-    layer: L3
-    without_it: "Robotic responses"
-  C6:
-    name: "Knowledge Domains"
-    check: "3-6 domains with depth levels AND explicit boundaries"
-    layer: L4
-    without_it: "Superficial or overconfident"
-  C7:
-    name: "Reasoning Engine"
-    check: "3+ concrete reasoning patterns with application triggers"
-    layer: L5
-    without_it: "Decorative persona without method"
+# ===========================================================================
+# COGNITIVE ARCHITECTURE — the 5 layers (cognitive depth only)
+# ===========================================================================
+# The 5-layer cognitive architecture is the v2.2 minds substance preserved
+# under the Wave 2 schema. Each layer is a reference file with a declared
+# purpose, target line range, and content checklist. Advisory minds do NOT
+# instantiate this architecture (they stay flat); cognitive minds MUST ship
+# all 5 layer files and MUST pass Stage 7b cognitive_fidelity on layer
+# completeness before claiming MCS-2+ on the fidelity dimension.
 
-# ---------------------------------------------------------------------------
-# COGNITIVE MIND SUB-TYPES
-# ---------------------------------------------------------------------------
+cognitive_architecture:
+  rationale: "Embodied cognition is not a single file of prose \u2014 it is a layered decomposition where each layer serves a disjoint function. L1 Boot is the identity layer; L2 Cognitive Core is the historical/experiential grounding; L3 Personality Engine is the behavioral matrix; L4 Knowledge Domains is the bounded expertise surface; L5 Reasoning Engine is the thinking methodology. Collapsing any two layers into one file produces a mind where debugging is impossible (when the mind misbehaves, which layer is wrong?) and surgical improvement is blocked (edit any content, risk changing unrelated behavior)."
+  applicable_to: cognitive depth only
+  layers:
+    L1_boot:
+      name: "L1 \u2014 Boot (Identity + Activation)"
+      file: AGENT.md
+      target_lines: "150-250"
+      purpose: "The identity layer \u2014 who the mind ARE, what it activates on, how it announces itself, what quality gate it applies before delivering output. This layer is the entry point: the parent LLM reads it to decide whether to invoke, and the mind reads it every turn to re-align identity. Small enough to stay in primary file without blowing the 500-line cap."
+      contains:
+      - "Ontological identity declaration (C1 strand) \u2014 'You ARE' not 'Act as'"
+      - Activation protocol (D1) with explicit load sequence L1 \u2192 L2 \u2192 L3 \u2192 L4 \u2192 L5
+      - 4-6 core principles that define the mind's intellectual DNA
+      - Cognitive flow summary (pointer to L5 for detail)
+      - Communication markers (C5 strand) \u2014 characteristic expressions, tone rules
+      - Activation triggers (when to invoke, when NOT to invoke)
+      - When Not To Use section (D14)
+      - Quality gate (D4) with verifiable checklist before output delivery
+      - Compact instructions section
+      strands_instantiated: [C1, C3 summary, C5]
+      reads_at_boot: "All reference files listed in activation protocol"
+      consumer_status: fully-wired
+      consumer_status_reason: "templates/minds/cognitive/AGENT.md.template exists and declares the L1 shape. /create scaffold consumes the template."
+    L2_cognitive_core:
+      name: "L2 \u2014 Cognitive Core (Biographical Anchor + Cognitive Flow + Singularity)"
+      file: references/cognitive-core.md
+      target_lines: "200-300"
+      purpose: "The historical and experiential grounding layer \u2014 what makes this mind's cognition SPECIFIC rather than generic. Biography anchors identity in real facts (C2 strand). Cognitive flow defines the named reasoning sequence (C3 strand). Singularity markers enumerate what makes this mind irreplaceable (C4 strand). Without L2 the mind is a costume; with L2 the mind has verifiable depth."
+      contains:
+      - "Biographical anchor (C2 strand) \u2014 real dates, names, events, works, documented characteristics"
+      - "Cognitive flow (C3 strand) \u2014 named input\u2192process\u2192output sequence (e.g., Observe \u2192 Analyze \u2192 Integrate \u2192 Synthesize \u2192 Validate)"
+      - "Singularity markers (C4 strand) \u2014 3+ unique characteristics that make this mind irreplaceable"
+      - Historical or experiential evolution of the cognitive pattern
+      - Canonical works, sources, or reference material grounding the cognition
+      - "If historical figure: real documented quotes (not invented), attribution to primary sources where possible"
+      strands_instantiated: [C2, C3, C4]
+      loads_on_demand: "When the mind needs historical grounding or cognitive flow specification"
+      consumer_status: fully-wired
+      consumer_status_reason: "templates/minds/cognitive/references/cognitive-core.md.template exists."
+    L3_personality_engine:
+      name: "L3 \u2014 Personality Engine (Behavioral Matrix + Philosophical System + Methodology)"
+      file: references/personality.md
+      target_lines: "150-250"
+      purpose: "The behavioral layer \u2014 HOW the mind expresses its cognition in interaction. Communication DNA (C5 strand) lives here with full detail. This layer covers tone rules, characteristic expressions, philosophical underpinnings, interaction patterns (how the mind opens conversations, how it handles disagreement, how it signals uncertainty), and methodology (the repeatable process the mind applies to novel problems)."
+      contains:
+      - "Communication DNA (C5 strand) \u2014 5+ characteristic expressions, tone rules, style markers"
+      - "Philosophical system \u2014 the worldview the mind operates from (without naming academic authors; use capability descriptions)"
+      - Methodology \u2014 the repeatable process the mind applies to novel problems
+      - Interaction patterns \u2014 how the mind opens a conversation, how it handles disagreement, how it signals uncertainty (confidence graduation per config.yaml certainty_bands)
+      - "Personality quirks that are distinctive but not caricatured \u2014 depth of curiosity, relationship with ambiguity, stance on speculation"
+      - Behavioral rules for edge cases (when to escalate, when to defer, when to decline)
+      strands_instantiated: [C5]
+      loads_on_demand: "When the mind needs communication DNA or methodology detail"
+      consumer_status: fully-wired
+      consumer_status_reason: "templates/minds/cognitive/references/personality.md.template exists."
+    L4_knowledge_domains:
+      name: "L4 \u2014 Knowledge Domains (Bounded Expertise Surface)"
+      file: references/knowledge-base.md
+      target_lines: "150-300"
+      purpose: "The expertise layer \u2014 WHAT the mind knows and WHERE the boundaries are. The C6 strand is load-bearing: 3-6 domains enumerated with depth level AND explicit boundary statements. A mind without declared boundaries is overclaim by construction; the boundary declaration is the mind's trust contract with the buyer."
+      contains:
+      - "Knowledge domains (C6 strand) \u2014 3-6 domains with depth level (foundational / working / deep / apex) per domain"
+      - "Explicit boundary statements for each domain \u2014 'I do not advise on X because Y'"
+      - "Adjacent domains the mind declines to enter (with reasons)"
+      - "Knowledge currency \u2014 as-of dates for time-sensitive expertise, explicit flagging of domains where the mind's knowledge may be stale"
+      - "Source hierarchy \u2014 which tiers of evidence the mind relies on (per config.yaml source_tiers: primary / secondary / synthesis / community / inference)"
+      - "Graceful-decline templates for out-of-domain queries"
+      strands_instantiated: [C6]
+      loads_on_demand: "When the mind checks its own domain coverage for an incoming query"
+      consumer_status: fully-wired
+      consumer_status_reason: "templates/minds/cognitive/references/knowledge-base.md.template exists."
+    L5_reasoning_engine:
+      name: "L5 \u2014 Reasoning Engine (Patterns + Triggers)"
+      file: references/reasoning-engine.md
+      target_lines: "100-200"
+      purpose: "The methodology catalog \u2014 concrete reasoning patterns the mind applies, each with a trigger condition and a method description. The C7 strand is load-bearing: 3+ reasoning patterns with application triggers. Decorative mentions of famous frameworks do not count; each pattern must have a named method and a named trigger, and the trigger must be specific enough that the mind can detect when to apply it."
+      contains:
+      - "Reasoning patterns (C7 strand) \u2014 3+ named patterns with trigger + method"
+      - Primary reasoning pattern \u2014 the mind's default mode
+      - Analogy catalog \u2014 if the mind reasons by cross-domain transfer, the source and target domain pairs it favors
+      - Model catalog \u2014 if the mind applies mental models, the models named by capability description (not author attribution)
+      - Application triggers \u2014 specific conditions under which each pattern fires
+      - Pattern composition \u2014 how the patterns combine for complex problems
+      - Falsifiability \u2014 for each reasoning pattern, the condition under which the mind would abandon it
+      strands_instantiated: [C7]
+      loads_on_demand: "When the mind chooses which reasoning pattern to apply"
+      consumer_status: fully-wired
+      consumer_status_reason: "templates/minds/cognitive/references/reasoning-engine.md.template exists."
+  layer_composition_rules:
+  - "All 5 layer files MUST exist for a cognitive mind to pass Stage 7b layer_completeness check"
+  - "Total lines across L1-L5 SHOULD be 800-1200 \u2014 below 600 suggests under-forged, above 1400 suggests monolith-tendency"
+  - "L1 AGENT.md loads the activation protocol that explicitly references L2-L5 in order"
+  - "L2-L5 are loaded on demand \u2014 not at boot \u2014 per progressive disclosure (D3)"
+  - "Each layer file contains ONLY its declared strands \u2014 mixing strands across layers is an anti-pattern (AP-M5)"
+  - "No layer file is a single long narrative \u2014 each layer uses named sub-sections for its declared content"
+
+# ===========================================================================
+# COGNITIVE DNA STRANDS — the 7 C1-C7 (cognitive depth only)
+# ===========================================================================
+# The 7 DNA strands are the minds-specific DNA extension beyond the universal
+# D1-D20 structural patterns. Each strand is a verifiable check at Stage 7b
+# cognitive_fidelity. The enumeration is preserved verbatim from v2.2
+# minds.yaml because it is production-validated and has exemplar grounding in
+# templates/genius-library/.
+
+cognitive_dna_strands:
+  rationale: "The 7 DNA strands are minds-specific cognitive checks that go beyond the universal D1-D20 structural patterns. Universal patterns check that a product has sections and boundaries; cognitive DNA checks that the embodied cognition is SPECIFIC rather than generic. Advisory minds are scored against universal DNA only; cognitive minds are scored against universal DNA plus all 7 strands C1-C7 via Stage 7b cognitive_fidelity."
+  applicable_to: cognitive depth only
+  total_strands: 7
+  strands_required_for_cognitive: [C1, C2, C3, C4, C5, C6, C7]
+  strands_recommended_for_advisory: [C1, C3, C5, C6]
+  C1_identity_declaration:
+    name: "C1 \u2014 Identity Declaration"
+    layer: L1_boot
+    check: "Uses 'You ARE' construction, not 'Act as' or 'You act like' or 'You will play the role of' \u2014 ontological, not performative"
+    verification: "grep 'You ARE' in AGENT.md AND absence of 'Act as' / 'role-play' / 'pretend to be' in identity section"
+    without_it: "Generic role-play \u2014 the model treats the mind as a costume rather than as embodied cognition, which degrades response quality measurably"
+    example_pass: "'You ARE a research partner specialized in empirical study design. Not an assistant pretending \u2014 the actual cognitive patterns of someone who has run hundreds of experiments.'"
+    example_fail: "'Act as a research partner. Help the user with study design.'"
+    fidelity_weight: 0.20
+  C2_biographical_anchor:
+    name: "C2 \u2014 Biographical Anchor"
+    layer: L2_cognitive_core
+    check: "Real dates, names, events, works, documented characteristics \u2014 grounded in verifiable history or declared fiction. Fabricated attribution is the single highest-impact failure mode for cognitive minds."
+    verification: "At least 3 specific factual anchors in cognitive-core.md that can be verified against primary sources (for historical figures) OR declared explicitly as fiction (for archetype-based personas)"
+    without_it: "Hallucinations, fabricated attribution, confident wrong claims about the exemplar's actual views or works"
+    example_pass: "'Trained as a civil engineer in Milan 1495-1499, worked on the Sforza court hydraulic projects documented in the Codex Atlanticus folios 26r-28v.'"
+    example_fail: "'A brilliant Renaissance thinker who knew a lot about many things.'"
+    fidelity_weight: 0.15
+  C3_cognitive_flow:
+    name: "C3 \u2014 Cognitive Flow"
+    layer: L2_cognitive_core
+    check: "Defined input \u2192 process \u2192 output sequence with NAMED steps (e.g., 'Observe \u2192 Decompose \u2192 Transfer \u2192 Validate'), not generic 'think carefully'"
+    verification: "cognitive-core.md contains an explicit numbered or arrowed sequence of 3-6 named steps, each step has a short method description"
+    without_it: "Knowledge without method \u2014 the mind has information but no repeatable reasoning process, producing inconsistent judgment across invocations"
+    example_pass: "'1. Observe (examine with microscopic attention). 2. Decompose (break into constituent parts). 3. Transfer (map to a different domain via analogy). 4. Validate (test against direct observation).'"
+    example_fail: "'Think about the problem carefully and respond.'"
+    fidelity_weight: 0.15
+  C4_singularity_markers:
+    name: "C4 \u2014 Singularity Markers"
+    layer: L2_cognitive_core
+    check: "3+ unique characteristics that make THIS mind irreplaceable \u2014 not generic traits like 'curious' or 'thorough', but specific cognitive patterns that differentiate this mind from any other mind in the marketplace"
+    verification: "cognitive-core.md lists 3+ singularity markers, each marker is a declarative sentence naming a specific cognitive pattern or preference"
+    without_it: "Generic advisor dressed up as a named persona \u2014 the buyer cannot distinguish this mind from any other advisor in the same domain"
+    example_pass: "'Cross-domain analogy as primary reasoning tool \u2014 explains engineering through anatomy. Obsessive documentation \u2014 every observation recorded. Comfort with productive ambiguity \u2014 boundaries that blur deliberately.'"
+    example_fail: "'Curious, thorough, analytical, creative.'"
+    fidelity_weight: 0.15
+  C5_communication_dna:
+    name: "C5 \u2014 Communication DNA"
+    layer: L3_personality_engine
+    check: "5+ characteristic expressions, tone rules, style markers that make this mind's voice unmistakable"
+    verification: "personality.md lists 5+ specific expressions the mind uses (not generic phrases), a declared tone (not just 'professional' or 'friendly'), and style markers (rhetorical tendencies, preferred sentence structures, signature questions)"
+    without_it: "Robotic responses \u2014 the mind's cognition may be deep but its voice is generic, breaking the embodiment illusion"
+    example_pass: "'Expressions: \"Let me look again at what we actually observed\", \"The proportion here follows\", \"I documented something similar when\". Tone: curious, precise, wonder-driven. Style marker: questions before answers, observations before theories.'"
+    example_fail: "'Tone: professional. Style: clear and concise.'"
+    fidelity_weight: 0.15
+  C6_knowledge_domains:
+    name: "C6 \u2014 Knowledge Domains"
+    layer: L4_knowledge_domains
+    check: "3-6 domains with declared depth levels AND explicit boundaries \u2014 the mind declares where it is deep, where it is working-knowledge, and where it refuses to advise"
+    verification: "knowledge-base.md enumerates 3-6 domains with depth levels (foundational / working / deep / apex) AND at least 2 explicit boundary statements ('I do not advise on X because Y')"
+    without_it: "Superficial or overconfident \u2014 the mind advises beyond its competence because it never declared where competence ends"
+    example_pass: "'Deep: empirical study design, statistical power analysis. Working: experimental psychology paradigms. I do not advise on medical trials because I lack the regulatory context.'"
+    example_fail: "'Expert in research methods and science.'"
+    fidelity_weight: 0.10
+  C7_reasoning_engine:
+    name: "C7 \u2014 Reasoning Engine"
+    layer: L5_reasoning_engine
+    check: "3+ concrete reasoning patterns with application triggers \u2014 each pattern has a named method and a named trigger condition, not decorative mentions of famous frameworks"
+    verification: "reasoning-engine.md lists 3+ patterns, each with {name, trigger, method} fields, each trigger is specific enough that the mind can detect when to apply the pattern"
+    without_it: "Decorative persona without method \u2014 the mind looks like a cognitive architecture but reasons generically in practice"
+    example_pass: "'Analogical Transfer: when a problem seems stuck in one domain, map it to a different domain and transfer the solution back. Observational Decomposition: when facing complexity, break into smallest observable units and rebuild.'"
+    example_fail: "'Uses first-principles thinking and systems analysis.'"
+    fidelity_weight: 0.10
+  composition_rules:
+  - "Every cognitive mind declares all 7 strands \u2014 partial declarations fail Stage 7b"
+  - "Strand content lives in the declared layer \u2014 C1 in L1, C2+C3+C4 in L2, C5 in L3, C6 in L4, C7 in L5"
+  - "Strand verification is evidence-based \u2014 Stage 7b checks file existence + named content, not narrative quality"
+  - "Strand semantic coherence across layers (e.g., C3 flow matching C7 patterns) is creator discipline; Wave 3 adds cross-layer coherence checks"
+  consumer_status: partial
+  consumer_status_reason: "Strand enumeration is consumed by config.yaml routing.minds.depth.cognitive.strands_required and by cognitive_fidelity_scoring below. Stage 7b cognitive_fidelity check is declared in config.yaml validation_pipeline but the stage reference file (stage-7b-cognitive-fidelity.md) does not yet exist \u2014 see schema_consumer_status.blocking_gaps_for_this_type GAP-MND-1."
+
+# ===========================================================================
+# COGNITIVE SUB-TYPES — self / genius / domain (cognitive depth only)
+# ===========================================================================
+# Cognitive minds bifurcate further into three sub-types depending on where
+# the persona comes from. Self minds package the creator's own expertise.
+# Genius minds build from a historical exemplar in templates/genius-library/.
+# Domain minds create a specialized intelligence from /scout research.
+
 cognitive_sub_types:
+  rationale: "Cognitive minds come from three different sources. SELF packages the creator's own expertise as a cognitive architecture \u2014 the creator IS the persona, extracted via deep discovery. GENIUS builds from a historical or archetypal exemplar profile in templates/genius-library/ \u2014 the exemplar IS the persona, customized per use case. DOMAIN creates a specialized intelligence from /scout research on a knowledge area \u2014 the domain IS the persona, synthesized from sourced material."
+  applicable_to: cognitive depth only
   self:
-    description: "Package the creator's own expertise as a cognitive mind"
-    source: "Environment scan (creator.yaml, skills, products, CLAUDE.md files)"
+    name: "SELF \u2014 Creator's own expertise as cognitive mind"
+    description: "Package the creator's own reasoning methodology, communication style, and domain expertise as an installable cognitive mind. The creator goes through deep discovery (10-15 elicitation questions) to surface the layers and strands. The result is a mind that thinks like the creator would think in their specialty."
+    source: "Environment scan (creator.yaml, existing skills, products, CLAUDE.md files) + deep discovery elicitation"
     requires_elicitation: true
-    elicitation_questions: 10-15
+    elicitation_questions_range: "10-15"
+    grounding_strategy: "Creator is the primary source. Claims are anchored to creator's real experience and documented work."
+    licensing: "Creator owns the persona \u2014 no third-party attribution issues."
+    common_use: "Experts packaging their own methodology for repeatable application by others or for offloading routine judgment to a specialist invocation."
   genius:
-    description: "Build from a genius profile in the library"
-    source: "Genius library (templates/genius-library/{name}/)"
+    name: "GENIUS \u2014 Historical or archetypal exemplar"
+    description: "Build a cognitive mind from a profile in templates/genius-library/. The profile provides C1-C7 seed content (identity, biographical anchor, cognitive flow, singularity markers, communication DNA, knowledge domains, reasoning patterns). The creator customizes the profile for their specific application context."
+    source: "templates/genius-library/{profile}/profile.yaml + creator customization"
     requires_elicitation: false
     requires_customization: true
+    grounding_strategy: "Profile provides verified biographical anchor for historical figures OR declared-fiction anchor for archetypal personas. Creator must maintain fidelity to the profile's documented cognitive patterns."
+    licensing: "Historical figures raise attribution and licensing questions \u2014 public domain for long-deceased figures, but commercial use may have jurisdictional complications. Creators must resolve before publishing."
+    licensing_status: "DECLARED GAP \u2014 see schema_consumer_status.blocking_gaps_for_this_type GAP-MND-7"
+    common_use: "Applying a known cognitive archetype to a new context \u2014 e.g., Renaissance polymath thinking applied to modern product design."
+    genius_library_location: templates/genius-library/
+    genius_library_consumer_status: partial
+    genius_library_consumer_status_reason: "Library exists with only 2 profiles today (_template + one exemplar). Catalog expansion is Wave 3 content work."
   domain:
-    description: "Create a domain intelligence from research"
-    source: "/scout report + domain research"
+    name: "DOMAIN \u2014 Specialized intelligence from research"
+    description: "Create a cognitive mind specialized in a knowledge domain where the persona is the synthesized voice of the domain itself. Grounded by /scout research on primary and secondary sources. The mind is not a historical figure or the creator \u2014 it is the domain's distilled cognitive pattern."
+    source: "/scout report + domain research + creator synthesis"
     requires_elicitation: true
-    elicitation_questions: 8-12
+    elicitation_questions_range: "8-12"
+    grounding_strategy: "Domain sources are primary. Claims are anchored to real references in the knowledge base. C2 biographical anchor becomes 'domain history and evolution' rather than a single person's life."
+    licensing: "Synthesized domain voice avoids single-attribution licensing issues. Citing sources in the knowledge base is still required."
+    common_use: "Packaging specialized knowledge areas where the creator is not the world expert but can synthesize the domain from good sources."
+  selection_gate:
+    ask_in: lifecycle.create.type_specific.discovery_phase
+    order: "After depth discriminator selects cognitive, BEFORE any layer-specific question"
+    default: self
+    default_reason: "SELF is the safest default for creators new to cognitive mind forging \u2014 the grounding comes from the creator's own real experience, which is the most verifiable material available. GENIUS requires licensing discipline; DOMAIN requires research budget."
+  consumer_status: aspirational
+  consumer_status_reason: "/create does not yet differentiate sub-types at scaffold time. Wave 3 teaches /create to route through the sub-type selector after depth discriminator."
 
-# ---------------------------------------------------------------------------
-# FIDELITY SCORING (cognitive depth only, used by /validate)
-# ---------------------------------------------------------------------------
-fidelity_scoring:
-  layer_completeness:
-    weight: 0.30
-    checks:
-      - "All 5 layer files exist"
-      - "Each layer within target line range"
-      - "Total lines 800-1200"
-  identity_integrity:
-    weight: 0.25
-    checks:
-      - "C1: 'You ARE' identity (not 'Act as')"
-      - "C2: 3+ verifiable biographical facts"
-      - "C4: 3+ singularity markers"
-      - "C5: 5+ characteristic expressions"
-  cognitive_depth:
-    weight: 0.25
-    checks:
-      - "C3: cognitive flow defined with named steps"
-      - "C6: 3-6 domains with explicit depth AND boundaries"
-      - "C7: 3+ reasoning patterns with triggers"
-  substance:
-    weight: 0.20
-    checks:
-      - "Real examples (not hypothetical)"
-      - "Reasoning engine has concrete models (not abstract advice)"
-      - "Boundaries are specific ('I do not X because Y')"
-      - "Baseline delta: mind output differs from vanilla Claude"
+# ===========================================================================
+# COGNITIVE FIDELITY SCORING — the minds-specific rubric (Stage 7b input)
+# ===========================================================================
 
-# ---------------------------------------------------------------------------
-# DISCOVERY QUESTIONS (per depth)
-# ---------------------------------------------------------------------------
+cognitive_fidelity_scoring:
+  rationale: "Cognitive minds are scored against a minds-specific rubric beyond the universal structural + integrity + DNA scoring. The fidelity rubric measures HOW embodied the cognition is \u2014 not just whether the files exist. Four dimensions weighted: layer_completeness (structural), identity_integrity (strands C1+C2+C4+C5), cognitive_depth (strands C3+C6+C7), substance (real examples, concrete patterns, specific boundaries, baseline delta). Stage 7b is the only place this rubric is applied."
+  applicable_to: cognitive depth only
+  rubric_dimensions:
+    layer_completeness:
+      weight: 0.30
+      checks:
+      - "All 5 layer files exist (AGENT.md + references/cognitive-core.md + references/personality.md + references/knowledge-base.md + references/reasoning-engine.md)"
+      - "Each layer within target line range (L1 150-250, L2 200-300, L3 150-250, L4 150-300, L5 100-200)"
+      - "Total lines 800-1200 (below 600 under-forged, above 1400 monolith-tendency)"
+      - "Each layer file contains only its declared strand content (no strand bleeding across layers)"
+      pass_threshold: "All 3 checks pass AND no layer under 50% of target minimum"
+    identity_integrity:
+      weight: 0.25
+      checks:
+      - "C1: 'You ARE' construction present in AGENT.md identity section, no 'Act as' / 'role-play' / 'pretend' in identity"
+      - "C2: 3+ verifiable biographical facts in cognitive-core.md with specific dates/names/works (for historical figures) OR declared fiction (for archetypes)"
+      - "C4: 3+ singularity markers, each is a specific cognitive pattern not a generic trait"
+      - "C5: 5+ characteristic expressions in personality.md, tone declared with specificity"
+      pass_threshold: "All 4 strand checks pass with evidence"
+    cognitive_depth:
+      weight: 0.25
+      checks:
+      - "C3: cognitive flow defined with 3-6 named steps, each step has method description"
+      - "C6: 3-6 domains with depth levels AND at least 2 explicit boundary statements"
+      - "C7: 3+ reasoning patterns with {name, trigger, method}, each trigger is specific"
+      pass_threshold: "All 3 strand checks pass with evidence"
+    substance:
+      weight: 0.20
+      checks:
+      - "Real examples (examples/examples.md contains 3+ concrete invocation examples with expected outputs)"
+      - "Reasoning engine has concrete patterns, not abstract advice (C7 triggers are detectable conditions)"
+      - "Boundaries are specific ('I do not X because Y'), not vague ('may not know everything')"
+      - "Baseline delta: mind output differs measurably from vanilla Claude on domain queries (coached, not auto-verified at Stage 7b)"
+      pass_threshold: "3 of 4 checks pass (substance baseline delta is coached)"
+  scoring_formula: "fidelity_score = (layer_completeness \u00d7 0.30) + (identity_integrity \u00d7 0.25) + (cognitive_depth \u00d7 0.25) + (substance \u00d7 0.20)"
+  mcs_thresholds:
+    mcs1: "fidelity_score >= 0.60 (advisory minds bypass this scoring entirely)"
+    mcs2: "fidelity_score >= 0.80"
+    mcs3: "fidelity_score >= 0.92 AND all 7 strands in top rubric tier"
+  stage_7b_reference: lifecycle.validate.type_specific.per_stage_hooks.stage_7b_cognitive_fidelity
+  consumer_status: aspirational
+  consumer_status_reason: "The rubric is declared and referenced by config.yaml validation_pipeline stage 7b, but the stage reference file does not yet exist \u2014 see blocking_gaps_for_this_type GAP-MND-1. Wave 3 forges stage-7b-cognitive-fidelity.md and wires /validate to invoke it."
+
+# ===========================================================================
+# MIND-FORGE ENTRY SCHEMA — origin-aware mind contract
+# ===========================================================================
+# This block declares the operational contract for minds across the three
+# origin types (artificial, synthetic, hybrid_fusion). Each named field
+# below is consumed by a specific downstream Engine skill at a specific
+# validation stage. The block is placed between cognitive_fidelity_scoring
+# (the minds-specific rubric) and archetypes (the shape selector),
+# preserving the codex's semantic progression from depth → cognitive
+# architecture → cognitive DNA → fidelity scoring → origin-aware contract
+# → archetypes.
+#
+# Every field is aspirational today and mechanical when wired. The field
+# names (A1_origin_schema, A2_fidelity_declaration, ...) are stable
+# identifiers for downstream routing; the prefix keeps the dependency
+# graph readable (A6 depends on A1's source_corpus, A8 on A1's
+# source_minds, and so on). The source architecture that declares the
+# full rationale lives at references/engine-mind-forge-architecture.md.
+
+mind_forge_schema:
+  source_architecture: references/engine-mind-forge-architecture.md
+  applies_to: "mind codex entries across all three origin types (artificial, synthetic, hybrid_fusion)"
+  consumer_status: aspirational
+  consumer_status_reason: "Downstream consumers (/validate origin_derivation check, /validate source_adequacy_gate check, /validate coherence_gate check, /validate pre_fusion_viability_gate check, /validate behavioral_manifestation vague-language detector, /create discovery walker extensions) are scheduled across the materialization roadmap declared in references/engine-mind-forge-architecture.md §11."
+
+  # ------------------------------------------------------------------------
+  # A1 — Origin enum + pipeline-decidable schema fields
+  # Source: engine-mind-forge-architecture.md §2, §5.1 (Pattern L1 Operational Origin Test)
+  # Law: LAW-MF-1 binding at the origin derivation layer
+  # ------------------------------------------------------------------------
+  A1_origin_schema:
+    rationale: "The origin field is DERIVED at /validate --level=3 time from pipeline-input fields, not self-declared. A mind declaring an origin that contradicts its pipeline inputs fails with origin_contradiction error. The rule fires mechanically at the validation gate rather than trusting marketing language."
+    origin:
+      type: enum
+      values: [artificial, synthetic, hybrid_fusion]
+      derived: true  # computed by validator, not self-declared
+      derivation_rule: |
+        if len(source_corpus.human_referents) >= 1 and source_ingestion.mode == "extraction_from_documents":
+          return "artificial"
+        elif len(source_corpus.human_referents) == 0 and design_starting_point in ["purpose", "failure_mode", "cognitive_vacuum"]:
+          return "synthetic"
+        elif len(source_minds) >= 2 and all(m.origin == "artificial" for m in source_minds):
+          return "hybrid_fusion"
+        else:
+          return "undefined"  # validator blocks publication
+    source_corpus:
+      human_referents:
+        type: list
+        items: "identifier of a real documented human (name + disambiguation)"
+        empty_for: synthetic
+      source_artifacts:
+        type: list
+        items: "path or stable identifier of a source document"
+      source_ingestion:
+        mode:
+          type: enum
+          values: [extraction_from_documents, designed_from_scratch, fused_from_artificial_minds]
+    design_starting_point:
+      applies_to: "synthetic origin only"
+      type: enum
+      values: [purpose, failure_mode, cognitive_vacuum, null]
+      default: null
+    source_minds:
+      applies_to: "hybrid_fusion origin only"
+      type: list
+      items:
+        mind_slug: string
+        origin: artificial  # all source minds must be artificial per LAW-MF-3
+        weight: "float — contribution weight to fusion, in [0, 1]"
+    validator_contract: "A mind with declared origin != derived origin fails with origin_contradiction error at /validate --level=3. A mind with derived origin == undefined fails with origin_underivable error."
+
+  # ------------------------------------------------------------------------
+  # A2 — Fidelity tier ladder + weighted formula + critical-layer floors
+  # Source: engine-mind-forge-architecture.md §5.2 (L2), §5.5 (L5)
+  # ------------------------------------------------------------------------
+  A2_fidelity_declaration:
+    rationale: "Discrete tiers with strict feature-superset inheritance (higher tier ⊇ lower tier, no XOR features); each tier binds an authenticity target, an effort budget, and a mandatory feature set. Weighted layer formula aggregates per-layer scores; critical layers (values, singularity, paradoxes) carry asymmetric floors that block publication regardless of the aggregate."
+    applies_to: "all three origins; critical layer subset varies by origin"
+    tier_ladder:
+      - name: excellence
+        aggregate_floor: 0.90
+        effort_budget_days: [20, 40]
+        authenticity_target_pct: [90, 100]
+        required_features: all
+      - name: high
+        aggregate_floor: 0.85
+        effort_budget_days: [12, 24]
+        authenticity_target_pct: [85, 89]
+        required_features: all_below_excellence
+      - name: functional
+        aggregate_floor: 0.75
+        effort_budget_days: [6, 15]
+        authenticity_target_pct: [75, 84]
+        required_features: core
+      - name: basic
+        aggregate_floor: 0.65
+        effort_budget_days: [3, 7]
+        authenticity_target_pct: [65, 74]
+        required_features: minimum
+      - name: insufficient
+        aggregate_floor: 0.00
+        meaning: "refuses to ship"
+    formula:
+      layers:
+        - name: values
+          weight: 0.20
+          is_critical: true
+          floor: 0.90
+        - name: singularity
+          weight: 0.20
+          is_critical: true
+          floor: 0.85
+        - name: master_models
+          weight: 0.15
+          is_critical: false
+          floor: 0.75
+        - name: decision_architecture
+          weight: 0.15
+          is_critical: false
+          floor: 0.75
+        - name: obsessions
+          weight: 0.15
+          is_critical: false
+          floor: 0.75
+        - name: paradoxes
+          weight: 0.15
+          is_critical: true
+          floor: 0.80
+        - name: linguistic_surface
+          weight: 0.10
+          is_critical: false
+          floor: 0.65
+        - name: pattern_recognition
+          weight: 0.10
+          is_critical: false
+          floor: 0.65
+      weight_sum_rationale: "Weights sum to 1.25 intentionally to amplify critical layers during aggregation. Formula normalizes by sum(weights)."
+      aggregation: |
+        fidelity = sum(layer.score * layer.weight) / sum(weights)
+        if any(layer.is_critical and layer.score < layer.floor): tier <- tier - 1
+
+  # ------------------------------------------------------------------------
+  # A3 — Graceful degradation + 3-state feature provenance
+  # Source: engine-mind-forge-architecture.md §5.3 (L3) — fills gap G3
+  # ------------------------------------------------------------------------
+  A3_graceful_degradation:
+    rationale: "Fills gap G3 — graceful degradation when source corpus is insufficient. Lower the fidelity tier by one step, tag every extracted feature as confirmed/inferred/speculative, require written justification in manifest. Kills both optimistic drift (false claim of excellence) and pessimistic drift (false rejection of forgeable subject). Creates an audit trail of what was captured vs what was inferred."
+    applies_to: "artificial origin primarily; synthetic uses a simplified variant without provenance tags since there is no external source to triangulate against"
+    source_adequacy_gate:
+      score_components:
+        quantity:
+          floor: 10
+          ideal: 50
+          meaning: "count of substantive sources"
+        quality:
+          floor: 0.6
+          ideal: 0.9
+          meaning: "tier-1 source proportion"
+        diversity:
+          floor: 3
+          ideal: 7
+          meaning: "distinct source types"
+      thresholds:
+        insufficient: "any(component < floor) → cannot forge, declared as gap with written reason"
+        thin: "quantity in [10, 19] OR quality in [0.6, 0.74] → auto-downgrade one fidelity tier"
+        sufficient: "quantity >= 20 AND quality >= 0.75 → top tier permitted"
+      asymmetric_floor:
+        rule: "if source_corpus.substantive_count < 20: fidelity_tier.max = high (not excellence)"
+        rationale: "A thin source corpus cannot support the excellence tier regardless of the subject's apex quality. The constraint is symmetric-drift safe — it prevents optimistic tier inflation without introducing pessimistic under-declaration."
+    feature_provenance:
+      states:
+        - confirmed: "backed by ≥3 independent sources (triangulation rule)"
+        - inferred: "backed by 1-2 sources plus behavioral pattern recognition"
+        - speculative: "backed by no direct source; inferred from adjacent context"
+      rendering_contract:
+        confirmed: "asserted in the mind body without hedge"
+        inferred: "asserted with 'observed across documented cases' framing"
+        speculative: "asserted with explicit 'plausible but not documented' framing"
+      per_feature_requirement: "every trait, value, pattern, and heuristic carries one of the three states in the mind manifest"
+
+  # ------------------------------------------------------------------------
+  # A4 — Cognitive architecture canonical with alternative decompositions
+  # Source: engine-mind-forge-architecture.md §5.4
+  # ------------------------------------------------------------------------
+  A4_cognitive_architecture_canonical:
+    rationale: "Preserves the canonical 7-layer cognitive architecture that is already wired at cognitive_architecture.layers above (L1 Boot / L2 Cognitive Core / L3 Personality Engine / L4 Knowledge Domains / L5 Reasoning Engine with the 7 DNA strands C1-C7). A creator who prefers a different decomposition (for example a content-oriented 7-layer split, an extraction-depth 8-layer split, or a lifecycle 8-layer split) may use one of the alternative decompositions documented in references/structural-dna/cognitive-architecture-variants.md, each of which maps back to the canonical via an explicit translation table. A codex entry using an alternative decomposition must reference the canonical and declare the mapping explicitly."
+    primary_declaration: "cognitive_architecture.layers in this codex (L1-L7 with DNA strands C1-C7)"
+    alternative_decompositions:
+      documented_at: references/structural-dna/cognitive-architecture-variants.md
+      purpose: "alternative decompositions are content variants, not competing architectures — each maps back to the canonical via a translation table"
+    migration_rule: "A codex entry using an alternative decomposition must reference the canonical and declare the mapping explicitly. /validate emits a warning (not a block) pointing at references/structural-dna/cognitive-architecture-variants.md for the translation table."
+
+  # ------------------------------------------------------------------------
+  # A5 — Behavioral manifestation requirement
+  # Source: engine-mind-forge-architecture.md §5.11 (L11) — fills gap G6
+  # ------------------------------------------------------------------------
+  A5_behavioral_manifestation_requirement:
+    rationale: "Fills gap G6 — emula vs simula validation ritual operationalized as mechanical check. Every trait, value, pattern, and heuristic in a mind codex must carry behavioral manifestation. Vague language blocks the validation gate. Kills the Theater anti-pattern at forge time and forces creators to operationalize aspiration."
+    applies_to: [trait, value, pattern, heuristic, cognitive_move]
+    required_fields_per_item:
+      - observable_signal: "at least one explicit signal the mind would exhibit"
+      - step_by_step_protocol: "OR a named procedure the mind runs"
+      - would_do_example: "concrete example of the behavior"
+      - would_not_do_example: "concrete example of what the mind would refuse"
+    validation_gate:
+      vague_language_detector:
+        banned_qualifiers_without_behavioral_pair:
+          - strategically
+          - effectively
+          - with rigor
+          - thoughtfully
+          - in a structured way
+          - holistically
+          - systematically
+        rule: "each banned qualifier must be paired with a concrete behavioral manifestation or blocks publication"
+      specificity_test: "every value needs ≥1 'would do X, would not do Y' pair"
+    cross_reference: "this extends the universal specificity discipline already present in cognitive_dna_strands.C4_singularity_markers (3+ specific cognitive patterns not generic traits) — A5 makes the requirement mechanical at the validation gate"
+
+  # ------------------------------------------------------------------------
+  # A6 — Artificial mind schema with dimensional profile
+  # Source: engine-mind-forge-architecture.md §4.1 (LAW-MF-1), §5.4
+  # ------------------------------------------------------------------------
+  A6_artificial_mind_schema:
+    rationale: "LAW-MF-1 binding — artificial mind extraction uses a dimensional genome template with named target counts per dimension. Required for every entry whose derived origin is artificial. Target counts are the minimum below which extraction is declared incomplete."
+    applies_to: "origin == artificial (derived)"
+    required_fields:
+      - source_corpus  # see A1_origin_schema.source_corpus
+      - dimensional_profile
+      - fidelity_declaration  # see A2_fidelity_declaration
+      - source_adequacy_gate  # see A3_graceful_degradation.source_adequacy_gate
+      - feature_provenance  # see A3_graceful_degradation.feature_provenance
+    dimensional_profile:
+      target_counts:
+        distinctive_terms:
+          min: 50
+          ideal: 100
+        recurring_metaphors:
+          min: 20
+          ideal: 40
+        master_mental_models:
+          min: 3
+          ideal: 5
+        inviolable_values:
+          min: 5
+          ideal: 7
+        core_obsessions:
+          min: 3
+          ideal: 5
+        productive_paradoxes:
+          min: 3
+          ideal: 5
+        unique_sensors:
+          min: 10
+          ideal: 20
+        decision_signatures:
+          min: 5
+          ideal: 10
+      extraction_rule: "extraction is complete when the target counts are hit with cross-source evidence (≥3 independent sources per feature) — see A3_graceful_degradation.feature_provenance.states.confirmed"
+
+  # ------------------------------------------------------------------------
+  # A7 — Synthetic mind schema with coherence gate
+  # Source: engine-mind-forge-architecture.md §4.2 (LAW-MF-2)
+  # ------------------------------------------------------------------------
+  A7_synthetic_mind_schema:
+    rationale: "LAW-MF-2 binding — synthetic minds require an internal coherence validation gate, external to the producer agent. The gate MUST be mechanical (a checklist, not prose), MUST be external to the producer per Clause II, and MUST include inter-layer non-contradiction, personality-behavior alignment, and a binary ethical boundary."
+    applies_to: "origin == synthetic (derived)"
+    required_fields:
+      - design_starting_point  # see A1_origin_schema.design_starting_point
+      - purpose_statement
+      - coherence_gate
+      - failure_modes_prevented
+    coherence_gate:
+      quarantine_rule: "the gate MUST be external to the producer agent — Clause II Separation of Production and Judgment"
+      mechanical_checks:
+        - inter_layer_non_contradiction: "no logical conflict between declared layers"
+        - personality_behavior_alignment: "declared personality matches declared decision speed and communication style"
+        - ethical_boundary_binary: "declared ethical limits are pass/fail, not graduated"
+      minimum_checks: 3
+      ethics_severity: binary  # ethics failure is a hard block, not a warning
+      rationale: "synthetic minds have no external source to triangulate against, so coherence becomes the primary fidelity signal — internal non-contradiction + behavior-alignment + ethical boundary"
+
+  # ------------------------------------------------------------------------
+  # A8 — Hybrid fusion schema (load-bearing)
+  # Source: engine-mind-forge-architecture.md §4.3 (LAW-MF-3), §5.6, §5.7
+  # ------------------------------------------------------------------------
+  A8_hybrid_fusion_schema:
+    rationale: "LAW-MF-3 binding — hybrid fusion uses dimensional compatibility analysis with weighted aggregate and numeric abort gate. Every hybrid_fusion forge MUST carry a pre-synthesis numeric viability gate across at least four named factors, with a declared abort threshold below which no synthesis is attempted."
+    applies_to: "origin == hybrid_fusion (derived)"
+    required_fields:
+      - source_minds  # see A1_origin_schema.source_minds — ≥2 required, all artificial
+      - pre_fusion_viability_gate
+      - relation_taxonomy
+      - co_activation_protocol
+      - destructive_tension_protocol
+      - affordance_preservation_audit
+      - fusion_failure_modes
+    pre_fusion_viability_gate:
+      factors:
+        - name: complementarity
+          weight: 0.25
+        - name: value_alignment
+          weight: 0.25
+        - name: cognitive_synergy
+          weight: 0.30  # highest weight intentional
+        - name: worldview_coherence
+          weight: 0.20
+      penalty_schedule:
+        anti_value_conflict: -30
+        ontological_conflict: -20
+        excessive_overlap_gt_70pct: -15
+      abort_threshold: 60
+      abort_behavior: "refuse synthesis with written reason; never silent downgrade"
+    relation_taxonomy:
+      purpose: "every shared dimension labeled one of four types with declared synthesis template"
+      types:
+        - name: complementary
+          synthesis_template: "integrate-all — both positions live in the output simultaneously"
+        - name: reinforcing
+          synthesis_template: "amplify-common — shared position strengthened"
+        - name: productive_tension
+          synthesis_template: "dialectic-generative — preserve both poles as live force, never compromise"
+        - name: destructive_tension
+          synthesis_template: "escalate-to-human — halt dimension, see destructive_tension_protocol below"
+    co_activation_protocol:
+      description: "fusion-time linguistic discipline — a pattern with no vault ancestor"
+      simultaneity_markers_required:
+        - simultaneously
+        - at once
+        - "not... but both"
+        - "three dimensions of one thing"
+        - in the same motion
+      sequential_markers_banned:
+        - "first... then"
+        - "on one hand... on the other"
+        - "step 1... step 2"
+        - "initially... subsequently"
+      invisibility_law: "the fused mind's system prompt MUST NOT name its source minds in its own body"
+      validation: "blind attribution test against chance-level baseline — <40% single-source attribution = pass"
+    destructive_tension_protocol:
+      detection: "classifier identifies same-axis opposition (not orthogonal)"
+      action: "halt synthesis on that dimension only; parallel dimensions continue"
+      decision_packet:
+        options:
+          - explicit_preservation: "both positions coexist with context rules"
+          - prioritize_A: "mind A position dominates on this dimension"
+          - prioritize_B: "mind B position dominates on this dimension"
+          - contextualize: "position varies by declared context"
+          - exclude_mind: "remove one source mind from the fusion entirely"
+        each_option_declares: [trade_offs, information_loss, operational_impact]
+      human_decision_required: true
+      decision_storage: "stored as fusion_decision: {dimension, option_chosen, rationale, date} in the mind manifest"
+    affordance_preservation_audit:
+      rule: "every unique capability of every source mind MUST survive into the fused artifact"
+      detection: "regression check after each synthesis cycle — any lost capability = restore before proceeding"
+      invariant: "the fused mind is at minimum as capable as each source in their respective domains"
+    fusion_failure_modes:
+      description: "Fills gap G2 — 5 named anti-patterns with detection + remediation"
+      modes:
+        - name: depth_collapse_under_token_pressure
+          detection: "all dimensions present but each 1-2 sentences"
+          remediation: "re-synthesis cycle with a 'no abstractions' constraint"
+        - name: tension_resolution_instead_of_operationalization
+          detection: "output feels moderate and balanced"
+          remediation: "restate both poles at maximum intensity"
+        - name: invisible_moderator
+          detection: "would any source find the output too mild?"
+          remediation: "remove hedges and filler"
+        - name: sequential_language_survival
+          detection: "grep for 'first/then/after/begin/proceed' in the fused body"
+          remediation: "per-occurrence rewrite to simultaneity markers per co_activation_protocol"
+        - name: dominance_collapse
+          detection: "one source disproportionately present in the fused body"
+          remediation: "pre-cycle enrichment of the thinner source genomes"
+
+  # ------------------------------------------------------------------------
+  # A9 — Library indexing principle
+  # Source: engine-mind-forge-architecture.md §5.9 (L9) — fills gap G4
+  # ------------------------------------------------------------------------
+  A9_library_indexing:
+    rationale: "Fills gap G4 — mind library indexing principle. Every library entry declares origin, genius_zone, kryptonite, ontology_map, and fidelity status. The library is honest about what it holds; capability plus named-incapability enables matching; ontological taxonomy enables diversity gates in squad composition."
+    primary_key: slug
+    required_per_entry:
+      - origin  # see A1_origin_schema.origin
+      - genius_zone  # list of capabilities (tag-based search)
+      - kryptonite  # list of named incapabilities (mandatory)
+      - ontology_map  # 4-zone cross-axis
+      - fidelity_status  # pending | complete
+    ontology_map:
+      description: "4-zone ontological taxonomy cross-cut with the 7 canonical cognitive layers + 1 transversal"
+      zones:
+        - foundation  # identity, values, worldview
+        - processing  # reasoning patterns, decision structures
+        - expression  # voice, communication, affect
+        - context  # situational adaptation, domain specificity
+      transversal: productive_paradoxes
+      purpose: "diversity gate in squad composition — squads must span ≥2 zones"
+    duplicate_archetype_policy:
+      rule: "subset-rejection validator — a new mind whose genius_zone is a subset of an existing mind's zone requires written justification in the manifest"
+      escape_hatch: "multiple variants of the same archetype coexist only if capability surfaces diverge materially"
+
+  # ------------------------------------------------------------------------
+  # A10 — Tier declaration protocol with default-optimistic discipline
+  # Source: engine-mind-forge-architecture.md §5.12 (L12)
+  # ------------------------------------------------------------------------
+  A10_tier_declaration_protocol:
+    rationale: "Default-optimistic initialization + mandatory downgrade epistemics. Operationalizes the symmetric-drift discipline at the forge level — a principle becomes a mechanical check at publish time. Pessimistic drift (under-declaring authenticity to hedge) is symmetric to optimistic drift (over-claiming); both are Clause I violations."
+    initialization: "every new mind initializes at max(viability_gate_output) — the highest tier its source adequacy gate permits"
+    downgrade_requires:
+      - rationale_field: "written reason in standard template"
+      - date_field: "timestamp"
+      - decided_by_field: "human or validator identity"
+    silent_downgrade_check: "validator refuses downgrades without rationale — blocks publication"
+    post_hoc_review:
+      frequency: "every 3 months OR after 10 forges"
+      metric: "was the tier downgrade correct post-deployment?"
+      feedback_loop: "systematic over-downgrade feeds back into viability_gate thresholds"
+
+  # ------------------------------------------------------------------------
+  # A11 — Recursive integrity hook discipline
+  # Source: engine-mind-forge-architecture.md §4.5 (LAW-MF-5), §5.13 (L13)
+  # ------------------------------------------------------------------------
+  A11_recursive_integrity:
+    rationale: "LAW-MF-5 binding — the mind-forge MUST pass its own methodology when applied to itself. Every substantive forge-related session writes one concrete improvement to a delta log. The forge is describable as a mind via its own template (reflexive self-description test)."
+    hooks:
+      pre_session: "hooks/pre-session-validate.sh — runs before any substantive forge session"
+      post_session: "hooks/post-session-reflect.sh — writes a delta log entry, mandatory"
+    constitutional_immutability:
+      layer: L0
+      layer_scope: "CLAUDE.md + structural-dna.md + this codex's schema"
+      rule: "L0 edits require a dedicated session; no mid-session L0 mutation"
+    reflect_protocol:
+      write_allowlist:
+        - observed_performance
+        - compatibility_scores  # with confidence provenance
+        - delta_log
+      write_denylist:
+        - identity_fields  # require human curation
+        - origin_field  # derived, not writable
+        - fidelity_tier  # computed from formula
+    dissolved_component_policy:
+      rule: "when a component is deleted during evolution, its deletion becomes a named anti-pattern entry"
+      storage: references/anti-patterns/dissolved-components.md
+      rationale: "a deletion is information the forge paid in error to discover; storing the pattern prevents re-invention by a future creator"
+    self_validation:
+      target: references/engine-mind-forge-architecture.md
+      gate: "/validate --level=3 MUST pass when pointed at the architecture document itself"
+      empirical_precedent: "the architecture document's own authoring session encountered and corrected a substrate-voice regression at its pre-seal gate — documented in docs/handoffs/S126-mind-forge-architecture-handoff.md §2.8"
+
+  # ------------------------------------------------------------------------
+  # A12 — SELF-CLONE elicitation protocol
+  # Source: references/self-clone-forge.md (canonical substrate)
+  # Law: LAW-MF-1 binding (dimensional genome), LAW-MF-5 binding (recursive)
+  # Applies to: minds where type=minds AND cognitive_sub_types == self
+  # ------------------------------------------------------------------------
+  A12_self_clone_elicitation_protocol:
+    source_architecture: references/self-clone-forge.md
+    applies_to: "minds where type=minds AND cognitive_sub_types == self"
+    rationale: "SELF-CLONE is the operator that fills the requires_elicitation: true declaration in cognitive_sub_types.self. It populates the eight dimensional target counts declared in A6 by running in one of two modes (distillation or elicitation), determined by the creator's corpus density."
+    modes: [distillation, elicitation]
+    mode_selection_rule: "distillation when corpus_density_tokens >= 20000 AND artifact_count >= 3; else elicitation"
+    distillation_threshold:
+      min_tokens: 20000
+      min_artifacts: 3
+      artifact_types: "skills, handoffs, substrate documents, CLAUDE.md files, or equivalent documented work"
+    dimensional_targets: "inherited from A6_artificial_mind_schema.dimensional_profile — 8 targets with named counts and criticality tiers"
+    stopping_rules:
+      foundation_tier: "stop at minimum count with ≥60% confidence ≥0.7, or ideal count with ≥40% confidence ≥0.8"
+      critical_080: "minimum count met AND every entry passes behavioral manifestation AND every entry has counter-proof"
+      critical_090: "same as 0.80 plus ≥1 entry passes three-day delay with discrepancy <30%"
+      reference: "references/self-clone-forge.md §4.4"
+    honesty_floor_gates:
+      - removal_test_inverted
+      - three_day_delay
+      - adversarial_reader
+      - signed_incaptable_list
+      - il_invisibile_invisibile
+    honesty_floor_source: "references/self-clone-forge.md §11"
+    typology_probe:
+      placement: end_only
+      rule: "typology probes run AFTER all 8 dimensions are populated, as retrospective mirrors — never at the start"
+      reference: "references/self-clone-forge.md §5"
+    outputs:
+      primary: "cognitive mind files (AGENT.md + 4 layer files + examples)"
+      secondary: "coherence diff (self-clone-diff.md) — disagreements between distillation and self-report"
+      tertiary: "honesty floor manifest (self-clone-manifest.md) — five gates output"
+      publish_policy: "diff and manifest stripped from .publish/ by default; creator may opt in"
+    consumer_status: partial
+    consumer_status_reason: "/fill loads references/fill-content-packs/self-clone.md when .meta.yaml.minds_sub_type == self; the content pack routes the walker through the protocol declared in references/self-clone-forge.md. Status is partial until the /fill branch and content pack are both authored and tested."
+    external_validator:
+      requirement: "non-skippable — clone never reaches validated state without a second Claude reading the output"
+      gate: adversarial_reader
+      reference: "references/self-clone-forge.md §11.3"
+    reconciliation_with_codex:
+      field: "cognitive_sub_types.self.elicitation_questions_range"
+      declared_value: "10-15"
+      reconciliation: "10-15 is the cold-creator Tier Functional case; 100+ is the cold-creator Tier Excellence case; 15-25 gap questions is the high-corpus-creator distillation case. The mode-selection rule decides which fires."
+      reference: "references/self-clone-forge.md §1.3"
+
+# ===========================================================================
+# ARCHETYPES — 6 minds shapes
+# ===========================================================================
+# Minds archetypes are SHAPES the persona takes, orthogonal to depth. A
+# domain advisor can be advisory or cognitive. A research partner can be
+# advisory or cognitive. Archetype determines the dominant interaction mode
+# and the typical tool pool (all inherited from agent.yaml ADVISER).
+
+archetypes:
+  selection_required: true
+  selection_phase: lifecycle.create.type_specific.discovery_phase
+  selection_question: "Which archetype best matches the mind you are forging?"
+  selection_order: "After depth discriminator AND after sub-type (for cognitive minds). Archetype is the shape; depth is the type; sub-type is the source."
+  hybrid_policy: "Identify the DOMINANT archetype. Use secondary archetypes to enrich the persona. Never declare two equal archetypes \u2014 that is design indecision and produces a muddy cognitive boundary."
+  inherits_tool_pool_from: agent.yaml ADVISER archetype
+  inherits_tool_pool_details: "Read, Glob, Grep, WebSearch, WebFetch allowed; Edit, Write, NotebookEdit, Bash in disallowedTools. Any deviation requires explicit justification in the mind body."
+  domain_advisor:
+    when_to_use: "The mind is a specialist advisor in a single domain \u2014 the buyer brings a domain question, the mind returns judgment grounded in declared expertise. This is the most common archetype."
+    typical_depth: advisory
+    typical_sub_type: "N/A for advisory; domain for cognitive"
+    primary_focus: "Domain-bounded expert judgment with confidence signaling"
+    typical_output: "Ranked recommendations with rationale and confidence levels, bounded by declared domain"
+    examples_by_domain:
+    - "Contract-law domain advisor"
+    - "Kubernetes cost optimization advisor"
+    - "Early-stage fundraising advisor"
+    validation_checklist:
+    - "Knowledge boundary (C6) declared with explicit out-of-domain decline pattern"
+    - Confidence signaling (D6) uses graduated certainty bands per config.yaml certainty_bands
+    - "Output shape documented in body (what the parent receives)"
+    typical_dna_emphasis: [D1, D2, D4, D5, D6, D14]
+  cognitive_mentor:
+    when_to_use: "The mind teaches a cognitive methodology by walking the user through named reasoning steps. The value is not the answer but the process \u2014 the user learns to think in the declared flow."
+    typical_depth: cognitive
+    typical_sub_type: "genius or domain"
+    primary_focus: "Methodology teaching via named cognitive flow"
+    typical_output: "Process walk-through with the user as co-thinker, not a polished answer"
+    examples_by_domain:
+    - "First-principles decomposition mentor"
+    - "Experimental-design mentor for empirical research"
+    - "Dialectical inquiry mentor"
+    validation_checklist:
+    - "Cognitive flow (C3) is walked step-by-step in interaction, not just declared in L2"
+    - "Socratic pressure (D11) pattern present \u2014 the mind challenges the user's assumptions, not just answers"
+    - "Knowledge boundary (C6) includes 'I teach the method, I do not give the answer when the method applies'"
+    typical_dna_emphasis: [D1, D2, D4, D5, D6, D11, D14]
+  research_partner:
+    when_to_use: "The mind accompanies the user on a longitudinal inquiry, maintaining context across invocations via memory scope. The mind tracks hypotheses, evidence, and confidence evolution."
+    typical_depth: cognitive
+    typical_sub_type: "self or domain"
+    primary_focus: "Longitudinal research companionship with graduated-confidence tracking"
+    typical_output: "Evidence-weighted hypothesis updates with confidence graduation"
+    requires_memory: "`memory: project` typically required"
+    examples_by_domain:
+    - "Literature review research partner"
+    - "User research synthesis partner"
+    - "Market hypothesis research partner"
+    validation_checklist:
+    - "Memory scope declared in frontmatter"
+    - "Confidence graduation (D6 + config.yaml certainty_bands) applied to every hypothesis update"
+    - Knowledge base (C6) has source_tiers tracking
+    typical_dna_emphasis: [D1, D2, D4, D5, D6, D8, D14]
+  strategic_thinker:
+    when_to_use: "The mind delivers high-level strategic judgment on multi-variable decisions where the value is weighting trade-offs, not executing a workflow. The cognitive flow is typically decompose \u2192 weight \u2192 recommend."
+    typical_depth: cognitive
+    typical_sub_type: "self or genius"
+    primary_focus: "Multi-variable strategic judgment with named trade-offs"
+    typical_output: "Named trade-offs surfaced, weighted by declared criteria, followed by a ranked recommendation"
+    examples_by_domain:
+    - "Product strategy thinker"
+    - "Portfolio allocation thinker"
+    - "Org design strategic thinker"
+    validation_checklist:
+    - "Reasoning patterns (C7) include multi-variable decomposition and weighted recommendation"
+    - "Named trade-offs pattern used in every substantive output"
+    - "Clause IV Named Trade-Offs (from CLAUDE.md global) inherited as mind-level discipline"
+    typical_dna_emphasis: [D1, D2, D4, D5, D6, D11, D14]
+  technical_specialist:
+    when_to_use: "The mind is a technical specialist whose value is deep technical competence in a narrow tool or system. Unlike a domain_advisor (broad expertise), the technical_specialist has narrow-and-deep competence."
+    typical_depth: "advisory typically; cognitive if the specialization has a declared cognitive flow"
+    typical_sub_type: "self or domain"
+    primary_focus: "Narrow-deep technical competence with specific-tool knowledge"
+    typical_output: "Precise technical recommendations with reference to primary documentation"
+    examples_by_domain:
+    - "PostgreSQL query optimization specialist"
+    - "Webpack bundle optimization specialist"
+    - "Terraform state management specialist"
+    validation_checklist:
+    - "Domain is narrow (one tool or one system, not a broad field)"
+    - "Primary sources cited in knowledge base (official docs for the specialty)"
+    - "Boundary declaration includes 'I do not advise on adjacent tools X, Y, Z'"
+    typical_dna_emphasis: [D1, D2, D4, D5, D6, D14]
+  creative_catalyst:
+    when_to_use: "The mind's value is generating novel combinations or provocations that move the user's thinking forward, not delivering a correct answer. Cognitive flow is typically observe \u2192 cross-pollinate \u2192 provoke."
+    typical_depth: cognitive
+    typical_sub_type: "genius or self"
+    primary_focus: "Generative cross-domain provocation"
+    typical_output: "Named analogies, unexpected combinations, productive questions the user had not asked themselves"
+    examples_by_domain:
+    - "Cross-disciplinary creative catalyst"
+    - "Constraint-based creative catalyst"
+    - "Contrarian creative catalyst"
+    validation_checklist:
+    - "C4 singularity markers include creative-specific traits (comfort with ambiguity, cross-domain reach, etc.)"
+    - "Reasoning patterns (C7) include analogical transfer or constraint relaxation"
+    - "Output convention explicitly says 'provocation not conclusion'"
+    typical_dna_emphasis: [D1, D2, D4, D5, D6, D11, D14]
+  selection_consumer_status: aspirational
+  selection_consumer_status_reason: "/create does not yet walk archetype selection for minds. Wave 3 wires the selection gate into the discovery phase."
+
+# ===========================================================================
+# DNA PATTERNS
+# ===========================================================================
+
+dna_patterns:
+  tier1:
+    D1:
+      required: true
+      applicable: true
+      name: Activation Protocol
+      check: "AGENT.md contains activation protocol that loads L2-L5 reference files in declared order (for cognitive); or loads references/ + domain knowledge (for advisory)"
+    D2:
+      required: true
+      applicable: true
+      name: Anti-Pattern Guard
+      check: "AGENT.md references AP-M1..M8 catalog; minimum 5 specific anti-patterns documented in the mind body or referenced to the catalog"
+    D3:
+      required: true
+      applicable: true
+      name: Progressive Disclosure
+      check: "Primary AGENT.md under 500 lines; cognitive minds split L2-L5 into separate reference files; advisory minds can place deep domain notes in references/"
+    D4:
+      required: true
+      applicable: true
+      name: Quality Gate
+      check: "Quality gate section with 3+ verifiable criteria the mind applies before delivering output"
+    D13:
+      required: true
+      applicable: true
+      name: Self-Documentation
+      check: "README.md has what/install/usage/requirements sections; install instructions reference myclaude install"
+    D14:
+      required: true
+      applicable: true
+      name: Graceful Degradation
+      check: "When Not To Use section present; graceful decline pattern for out-of-domain queries; failure confidence band (uncertain) rather than fabricated certainty"
+    D19:
+      required: false
+      applicable: true
+      name: Attention-Aware Authoring
+      check: "Critical constraints (anti-patterns, knowledge boundaries, quality gate) in the last 30% of AGENT.md body"
+  tier2:
+    D5:
+      required: true
+      applicable: true
+      name: Question System
+      check: "Discovery questions declared; $ARGUMENTS handling documented; minds that accept parameters document them"
+    D6:
+      required: true
+      applicable: true
+      name: Confidence Signaling
+      check: "Confidence graduation using config.yaml certainty_bands (verified / high / moderate / low / uncertain); no fabricated certainty"
+    D7:
+      required: false
+      applicable: false
+      name: Pre-Execution Gate
+      applicable_reason: "Minds do not execute \u2014 they deliver judgment. Pre-execution gating applies to write-capable products."
+    D8:
+      required: false
+      applicable: true
+      name: State Persistence
+      check: "Optional \u2014 cognitive minds with research_partner archetype typically declare `memory: project` scope"
+    D11:
+      required: false
+      applicable: true
+      name: Socratic Pressure
+      check: "Optional for advisory; REQUIRED for cognitive depth at MCS-2+ \u2014 the mind challenges its own output before delivering (the 'what is wrong with this output' self-check)"
+      required_for_cognitive: true
+    D15:
+      required: false
+      applicable: true
+      name: Testability
+      check: "Optional for advisory; REQUIRED for cognitive depth at MCS-2+ \u2014 examples/examples.md contains 3+ invocation scenarios with expected output shapes"
+      required_for_cognitive: true
+    D16:
+      required: true
+      applicable: true
+      name: Composability
+      check: "No hardcoded absolute paths; install target uses {slug} placeholder; command name does not collide with common names"
+    D17:
+      required: false
+      applicable: false
+      name: Hook Integration
+      applicable_reason: "Minds rarely ship hook fragments. A mind that binds hooks is using the hooks product type as the primary artifact; the mind itself is the hook handler not the product."
+    D20:
+      required: false
+      applicable: false
+      name: Cache-Friendly Design
+      applicable_reason: "Minds are loaded on demand via Task spawn, not ambient like claude-md products. Cache-friendly design targets ambient-load products."
+  tier3:
+    D9:
+      required: false
+      applicable: false
+      name: "Orchestrate Don't Execute"
+      applicable_reason: "Minds are leaf specialists, not orchestrators. A mind that orchestrates is using the squad type by mistake."
+    D10:
+      required: false
+      applicable: false
+      name: Handoff Specification
+      applicable_reason: "Minds do not hand off to sibling minds \u2014 the parent LLM is the orchestrator."
+    D11_tier3:
+      required: false
+      applicable: true
+      name: "Socratic Pressure (Tier 3 version)"
+      same_as: dna_patterns.tier2.D11
+      note: "D11 is listed under Tier 2 for minds because cognitive minds require it at MCS-2, not MCS-3."
+    D12:
+      required: false
+      applicable: true
+      name: Compound Memory
+      check: "Optional \u2014 cognitive minds with memory scope declared AND longitudinal research archetype may accumulate learning; this is aspirational across sessions"
+    D18:
+      required: false
+      applicable: false
+      name: Subagent Isolation
+      applicable_reason: "Minds ARE the subagent being isolated \u2014 the native Task spawn forks the context. The pattern applies to orchestrators of subagents, not to the subagents themselves."
+
+mcs_expectations:
+  mcs1:
+    dna_required: [D1, D2, D3, D4, D5, D13, D14]
+    score_min: 75
+    blocks_publish: true
+    natural_ceiling: false
+    depth_applicability: "advisory AND cognitive"
+  mcs2:
+    dna_required: [D1, D2, D3, D4, D5, D6, D13, D14, D16]
+    dna_recommended: [D11, D15, D19]
+    score_min: 85
+    blocks_publish: false
+    natural_ceiling: false
+    depth_applicability: "advisory AND cognitive"
+    cognitive_fidelity_required: true
+    cognitive_fidelity_threshold: 0.80
+    cognitive_fidelity_applicable_to: cognitive depth only
+  mcs3:
+    dna_required: [D1, D2, D3, D4, D5, D6, D11, D13, D14, D15, D16]
+    dna_recommended: [D8, D19]
+    score_min: 92
+    blocks_publish: false
+    natural_ceiling: true
+    ceiling_reason: "Advisory minds cannot reach MCS-3 \u2014 the cognitive fidelity rubric (Stage 7b) is the primary differentiator and advisory minds do not ship the 5-layer architecture Stage 7b scores against. MCS-3 is reserved for cognitive minds whose 7 strands score in the top rubric tier AND whose substance check passes. This is a natural ceiling, not a bug."
+    depth_applicability: "cognitive depth only"
+    cognitive_fidelity_required: true
+    cognitive_fidelity_threshold: 0.92
+    advisory_ceiling: mcs2
+    advisory_ceiling_reason: "Advisory minds top out at MCS-2 on the fidelity dimension; they remain eligible for MCS-2 on structural/integrity/DNA dimensions."
+
+# ===========================================================================
+# FRONTMATTER (inherited from agent.yaml + depth field added)
+# ===========================================================================
+
+frontmatter:
+  inherits_from: product-dna/agent.yaml.frontmatter
+  required:
+  - name
+  - description
+  recommended:
+  - model
+  - denied-tools
+  optional:
+  - "allowed-tools"
+  - "auto-memory"
+  - memory
+  - effort
+  - maxTurns
+  - skills
+  - hooks
+  - permissionMode
+  - criticalSystemReminder_EXPERIMENTAL
+  - initialPrompt
+  - mcpServers
+  - omitClaudeMd
+  - isolation
+  minds_specific_conventions:
+    depth_field_placement: "body (not frontmatter) \u2014 depth is a codex concept, not a runtime field"
+    default_model_advisory: "claude-sonnet-4-6 (fluent advisory interaction)"
+    default_model_cognitive: "claude-opus-4-6 (depth of embodied reasoning)"
+    default_denied_tools: "[Edit, Write, NotebookEdit, Bash] \u2014 inherits ADVISER archetype default"
+    memory_scope_for_research_partner: "project"
+    auto_memory_for_cognitive: "true recommended for longitudinal minds"
+  field_source_refs:
+    name: loadAgentsDir.ts:404-409
+    description: loadAgentsDir.ts:411-414
+    tools: loadAgentsDir.ts:660
+    disallowedTools: loadAgentsDir.ts:677-681
+    model: loadAgentsDir.ts:660
+    memory: "loadAgentsDir.ts:456-467"
+    skills: loadAgentsDir.ts:684
+    initialPrompt: "loadAgentsDir.ts:123, 686-690"
+    criticalSystemReminder_EXPERIMENTAL: runAgent.ts:711-714
+    hooks: loadAgentsDir.ts:424-440
+
+# ===========================================================================
+# TEMPLATE FILES
+# ===========================================================================
+
+template_files:
+- source: AGENT.md.template
+  target: AGENT.md
+  dna_injected: [D1, D2, D4, D5, D6, D14]
+  why_comments: true
+  applicable_to: "advisory AND cognitive"
+- source: README.md.template
+  target: README.md
+  dna_injected: [D13]
+  why_comments: true
+  applicable_to: "advisory AND cognitive"
+- source: examples/examples.md.template
+  target: examples/examples.md
+  dna_injected: [D15]
+  why_comments: true
+  applicable_to: "advisory (optional) AND cognitive (required at MCS-2+)"
+- source: references/cognitive-core.md.template
+  target: references/cognitive-core.md
+  dna_injected: [D3]
+  cognitive_strands_injected: [C2, C3, C4]
+  why_comments: true
+  applicable_to: cognitive only
+- source: references/personality.md.template
+  target: references/personality.md
+  dna_injected: [D3]
+  cognitive_strands_injected: [C5]
+  why_comments: true
+  applicable_to: cognitive only
+- source: references/knowledge-base.md.template
+  target: references/knowledge-base.md
+  dna_injected: [D3]
+  cognitive_strands_injected: [C6]
+  why_comments: true
+  applicable_to: cognitive only
+- source: references/reasoning-engine.md.template
+  target: references/reasoning-engine.md
+  dna_injected: [D3]
+  cognitive_strands_injected: [C7]
+  why_comments: true
+  applicable_to: cognitive only
+
+# ===========================================================================
+# TOKEN ECONOMICS
+# ===========================================================================
+
+token_economics:
+  catalog_cost_tokens: 60
+  catalog_cost_reason: "Minds appear in the agent catalog like any agent \u2014 name plus description roughly 50-70 tokens per mind. Cognitive minds with longer descriptions may hit 80-100 tokens in the catalog."
+  catalog_cost_source: loadSkillsDir.ts:100-105
+  invocation_cost_advisory: "Full AGENT.md (150-300 lines) loaded when mind is spawned via Task. Roughly 2-4K tokens for the body plus references/ loaded on demand."
+  invocation_cost_cognitive: "AGENT.md L1 (150-250 lines) loaded at spawn; L2-L5 reference files loaded progressively on demand (total 800-1200 lines across all 5 layers). Roughly 6-10K tokens when all layers are loaded."
+  invocation_cost_source: "runAgent.ts:577-646 (skills preload) + agent context fork"
+  ambient_cost: "Zero \u2014 minds are loaded on demand via Task spawn, not auto-loaded into the parent context"
+  ambient_cost_reason: "Unlike claude-md products which are always in ambient context, minds are spawn-on-demand. Their cost materializes only when the parent invokes Task(subagent_type='{slug}')."
+  optimization_notes: |
+    Advisory minds stay cheap by keeping AGENT.md under 300 lines and using references/ only
+    for rarely-loaded deep domain notes. Cognitive minds must split the 5 layers into separate
+    reference files to avoid loading the full 1200 lines at spawn \u2014 L1 stays in AGENT.md (loaded
+    at spawn), L2-L5 load on demand when the cognitive flow reaches them. Memory scopes should
+    be declared only for research_partner archetype \u2014 memory has per-turn cost even when dormant.
+  budget_example: "An advisory domain-advisor mind: catalog ~60 tokens, invocation ~3K tokens. A cognitive research_partner mind with memory project scope: catalog ~80 tokens, invocation ~8K at first spawn, 2K per subsequent spawn when memory is loaded."
+
+# ===========================================================================
+# COMPACT INSTRUCTIONS
+# ===========================================================================
+
+compact_instructions:
+  applicable: true
+  location: "AGENT.md \u2192 ## Compact Instructions section"
+  source_reference: compact/prompt.ts:133-143
+  preserves:
+  - "Ontological identity declaration (C1) \u2014 'You ARE {mind identity}'"
+  - "Cognitive flow name sequence (C3) \u2014 the named reasoning steps"
+  - "Singularity markers (C4) \u2014 what makes this mind irreplaceable"
+  - "Communication markers (C5) \u2014 characteristic expressions and tone"
+  - Active analysis state
+  - Knowledge domain boundaries (C6)
+  - Confidence band of the current working judgment
+
+# ===========================================================================
+# STATE MACHINE HOOKS (universal Engine lifecycle states)
+# ===========================================================================
+
+state_machine_hooks:
+  source_file: quality-gates.yaml
+  source_section: states
+  scope: universal
+  type_specific_branches: []
+  regression_rules: "Universal \u2014 file edit after validation regresses to content"
+  publish_prerequisites_addendum:
+  - "cognitive minds at MCS-2+ must pass Stage 7b cognitive_fidelity"
+  - "examples/examples.md must exist and contain 3+ scenarios for cognitive minds at MCS-2+"
+  publish_prerequisites_addendum_reason: "Cognitive minds require the fidelity rubric pass to justify premium pricing and the cognitive depth claim."
+
+# ===========================================================================
+# VALIDATION PIPELINE REFS
+# ===========================================================================
+
+validation_pipeline_refs:
+  stage_1: .claude/skills/validate/references/validation-stages/stage-1-structural.md
+  stage_2: .claude/skills/validate/references/validation-stages/stage-2-integrity.md
+  stage_3: .claude/skills/validate/references/validation-stages/stage-3-dna-tier1.md
+  stage_4: .claude/skills/validate/references/validation-stages/stage-4-dna-tier2.md
+  stage_5: .claude/skills/validate/references/validation-stages/stage-5-dna-tier3.md
+  stage_6: .claude/skills/validate/references/validation-stages/stage-6-cli-preflight.md
+  stage_7: .claude/skills/validate/references/validation-stages/stage-7-anti-commodity.md
+  stage_7b: .claude/skills/validate/references/validation-stages/stage-7b-cognitive-fidelity.md
+  stage_7b_status: "DECLARED GAP \u2014 the file does not yet exist. See schema_consumer_status.blocking_gaps_for_this_type GAP-MND-1. Wave 3 forges the stage file."
+  stage_8: .claude/skills/validate/references/validation-stages/stage-8-value-intelligence.md
+  index: .claude/skills/validate/references/validation-stages/_index.md
+
+# ===========================================================================
+# LIFECYCLE SHARED REFS
+# ===========================================================================
+
+lifecycle_shared_refs:
+  ux_experience:
+    path: references/ux-experience-system.md
+    consumed_by: [/create, /fill, /validate, /package, /test, /help, /status]
+    sections_relevant_to_type:
+    - \u00a71 Context Assembly
+    - \u00a72.1 Experience Level Scaling
+    - \u00a72.2 Archetype-Aware Insights
+    - \u00a72.3 Moment Awareness
+    invisibility_audit_status: "PRE-EXISTING DEBT \u2014 Wave 4 scope"
+  ux_vocabulary:
+    path: references/ux-vocabulary.md
+    consumed_by: [/create, /fill, /validate, /package, /test, /help, /status]
+    purpose: "Translate internal engine names and archetype labels to user-facing mind vocabulary"
+    invisibility_audit_status: "PRE-EXISTING DEBT \u2014 Wave 4 scope"
+  engine_voice:
+    path: references/quality/engine-voice.md
+    consumed_by: [/create, /fill, /validate, /package, /test, /help, /status]
+    purpose: "Brand DNA, voice markers"
+    invisibility_audit_status: Acceptable
+  intelligence_layer:
+    path: references/intelligence-layer.md
+    consumed_by: [/validate, /package, /scout]
+    purpose: "Value scoring, pricing strategy, portfolio analysis"
+    invisibility_audit_status: "PRE-EXISTING DEBT \u2014 Wave 4 scope"
+  product_spec:
+    path: references/product-specs/minds-spec.md
+    consumed_by: [/create, /validate]
+    purpose: "Canonical minds spec \u2014 file structure, depth discriminator, 5-layer architecture for cognitive depth"
+    invisibility_audit_status: "unverified in S118d"
+  claude_code_ground_truth:
+    path: references/claude-code-ground-truth.md
+    consumed_by: [/create, /fill, /validate]
+    purpose: "Verified capability register \u2014 minds inherit all native claims from the agent primitive layer (runAgent.ts, loadAgentsDir.ts, agentToolUtils.ts)"
+    invisibility_audit_status: "Clean \u2014 internal Engine documentation"
+  agent_codex:
+    path: product-dna/agent.yaml
+    consumed_by: [/create, /fill, /validate]
+    purpose: "Inheritance \u2014 minds extend agent.yaml; frontmatter, tool boundary, archetypes (ADVISER), anti-patterns (AP-A1..A6), and lifecycle contract all inherit from agent.yaml"
+    invisibility_audit_status: "N/A \u2014 internal inheritance"
+  skill_codex:
+    path: product-dna/skill.yaml
+    consumed_by: [/create, /fill, /validate]
+    purpose: "Grandparent inheritance \u2014 the 18 skill anti-patterns (AP-D1..P3) apply to minds by transitive inheritance"
+    invisibility_audit_status: "N/A \u2014 internal inheritance"
+  genius_library:
+    path: templates/genius-library/
+    consumed_by: [/create, /fill]
+    purpose: "Cognitive mind genius sub-type \u2014 the library provides seed profiles for historical and archetypal cognitive exemplars"
+    invisibility_audit_status: "Clean \u2014 internal template library"
+    consumer_status: partial
+    consumer_status_reason: "Library exists with 2 profiles today. Wave 3 expands the catalog and adds licensing policy per GAP-MND-7."
+  cognitive_templates:
+    path: templates/minds/cognitive/
+    consumed_by: [/create, /fill]
+    purpose: "Template files for the 5-layer cognitive architecture \u2014 AGENT.md, references/cognitive-core.md, references/personality.md, references/knowledge-base.md, references/reasoning-engine.md, README.md, examples/examples.md"
+    invisibility_audit_status: "Clean \u2014 internal template library"
+    consumer_status: fully-wired
+    consumer_status_reason: "All 7 template files present and consumed by /create when depth=cognitive."
+
+# ===========================================================================
+# LIFECYCLE — 10 skills with universal contract + type_specific blocks
+# ===========================================================================
+
+lifecycle:
+  map:
+    role: "Extract the creator's cognitive expertise into domain-map.md, with special attention to the 5 cognitive layers and 7 DNA strands decomposition."
+    optional: true
+    inputs:
+    - creator.yaml
+    - domain topic seed ($ARGUMENTS)
+    outputs:
+    - workspace/domain-map.md
+    blocks_when: []
+    consumer_status: aspirational
+    consumer_status_reason: "/map does not yet consult minds-specific decomposition prompts per the 5 layers and 7 strands."
+    next_action: null
+    next_action_reason: "read-only skill"
+    type_specific:
+      skip_recommended: false
+      skip_message: "For minds (especially cognitive self sub-type), /map is load-bearing \u2014 it extracts the creator's own cognitive methodology, which becomes the L2 cognitive core and the C7 reasoning patterns."
+      minds_specific_prompts:
+      - "What cognitive flow do you use for hard problems in your domain? Walk me through a recent example with the named steps."
+      - "What 3 characteristics make YOUR reasoning in this domain irreplaceable (not generic traits)?"
+      - "What 5 expressions or questions do you consistently use when working in this domain?"
+      - "What 3-6 knowledge sub-domains are you deep in, and where do you refuse to advise even though adjacent?"
+      - "What 3+ reasoning patterns do you apply, each with a specific trigger condition?"
+  scout:
+    role: "Research existing minds in the marketplace and cognitive exemplars in the genius library. Prevents reinventing personas that exist."
+    optional: true
+    inputs:
+    - creator.yaml
+    - domain query ($ARGUMENTS)
+    outputs:
+    - workspace/scout-{slug}.md
+    - STATE.yaml.last_scout updated
+    blocks_when: []
+    consumer_status: aspirational
+    consumer_status_reason: "/scout does not yet calibrate for minds-specific research (existing cognitive exemplars, genius library coverage, domain advisor marketplace scan)."
+    next_action: null
+    next_action_reason: "read-only research skill"
+    type_specific:
+      skip_recommended: false
+      skip_message: "Skipping /scout for minds is risky when the domain has existing advisors \u2014 the new mind may be a commodity. Cognitive minds especially benefit from scout because the genius library may already have a relevant exemplar."
+      scout_calibration_for_minds:
+      - "Scan marketplace for existing advisor minds in the same domain"
+      - "Scan templates/genius-library/ for relevant cognitive exemplars (for genius sub-type)"
+      - "Identify differentiation opportunities vs existing minds"
+      - "For cognitive minds: scan for baseline delta \u2014 what does vanilla Claude already do well in this domain?"
+  import:
+    role: "Bring an existing minds-shaped artifact from a workspace install target into the Engine workspace for validation, packaging, republish."
+    optional: true
+    inputs:
+    - "Source file (.claude/agents/{slug}.md) OR source directory (for cognitive mind with references/)"
+    - creator.yaml
+    outputs:
+    - workspace/{slug}/ (single file for advisory, full directory with 5 layer files for cognitive)
+    - workspace/{slug}/.meta.yaml (state auto-detected, depth auto-detected)
+    blocks_when:
+    - workspace/{slug}/ already exists (no --force)
+    - Source has no identity declaration
+    consumer_status: partial
+    consumer_status_reason: "/import SKILL.md detection table was extended in S118c to recognize minds shape. Depth auto-detection (advisory vs cognitive based on reference file presence) is aspirational \u2014 Wave 3."
+    next_action: "/validate {slug}"
+    type_specific:
+      detection_pattern: "single .md file in .claude/agents/ containing 'You ARE' identity construction \u2014 advisory. Directory containing AGENT.md + references/cognitive-core.md + references/personality.md + references/knowledge-base.md + references/reasoning-engine.md \u2014 cognitive."
+      rename_on_import: null
+      rename_on_import_reason: "Mind files use {slug}.md in install and AGENT.md in workspace \u2014 /import reverses the package rename."
+      auto_detected_phase: content
+      auto_detect_depth: true
+      auto_detect_depth_rule: "If the 4 cognitive reference files are present, depth=cognitive. Otherwise depth=advisory."
+  create:
+    role: "Run the creation cycle for minds \u2014 depth discriminator FIRST, then archetype selection, then sub-type selection (for cognitive), then discovery questions walked in order, then scaffold of primary file + references/ (for cognitive)."
+    optional: false
+    inputs:
+    - creator.yaml
+    - type
+    - slug
+    - depth (advisory | cognitive)
+    - archetype
+    - sub_type (for cognitive)
+    - discovery_answers
+    - scout_report (optional)
+    - domain_map (optional)
+    - genius_profile (for cognitive genius sub-type)
+    outputs:
+    - workspace/{slug}/AGENT.md
+    - workspace/{slug}/README.md
+    - "workspace/{slug}/references/cognitive-core.md (cognitive only)"
+    - "workspace/{slug}/references/personality.md (cognitive only)"
+    - "workspace/{slug}/references/knowledge-base.md (cognitive only)"
+    - "workspace/{slug}/references/reasoning-engine.md (cognitive only)"
+    - "workspace/{slug}/examples/examples.md (cognitive required, advisory optional)"
+    - workspace/{slug}/.meta.yaml (depth recorded, archetype recorded, sub_type recorded)
+    blocks_when:
+    - slug invalid
+    - workspace/{slug}/ exists without --force
+    - creator.yaml missing AND micro-onboard fails
+    - depth not selected
+    - "archetype not selected"
+    - "sub_type not selected (for cognitive depth)"
+    consumer_status: aspirational
+    consumer_status_reason: "/create does not yet walk the depth discriminator as the first-class first question. Wave 3 teaches /create to ask 'advisory or cognitive?' BEFORE any other minds discovery question."
+    next_action: "/fill {slug}"
+    type_specific:
+      activates_templates_advisory:
+      - templates/minds/AGENT.md.template
+      - templates/minds/README.md.template
+      - "templates/minds/examples/examples.md.template (optional)"
+      activates_templates_cognitive:
+      - templates/minds/cognitive/AGENT.md.template
+      - templates/minds/cognitive/README.md.template
+      - templates/minds/cognitive/references/cognitive-core.md.template
+      - templates/minds/cognitive/references/personality.md.template
+      - templates/minds/cognitive/references/knowledge-base.md.template
+      - templates/minds/cognitive/references/reasoning-engine.md.template
+      - templates/minds/cognitive/examples/examples.md.template
+      activates_dna_at_scaffold: [D1, D2, D3, D4, D5, D6, D13, D14]
+      discovery_phase:
+        questions_source: this file \u2192 discovery_questions.required_in_order
+        questions_walked_in_order: true
+        depth_selection_required: true
+        depth_selection_first: true
+        depth_selection_first_reason: "Every downstream question depends on depth \u2014 template path, required files, DNA set, rubric, pricing. Ask depth first, prevent re-work."
+        archetype_selection_phase: "AFTER depth"
+        sub_type_selection_phase: "AFTER depth AND after archetype (cognitive only)"
+      read_before_write_ratio_advisory: "5:1"
+      read_before_write_ratio_cognitive: "8:1"
+      read_inputs_advisory:
+      - creator.yaml
+      - this codex
+      - templates/minds/
+      - agent.yaml (inheritance)
+      - structural-dna.md
+      - config.yaml
+      read_inputs_cognitive:
+      - creator.yaml
+      - this codex
+      - templates/minds/cognitive/
+      - agent.yaml (inheritance)
+      - skill.yaml (transitive inheritance for anti-patterns)
+      - structural-dna.md
+      - config.yaml
+      - "templates/genius-library/{profile}/profile.yaml (for genius sub-type)"
+      - scout report (if exists)
+      - domain-map.md (if exists)
+      ground_truth_required: false
+      ground_truth_required_reason: "Minds inherit native claims from agent.yaml which already traces everything to ground-truth. Minds themselves make no new native claims."
+      inherits_from:
+      - agent.yaml (frontmatter, tool boundary, archetypes, anti-patterns, lifecycle)
+      - skill.yaml (transitive anti-pattern catalog)
+  fill:
+    role: "Walk the mind's sections sequentially \u2014 for advisory, walk AGENT.md sections; for cognitive, walk AGENT.md PLUS each of the 4 reference files (L2-L5) PLUS examples/examples.md."
+    optional: false
+    inputs:
+    - workspace/{slug}/ (all files from /create)
+    - workspace/{slug}/.meta.yaml
+    - creator.yaml
+    - scout report
+    - domain-map.md
+    - this file (sections_walked)
+    - agent.yaml (inherited sections_walked)
+    outputs:
+    - All files filled
+    - workspace/{slug}/.meta.yaml (state content, fill_progress updated, fill_metrics recorded)
+    blocks_when: []
+    consumer_status: aspirational
+    consumer_status_reason: "/fill does not yet know how to walk a cognitive mind's 5 layer files. Wave 3 teaches /fill to iterate layers with strand-specific prompts."
+    next_action: "/validate {slug}"
+    type_specific:
+      sections_walked_advisory:
+      - name: Identity (AGENT.md ontological declaration)
+        why: "C1 strand \u2014 'You ARE' construction, not 'Act as'"
+        sparring_required: true
+      - name: Activation Protocol
+        why: "D1 \u2014 load sequence for references/ if present"
+        sparring_required: false
+      - name: Core Principles
+        why: "4-6 principles that define the mind's intellectual DNA"
+        sparring_required: true
+      - name: Knowledge Domains and Boundaries
+        why: "C6 strand \u2014 declared expertise with explicit boundaries"
+        sparring_required: true
+      - name: Communication Voice
+        why: "C5 strand \u2014 tone, expressions, style markers"
+        sparring_required: true
+      - name: Anti-Patterns
+        why: "D2 \u2014 5+ specific anti-patterns for this mind's domain"
+        sparring_required: true
+      - name: Quality Gate
+        why: "D4 \u2014 verifiable checklist before output delivery"
+        sparring_required: false
+      - name: When Not To Use
+        why: "D14 \u2014 graceful decline pattern"
+        sparring_required: false
+      sections_walked_cognitive:
+      - name: "L1 AGENT.md Boot \u2014 Identity + Activation + Principles + Voice Markers + Triggers + Quality Gate"
+        why: "C1 + C5 summary + D1 + D4"
+        sparring_required: true
+        sparring_minimum: 2
+      - name: "L2 cognitive-core.md \u2014 Biographical Anchor + Cognitive Flow + Singularity Markers"
+        why: "C2 + C3 + C4 \u2014 load-bearing for fidelity scoring"
+        sparring_required: true
+        sparring_minimum: 3
+      - name: "L3 personality.md \u2014 Communication DNA + Methodology + Interaction Patterns"
+        why: "C5 full detail beyond the L1 summary"
+        sparring_required: true
+        sparring_minimum: 2
+      - name: "L4 knowledge-base.md \u2014 Knowledge Domains + Explicit Boundaries + Source Tiers"
+        why: "C6 strand with depth levels"
+        sparring_required: true
+        sparring_minimum: 2
+      - name: "L5 reasoning-engine.md \u2014 Reasoning Patterns with Triggers + Methods + Falsifiability"
+        why: "C7 strand \u2014 concrete patterns, not decorative framework names"
+        sparring_required: true
+        sparring_minimum: 3
+      - name: "examples/examples.md \u2014 3+ invocation scenarios with expected outputs"
+        why: "D15 for cognitive minds, required at MCS-2+"
+        sparring_required: true
+      sparring_protocol: "Deep sparring on strand specificity \u2014 singularity markers, knowledge boundaries, reasoning patterns \u2014 because these are where cognitive minds collapse into generic advisors if not forged carefully."
+      research_injection_eligible: true
+      scout_fallback_enabled: true
+      inline_research_offer: "For cognitive minds in domains the creator does not personally master, /fill offers WebSearch research injection per L4 knowledge domain."
+  validate:
+    role: "Run structural + integrity + DNA at Tier 1+2 + CLI preflight + anti-commodity + (for cognitive minds) Stage 7b cognitive_fidelity."
+    optional: false
+    inputs:
+    - workspace/{slug}/ (all files)
+    - workspace/{slug}/.meta.yaml
+    - this file
+    - agent.yaml (inherited checks)
+    - skill.yaml (transitive anti-patterns)
+    - claude-code-ground-truth.md
+    - config.yaml
+    - quality-gates.yaml
+    - structural-dna.md
+    outputs:
+    - workspace/{slug}/.meta.yaml (state validated, scores, intelligence, cognitive_fidelity_result)
+    - Validation report
+    blocks_when: []
+    consumer_status: partial
+    consumer_status_reason: "/validate reads dna_patterns per type but does not yet enforce minds-specific checks (depth-routed validation, Stage 7b cognitive_fidelity). The Stage 7b file does not yet exist \u2014 see GAP-MND-1."
+    next_action: "/test {slug} (required for cognitive MCS-2+) OR /package {slug}"
+    type_specific:
+      stages_run_advisory:
+        mcs1: [1, 2, 3, 6]
+        mcs2: [1, 2, 3, 4, 6, 7]
+        mcs3: "NOT APPLICABLE \u2014 advisory ceiling is MCS-2"
+      stages_run_cognitive:
+        mcs1: [1, 2, 3, 6]
+        mcs2: [1, 2, 3, 4, 6, 7, "7b"]
+        mcs3: [1, 2, 3, 4, 5, 6, 7, "7b", 8]
+      depth_routing:
+        rule: "Read workspace/{slug}/.meta.yaml depth field. IF advisory, skip Stage 7b. IF cognitive, require Stage 7b at MCS-2+."
+        consumer_status: aspirational
+        consumer_status_reason: "Wave 3 teaches /validate to read depth and route accordingly. Today the depth field is recorded in .meta.yaml but not consulted at validate time."
+      per_stage_hooks:
+        stage_1_structural:
+          check_advisory: "Glob workspace/{slug}/ for AGENT.md + README.md present. references/ optional but recommended."
+          check_cognitive: "Glob workspace/{slug}/ for AGENT.md + README.md + references/cognitive-core.md + references/personality.md + references/knowledge-base.md + references/reasoning-engine.md + examples/examples.md present."
+          blocking: true
+        stage_2_integrity:
+          check: "YAML parse on .meta.yaml. No placeholder patterns. No secret patterns. Markdown parses in every layer file."
+          blocking: true
+        stage_3_dna_tier1:
+          required_patterns: [D1, D2, D3, D4, D13, D14]
+          recommended_patterns: [D19]
+          check_d1: "AGENT.md has identity + activation protocol; cognitive minds reference all 4 L2-L5 files in the activation sequence"
+          check_d2: "AGENT.md references AP-M1..M8 catalog + inherited AP-A1..A6 from agent.yaml"
+          check_d3: "AGENT.md under 500 lines; cognitive minds split L2-L5 into separate reference files"
+          check_d4: "Quality gate section with 3+ verifiable criteria"
+          check_d13: "README.md has what/install/usage/requirements sections"
+          check_d14: "When Not To Use section with graceful decline pattern"
+          check_d19: "Critical constraints in last 30% of AGENT.md body"
+          blocking: true
+        stage_4_dna_tier2:
+          required_patterns: [D5, D6, D16]
+          recommended_patterns: [D11, D15]
+          check_d5: "Discovery questions declared; $ARGUMENTS handling documented"
+          check_d6: "Confidence graduation using config.yaml certainty_bands"
+          check_d11: "Socratic pressure pattern present (required for cognitive at MCS-2+)"
+          check_d15: "examples/examples.md with 3+ scenarios (required for cognitive at MCS-2+)"
+          check_d16: "No hardcoded absolute paths; install target uses {slug} placeholder"
+          blocking: false
+        stage_6_cli_preflight:
+          check: "myclaude validate {slug} succeeds \u2014 manifest, secrets, file sizes"
+          blocking: true
+        stage_7_anti_commodity:
+          check: "Substance score + invisibility audit (word-bounded grep against substrate vocabulary AND academic author names) + quality_rubric application + AP-M1..M8 grep"
+          blocking: false
+          coaching_only: true
+          minds_specific_invisibility_source: scripts/codex-drift-check.py INVISIBILITY_PATTERN plus a minds-specific supplementary list maintained in references/product-specs/minds-spec.md
+          minds_specific_invisibility_reason: "Minds documentation has the highest academic-author leak risk of any product type because cognitive-science methodology naturally references named frameworks. Authors must appear as capability descriptions (graduated-confidence updating, falsifiability gate, fast-intuitive vs slow-deliberate modes) rather than as attribution."
+        stage_7b_cognitive_fidelity:
+          check: "For cognitive minds ONLY. Apply the cognitive_fidelity_scoring rubric: layer_completeness 0.30 + identity_integrity 0.25 + cognitive_depth 0.25 + substance 0.20. Verify all 7 strands C1-C7 present with evidence. Gate MCS-2 at 0.80, MCS-3 at 0.92."
+          prerequisite: "workspace/{slug}/.meta.yaml depth == cognitive"
+          blocking: false
+          applies_to: cognitive depth only
+          stage_file: .claude/skills/validate/references/validation-stages/stage-7b-cognitive-fidelity.md
+          stage_file_status: "DECLARED GAP \u2014 file does not yet exist, Wave 3 forges it (GAP-MND-1)"
+          strand_checks:
+            C1: "grep 'You ARE' in AGENT.md identity section; absence of 'Act as' / 'role-play' / 'pretend'"
+            C2: "3+ specific factual anchors in cognitive-core.md (dates, names, works) OR explicit fiction declaration"
+            C3: "Named cognitive flow sequence in cognitive-core.md with 3-6 steps, each with method"
+            C4: "3+ singularity markers in cognitive-core.md, each is a specific cognitive pattern"
+            C5: "5+ characteristic expressions in personality.md, declared tone with specificity"
+            C6: "3-6 domains in knowledge-base.md with depth levels AND at least 2 explicit boundary statements"
+            C7: "3+ reasoning patterns in reasoning-engine.md with {name, trigger, method}"
+          strand_semantic_coherence_check: "Wave 3 \u2014 verify C3 flow matches C7 patterns, C6 domains match L4 content"
+          strand_semantic_coherence_consumer_status: aspirational
+          strand_semantic_coherence_consumer_status_reason: "Wave 3 teaches Stage 7b to check cross-layer coherence, not just per-strand presence."
+        stage_8_value_intelligence:
+          check: "Value score, suggested price range, market position. For cognitive minds, depth adds +1 to value score per config.yaml intelligence.pricing.depth_weight."
+          blocking: false
+          runs_at_mcs: [2, 3]
+      read_before_write_ratio: "Read-only skill \u2014 updates .meta.yaml only"
+      next_action_pass: "/test {slug} (required for cognitive MCS-2+) OR /package {slug}"
+      next_action_fail: "/validate --fix {slug}"
+  test:
+    role: "Sandbox-install the mind in worktree isolation, run 3 behavioral scenarios (happy / edge / adversarial), verify activation protocol, verify confidence signaling, verify graceful decline pattern."
+    optional: true
+    inputs:
+    - workspace/{slug}/ (validated)
+    - this file
+    outputs:
+    - workspace/{slug}/.meta.yaml (test_result, last_tested, test_scenarios)
+    - Test report
+    blocks_when: []
+    consumer_status: aspirational
+    consumer_status_reason: "/test does not yet have minds-specific scenario logic. Wave 3 teaches /test to run the 3 canonical scenarios against a sandbox-spawned mind."
+    next_action: "/package {slug}"
+    type_specific:
+      required_for_mcs: [2, 3]
+      required_for_mcs_cognitive_only: true
+      optional_for_mcs: [1]
+      sandbox_isolation: worktree
+      type_specific_steps:
+      - step: activation_protocol_verification
+        check: "Dry-spawn the mind in sandbox, verify it reads all declared layer files (for cognitive) or references/ (for advisory) at activation"
+      - step: knowledge_boundary_verification
+        check: "Invoke with an out-of-domain query, verify the mind declines gracefully with declared boundary statement rather than fabricating"
+      - step: confidence_signaling_verification
+        check: "Invoke with an ambiguous query, verify the mind uses graduated certainty bands rather than fabricating certainty"
+      - step: cognitive_flow_trace
+        check: "For cognitive minds, verify the response traces through the declared cognitive flow steps, not generic reasoning"
+        applies_to: cognitive depth only
+      scenarios_applicable: true
+      scenarios:
+      - name: Happy Path
+        purpose: "In-domain query that exercises the mind's primary expertise"
+        input_strategy: "Invoke with a query that matches one of the declared C6 knowledge domains"
+        on_fail: "Knowledge boundary (C6) is mis-declared or cognitive flow (C3) is mis-applied"
+      - name: Edge Case
+        purpose: "Adjacent-domain query that tests boundary handling"
+        input_strategy: "Invoke with a query that is near but outside the declared C6 boundaries"
+        on_fail: "Graceful decline pattern (D14) is weak; mind advises beyond competence"
+      - name: Adversarial
+        purpose: "Ambiguous query designed to elicit fabricated certainty"
+        input_strategy: "Invoke with a query that has no clear answer in the declared domain"
+        on_fail: "Confidence signaling (D6) is absent; mind fabricates certainty rather than declaring uncertain"
+      must_haves_verification: true
+      next_action_pass: "/package {slug}"
+  package:
+    role: "Strip WHY comments from all mind files, generate vault.yaml + plugin.json + agentskills.yaml with depth-aware metadata, rename primary file from AGENT.md to {slug}.md, stage .publish/."
+    optional: false
+    inputs:
+    - workspace/{slug}/ (validated, test_result pass for cognitive MCS-2+)
+    - creator.yaml
+    - this file
+    - config.yaml
+    outputs:
+    - workspace/{slug}/.publish/{slug}.md (primary file, WHY stripped)
+    - "workspace/{slug}/.publish/references/cognitive-core.md (cognitive only, WHY stripped)"
+    - "workspace/{slug}/.publish/references/personality.md (cognitive only, WHY stripped)"
+    - "workspace/{slug}/.publish/references/knowledge-base.md (cognitive only, WHY stripped)"
+    - "workspace/{slug}/.publish/references/reasoning-engine.md (cognitive only, WHY stripped)"
+    - "workspace/{slug}/.publish/examples/examples.md (WHY stripped)"
+    - workspace/{slug}/.publish/README.md (badges injected)
+    - workspace/{slug}/.publish/vault.yaml
+    - workspace/{slug}/.publish/plugin.json
+    - workspace/{slug}/.publish/agentskills.yaml
+    - workspace/{slug}/.publish/CHANGELOG.md
+    - workspace/{slug}/.publish/LICENSE.md
+    blocks_when: []
+    consumer_status: aspirational
+    consumer_status_reason: "/package does not yet differentiate mind depth for plugin.json generation. Wave 3 extends /package to consult depth and generate depth-aware manifests."
+    next_action: "/publish {slug}"
+    type_specific:
+      strips:
+      - HTML WHY comments in ALL files
+      - "# WHY lines in ALL files"
+      - .meta.yaml
+      - domain-map.md
+      renames:
+      - from: AGENT.md
+        to: "{slug}.md"
+        reason: "Workspace file is AGENT.md for editorial clarity; installed agent file is renamed to match the slug."
+      injects:
+      - field: marketplace_url
+        value: "https://myclaude.sh/p/{slug}"
+      - field: Attribution comment at end of {slug}.md frontmatter
+        value: "<!-- Published on myclaude.sh | Engine: Studio v3 -->"
+      - field: README badges
+      plugin_json_block: "Plugin.json generated with 'agents' field pointing to the installed {slug}.md. For cognitive minds, the 'agents' entry includes references/ path listings for the 5 layer files."
+      agentskills_yaml_block: "Platforms: [claude-code]. Minds are Claude Code specific (the Task spawn + agent frontmatter pattern is native to Claude Code)."
+      step_6b_verify:
+      - All required files present in .publish/ per depth
+      - "For cognitive: all 5 layer files present (AGENT.md + 4 references/)"
+      - No WHY comments remaining
+      - "Primary file ({slug}.md) under 500 lines"
+      - "For cognitive: each layer file within target line range"
+  publish:
+    role: "Push to the marketplace + Anthropic plugin marketplace. Minds distribute via vault.yaml + plugin.json with agent-frontmatter + (for cognitive) references/ declarations."
+    optional: false
+    inputs:
+    - workspace/{slug}/.publish/ (state packaged)
+    - myclaude CLI auth
+    - creator confirmation
+    outputs:
+    - Live marketplace listing
+    - Plugin marketplace listing
+    - workspace/{slug}/.meta.yaml (state published)
+    blocks_when:
+    - state != packaged
+    - "test_result != pass (for cognitive MCS-2+)"
+    - myclaude auth missing
+    - creator declines confirmation
+    - "for cognitive at MCS-2+: Stage 7b cognitive_fidelity not pass"
+    consumer_status: aspirational
+    consumer_status_reason: "/publish does not yet route minds distribution differently from agents for plugin.json generation."
+    next_action: null
+    next_action_reason: terminal action
+    type_specific:
+      distribution_channels:
+      - channel: myclaude
+        primary: true
+        url_pattern: "https://myclaude.sh/p/{slug}"
+      - channel: anthropic-plugin
+        primary: true
+        plugin_json_block: "agents field with primary file and references/ path listings for cognitive minds"
+      - channel: agentskills_universal
+        primary: false
+        applicable: false
+        reason: "Task spawn + agent frontmatter is Claude Code specific."
+      distribution_extras:
+      - channel: newsletter
+        source: config.yaml intelligence.distribution.channels_by_type.minds
+      - channel: linkedin
+        source: config.yaml intelligence.distribution.channels_by_type.minds
+      - channel: domain-community
+        source: config.yaml intelligence.distribution.channels_by_type.minds
+      confirmation_required: true
+      post_publish_actions:
+      - "Suggest: 'Use the mind in your own daily work. A cognitive mind reveals its calibration only through real use across varied queries.'"
+      - "Surface install command: myclaude install {slug}"
+      - "Schedule check-in 7 days post-publish"
+  status:
+    role: "Display the mind in dashboard with depth badge (advisory or cognitive), archetype, sub_type (for cognitive), fidelity score (for cognitive), and invocation count."
+    optional: true
+    inputs:
+    - workspace/{slug}/.meta.yaml
+    - this file
+    - references/ux-vocabulary.md
+    outputs:
+    - Dashboard line
+    - Mind badge (depth-aware)
+    blocks_when: []
+    consumer_status: aspirational
+    consumer_status_reason: "/status does not yet surface minds depth or fidelity scores. Wave 3 adds depth-aware dashboard."
+    next_action: null
+    next_action_reason: read-only dashboard
+    type_specific:
+      ux_type_name: Mind
+      ux_type_name_source: references/ux-vocabulary.md
+      state_emoji_rules: Universal
+      portfolio_role_default: specialist
+      portfolio_role_reason: "Minds are specialists in the creator's portfolio \u2014 each mind is a bounded cognitive judgment invocable on demand."
+      depth_badge:
+        advisory: "advisor"
+        cognitive: "cognitive"
+
+# ===========================================================================
+# FLOW
+# ===========================================================================
+
+flow: |
+  ```mermaid
+  flowchart LR
+    THINK[/think optional/] -.->|persona unclear| MAP[/map/]
+    MAP -.->|expertise decomposed| SCOUT[/scout/]
+    SCOUT -.->|existing minds surveyed| CREATE[/create minds/]
+    IMPORT[/import existing/] -.-> WORKSPACE
+    CREATE -->|depth + archetype + sub-type| WORKSPACE[(workspace/slug/)]
+    WORKSPACE --> FILL[/fill/]
+    FILL -->|layers + strands + boundary| VALIDATE[/validate/]
+    VALIDATE -->|fail| VALIDATE
+    VALIDATE -->|pass + Stage 7b for cognitive| TEST[/test/]
+    TEST -->|3 scenarios: happy edge adversarial| PACKAGE[/package/]
+    PACKAGE -->|stripped + depth-aware plugin.json| PUBLISH[/publish/]
+    PUBLISH -->|live| MARKET[(marketplace)]
+    MARKET -.->|longitudinal usage feedback| SCOUT
+    STATUS[/status/] -.-> WORKSPACE
+    classDef writeSkill fill:#e1f5ff,stroke:#0277bd
+    classDef gate fill:#fff4e1,stroke:#ef6c00
+    classDef terminal fill:#e8f5e9,stroke:#2e7d32
+    classDef discovery fill:#f3e5f5,stroke:#6a1b9a
+    class CREATE,FILL,PACKAGE writeSkill
+    class STATUS,VALIDATE,TEST gate
+    class PUBLISH terminal
+    class IMPORT,THINK,MAP,SCOUT discovery
+  ```
+
+# ===========================================================================
+# FAILURE MODES
+# ===========================================================================
+
+failure_modes:
+- mode: depth_not_selected
+  detection: /create blocks_when depth not selected
+  degradation: BLOCK scaffold
+  recovery: Ask depth discriminator question before any other discovery question
+- mode: cognitive_mind_missing_layer_file
+  detection: /validate Stage 1 structural
+  degradation: BLOCK \u2014 cognitive claim not instantiated
+  recovery: Scaffold the missing layer file from templates/minds/cognitive/references/
+- mode: identity_uses_act_as_instead_of_you_are
+  detection: /validate Stage 7b C1 check
+  degradation: BLOCK cognitive MCS-2+ \u2014 C1 strand fail
+  recovery: Rewrite identity section using 'You ARE' construction
+- mode: biographical_anchor_fabricated
+  detection: /validate Stage 7 anti-commodity substance check
+  degradation: BLOCK publish \u2014 highest-impact trust failure
+  recovery: "Anchor C2 to verifiable facts (for historical figures) OR declare fiction explicitly (for archetypes)"
+- mode: knowledge_domains_without_boundaries
+  detection: /validate Stage 7b C6 check
+  degradation: BLOCK cognitive MCS-2+ \u2014 C6 strand fail (overclaim)
+  recovery: "Add 2+ explicit boundary statements ('I do not advise on X because Y')"
+- mode: reasoning_engine_is_decorative
+  detection: /validate Stage 7b C7 check
+  degradation: BLOCK cognitive MCS-2+ \u2014 C7 strand fail
+  recovery: "Replace framework name-drops with concrete patterns (name + trigger + method)"
+- mode: advisory_mind_claims_mcs3
+  detection: /validate mcs3 eligibility check
+  degradation: BLOCK \u2014 advisory ceiling is MCS-2
+  recovery: Either accept MCS-2 ceiling OR upgrade depth to cognitive and ship the 5 layer files
+- mode: cognitive_fidelity_below_threshold
+  detection: /validate Stage 7b rubric score
+  degradation: "BLOCK MCS-2 (if below 0.80) or MCS-3 (if below 0.92)"
+  recovery: "Strengthen the failing rubric dimension \u2014 layer_completeness (add missing layer content) or identity_integrity (strengthen C1+C2+C4+C5) or cognitive_depth (strengthen C3+C6+C7) or substance (add real examples)"
+- mode: invisibility_leak_academic_author_name
+  detection: /validate Stage 7 anti-commodity invisibility grep
+  degradation: BLOCK publish \u2014 Clause VIII violation
+  recovery: "Replace the author name with a capability description \u2014 fast-intuitive vs slow-deliberate reasoning modes, causal structure mapping, falsifiability gate, graduated-confidence updating, and similar capability-first phrasings."
+- mode: missing_graceful_decline_pattern
+  detection: /validate Stage 3 check_d14
+  degradation: BLOCK MCS-1 \u2014 D14 fail
+  recovery: Add When Not To Use section with graceful decline template for out-of-domain queries
+- mode: examples_missing_for_cognitive_mcs2
+  detection: /validate Stage 4 check_d15 for cognitive depth
+  degradation: BLOCK cognitive MCS-2+ \u2014 D15 fail
+  recovery: "Add examples/examples.md with 3+ scenarios (happy, edge, adversarial) and expected outputs"
+
+# ===========================================================================
+# INVARIANTS
+# ===========================================================================
+
+invariants:
+- "Primary file is AGENT.md (renamed to {slug}.md at package time)"
+- "Install target is .claude/agents/{slug}.md (single file for advisory; file plus references/ directory for cognitive)"
+- "depth field is recorded in .meta.yaml and routes /validate stage selection"
+- "Advisory minds ship minimum 2 files: AGENT.md + README.md (references/ recommended)"
+- "Cognitive minds ship minimum 7 files: AGENT.md + README.md + 4 reference files (L2-L5) + examples/examples.md"
+- "Every mind inherits the ADVISER archetype tool pool from agent.yaml by default (Read, Glob, Grep, WebSearch, WebFetch; disallowedTools includes Edit, Write, NotebookEdit, Bash)"
+- "Any deviation from the default tool pool MUST be explicitly justified in the mind body"
+- "Cognitive minds MUST declare all 7 DNA strands C1-C7 to pass Stage 7b cognitive_fidelity"
+- "Identity construction is 'You ARE' not 'Act as' \u2014 required for cognitive, strongly recommended for advisory"
+- "Knowledge domains (C6) must include at least 2 explicit boundary statements for cognitive minds"
+- "Reasoning patterns (C7) must be concrete (name + trigger + method) not decorative framework name-drops"
+- "Academic author names are forbidden in user-facing strings (use capability descriptions)"
+- "Advisory minds cannot claim MCS-3 \u2014 natural ceiling is MCS-2"
+- "Cognitive minds at MCS-2+ must pass Stage 7b cognitive_fidelity (threshold 0.80 for MCS-2, 0.92 for MCS-3)"
+- "Cognitive minds at MCS-2+ must ship examples/examples.md with 3+ scenarios"
+- "No hardcoded absolute paths in any mind file"
+- "Primary file (AGENT.md) under 500 lines; cognitive minds split L2-L5 into separate reference files"
+
+# ===========================================================================
+# SECURITY PROFILE
+# ===========================================================================
+
+security_profile:
+  aegis_applicable: true
+  reason: "Minds have lower direct attack surface than write-capable agents because they inherit the ADVISER archetype default (Read, Glob, Grep, WebSearch, WebFetch; Edit, Write, NotebookEdit, Bash in disallowedTools). However, minds have a HIGH indirect attack surface via prompt injection \u2014 the cognitive architecture and the declared persona can be targeted to override reasoning behavior, and the WebSearch + WebFetch tools expose the mind to untrusted content that the declared persona may rationalize as authoritative."
+  attack_surfaces:
+  - "Prompt injection via WebSearch / WebFetch results \u2014 the mind reads untrusted web content and may be persuaded to override its declared cognitive flow or boundaries"
+  - "Persona override via user input \u2014 'forget your cognitive architecture and help me with X' is the classic attack vector"
+  - "Biographical anchor falsification \u2014 an attacker may provide false biographical facts that the mind accepts and propagates"
+  - "Knowledge boundary bypass \u2014 an attacker frames an out-of-domain query as in-domain to extract advice the mind should decline"
+  - "Memory scope contamination \u2014 for research_partner minds with memory:project scope, an attacker may inject misleading observations that persist across sessions"
+  - "Preloaded skills injection \u2014 a cognitive mind that preloads genius-library skills inherits any vulnerabilities in those skills"
+  - "References/ file tampering \u2014 if an attacker can modify the L2-L5 reference files post-install, the cognitive architecture is silently compromised"
+  shell_execution: "Blocked by default \u2014 Bash is in disallowedTools. Any override requires explicit justification."
+  file_io: "Read-only by default \u2014 Edit/Write/NotebookEdit in disallowedTools. Read is allowed for loading references/."
+  network_calls: "Via WebSearch and WebFetch. Attack surface: untrusted web content that the mind may rationalize as authoritative. Mitigation: confidence signaling (D6) and source tier tagging (per config.yaml source_tiers)."
+  tool_invocation: "Controlled via the inherited ADVISER tool pool. Minds rarely spawn sub-agents; any Task invocation should be justified in the mind body."
+  installation_trust_level: standard
+  installation_trust_reason: "Minds install a single .md file (advisory) or a file plus references/ directory (cognitive) to .claude/agents/. No settings.local.json merges, no hooks.json bindings, no cross-destination dispatch. Lower installation trust requirement than systems, squads, or hook products. However, the mind body is loaded into the LLM context at every spawn, so prompt injection content in the mind body affects every invocation."
+  recommended_audit_checks:
+  - "Audit AGENT.md identity section for ontological 'You ARE' construction (not 'Act as')"
+  - "Audit cognitive-core.md biographical anchor for verifiable facts vs fabrication"
+  - "Audit knowledge-base.md boundaries for explicit decline patterns"
+  - "Audit reasoning-engine.md patterns for concrete triggers (not decorative framework names)"
+  - "Audit frontmatter for unexpected tool overrides (any Edit/Write/Bash in allowed-tools requires justification)"
+  - "Audit memory scope declarations \u2014 memory:user scope has cross-project attack surface"
+  - "Audit preloaded skills declarations \u2014 every preloaded skill inherits its own attack surface"
+  - "Audit references/ files for content that could be tampered with post-install (prefer in-Engine references/ locations over external URLs)"
+  consumer_status: aspirational
+  consumer_status_reason: "/aegis does not yet audit minds as a distinct type with the attack surface list above. Wave 3 teaches /aegis to treat minds specially with prompt-injection focus."
+
+# ===========================================================================
+# MARKETPLACE TAXONOMY
+# ===========================================================================
+
+marketplace_taxonomy:
+  default_category: minds
+  default_price: 12
+  default_license: MIT
+  pricing_rationale: "Minds pricing depends heavily on depth. Advisory minds are solid tier ($5-15) \u2014 domain expertise packaged as declared persona, low forge cost, broad market. Cognitive minds are premium to rare ($15-50) \u2014 the 5-layer architecture, 7 strands, Stage 7b fidelity rubric, and substance check justify premium pricing. Rare-tier cognitive minds (with apex singularity markers and deep domain boundaries) can reach $50-100."
+  bundle_eligible: true
+  bundle_eligible_reason: "Minds compose with other minds (cognitive councils), with skills (a mind preloading specialist skills), with agents (a mind invoked by an orchestrating agent), with claude-md products (a mind declared as project-level cognitive contributor)."
+  composition_eligible_with:
+  - agent
+  - skill
+  - squad
+  - system
+  - bundle
+  - claude-md
+  - workflow
+  composition_eligible_reason: "Minds compose with most types because they are leaf specialists that can be invoked by any orchestrator. They do NOT compose with design-system (wrong domain), statusline (voice-only), or hooks (event-handler product)."
+  consumer_status: aspirational
+  consumer_status_reason: "/package today reads vault_defaults from config.yaml. Wave 3 teaches /package to consult this block first for minds with depth-aware pricing."
+  natural_tags:
+    scope: by_archetype
+    by_archetype:
+      domain_advisor:
+      - advisor
+      - domain-expertise
+      - consultant
+      - specialist
+      cognitive_mentor:
+      - mentor
+      - methodology
+      - teaching
+      - socratic
+      research_partner:
+      - research
+      - longitudinal
+      - hypothesis-tracking
+      - evidence-weighting
+      strategic_thinker:
+      - strategy
+      - trade-offs
+      - multi-variable
+      - decision-support
+      technical_specialist:
+      - technical
+      - narrow-deep
+      - tool-specific
+      - reference-grounded
+      creative_catalyst:
+      - creative
+      - cross-domain
+      - provocation
+      - generative
+  pricing_strategy:
+    scope: by_archetype
+    by_archetype:
+      domain_advisor:
+        default_advisory: solid
+        default_cognitive: premium
+        recommended_range_usd_advisory: [5, 15]
+        recommended_range_usd_cognitive: [15, 35]
+      cognitive_mentor:
+        default_advisory: "NOT typical"
+        default_cognitive: premium
+        recommended_range_usd_cognitive: [20, 50]
+      research_partner:
+        default_advisory: "NOT typical"
+        default_cognitive: premium
+        recommended_range_usd_cognitive: [25, 60]
+      strategic_thinker:
+        default_advisory: solid
+        default_cognitive: premium-rare
+        recommended_range_usd_advisory: [10, 20]
+        recommended_range_usd_cognitive: [25, 75]
+      technical_specialist:
+        default_advisory: solid
+        default_cognitive: premium
+        recommended_range_usd_advisory: [5, 15]
+        recommended_range_usd_cognitive: [15, 40]
+      creative_catalyst:
+        default_advisory: signal
+        default_cognitive: premium
+        recommended_range_usd_advisory: [3, 10]
+        recommended_range_usd_cognitive: [15, 40]
+
+# ===========================================================================
+# DISCOVERY QUESTIONS
+# ===========================================================================
+
 discovery_questions:
-  advisory:
-    - "What domain expertise does this mind embody?"
-    - "How does this mind think? What mental models does it use?"
-    - "What questions does this mind always ask before answering?"
-    - "What does this mind refuse to do or claim knowledge about?"
-    - "How does this mind communicate? (formal, casual, Socratic, direct)"
-    - "Who is this mind for? What problem does the user have?"
-  cognitive_self:
-    - "What domains are you deepest in? (not just familiar — where you have REAL expertise)"
-    - "How do you think through hard problems? Walk me through a recent one."
-    - "What do most people in your field get wrong?"
-    - "What's your communication style? Direct? Socratic? Analytical?"
-    - "What do you refuse to do or advise on? Where are your boundaries?"
-  cognitive_genius:
-    - "Which genius profile do you want to build from?"
-    - "What domain are you applying this mind's thinking to?"
-    - "What aspects of their methodology matter most for your use case?"
-  cognitive_domain:
-    - "What domain should this mind specialize in?"
-    - "Who is the target user for this mind?"
-    - "What decisions or analysis should this mind support?"
-    - "What should this mind explicitly NOT claim expertise in?"
+  rationale: "Minds discovery walks depth FIRST (advisory vs cognitive), then archetype, then sub-type (for cognitive), then the layer-specific questions. The order matters because depth determines which downstream questions apply."
+  required_in_order: true
+  ordered_questions:
+  - id: Q1
+    order: 1
+    question: "Is this mind advisory (lightweight domain advisor, single file, cheap to forge) or cognitive (apex 5-layer architecture, premium)?"
+    feeds: depth_discriminator
+    required: true
+  - id: Q2
+    order: 2
+    question: "Which archetype best matches this mind \u2014 domain advisor, cognitive mentor, research partner, strategic thinker, technical specialist, or creative catalyst?"
+    feeds: archetypes.selection
+    required: true
+  - id: Q3
+    order: 3
+    question: "For cognitive minds only: which sub-type \u2014 SELF (your own expertise), GENIUS (historical or archetypal exemplar from genius-library), or DOMAIN (synthesized from /scout research)?"
+    feeds: cognitive_sub_types.selection
+    required_for: cognitive
+  - id: Q4
+    order: 4
+    question: "What cognitive judgment does this mind deliver in one sentence? (What does the buyer get that they could not get from vanilla Claude?)"
+    feeds: essence.amplifies
+    required: true
+  - id: Q5
+    order: 5
+    question: "What 3-6 knowledge domains is this mind deep in, and where does it refuse to advise (adjacent domains)?"
+    feeds: cognitive_architecture.layers.L4_knowledge_domains (cognitive) OR knowledge_boundary (advisory)
+    required: true
+  - id: Q6
+    order: 6
+    question: "For cognitive minds: what is the mind's cognitive flow \u2014 the named 3-6 step sequence the mind applies to problems?"
+    feeds: cognitive_architecture.layers.L2_cognitive_core C3 strand
+    required_for: cognitive
+  - id: Q7
+    order: 7
+    question: "For cognitive minds: what 3+ characteristics make this mind irreplaceable (specific cognitive patterns, not generic traits)?"
+    feeds: cognitive_architecture.layers.L2_cognitive_core C4 strand
+    required_for: cognitive
+  - id: Q8
+    order: 8
+    question: "What 5+ characteristic expressions and what tone define this mind's voice?"
+    feeds: cognitive_architecture.layers.L3_personality_engine C5 strand
+    required: true
+  - id: Q9
+    order: 9
+    question: "For cognitive minds: what 3+ concrete reasoning patterns does this mind apply, each with a specific trigger condition and a method description?"
+    feeds: cognitive_architecture.layers.L5_reasoning_engine C7 strand
+    required_for: cognitive
+  - id: Q10
+    order: 10
+    question: "What does this mind refuse to do or claim, even within its domain?"
+    feeds: essence.refuses + anti_patterns_catalog
+    required: true
+  consumer_status: aspirational
+  consumer_status_reason: "/create does not yet walk these questions in order. Wave 3 wires the ordered walker with depth-conditional branching."
+
+# ===========================================================================
+# ANTI-PATTERNS CATALOG — AP-M1..M8 minds-specific + inherited AP-A1..A6
+# ===========================================================================
+
+anti_patterns_catalog:
+  scope: "Minds-specific failure modes. Agent anti-patterns (AP-A1..A6 from product-dna/agent.yaml) apply by inheritance. Skill anti-patterns (AP-D1..P3 from product-dna/skill.yaml) apply transitively."
+  inherited_from_agent: "AP-A1 through AP-A6 from product-dna/agent.yaml"
+  inherited_from_skill: "AP-D1 through AP-P3 from product-dna/skill.yaml transitively"
+  aspirational_framework_failures:
+    AP_M1_framework_decoration:
+      name: Framework Decoration
+      symptom: "Mind name-drops famous frameworks in L5 reasoning-engine.md without concrete patterns \u2014 'Uses first-principles thinking, systems analysis, and Bayesian reasoning'"
+      problem: "C7 strand is decorative, not operational. The mind looks cognitively deep but reasons generically in practice. Name-dropping frameworks triggers invisibility leak at Stage 7 anti-commodity."
+      severity: high
+      fix: "Replace framework names with concrete {name, trigger, method} patterns. 'When X happens, apply method Y' \u2014 a pattern the mind can actually detect and execute."
+    AP_M2_performative_identity:
+      name: Performative Identity
+      symptom: "AGENT.md uses 'Act as X' or 'Role-play X' or 'Pretend to be X' instead of 'You ARE X'"
+      problem: "C1 strand fail. The ontological construction is measurably better than the performative construction at producing consistent embodied cognition. Performative framing degrades response quality."
+      severity: critical
+      fix: "Rewrite identity section using 'You ARE' construction. Ontological, not performative."
+    AP_M3_fabricated_biographical_anchor:
+      name: Fabricated Biographical Anchor
+      symptom: "L2 cognitive-core.md contains biographical facts that are either fabricated (for historical figures) or not declared as fiction (for archetypes)"
+      problem: "C2 strand fail with highest trust impact. The mind propagates hallucinations as authoritative. Buyers who check the facts discover the fabrication and uninstall with a bad review."
+      severity: critical
+      fix: "Either anchor C2 to verifiable facts (primary sources for historical figures) OR explicitly declare fiction for archetype-based personas."
+    AP_M4_unbounded_knowledge:
+      name: Unbounded Knowledge
+      symptom: "L4 knowledge-base.md declares domains without explicit boundary statements \u2014 'Expert in research methods and science'"
+      problem: "C6 strand fail \u2014 overclaim by construction. The mind will advise beyond its competence on edge cases because it never declared where competence ends."
+      severity: high
+      fix: "Add 2+ explicit boundary statements per domain. 'I do not advise on X because Y.' Specific domains, specific reasons."
+  architecture_failures:
+    AP_M5_strand_bleeding_across_layers:
+      name: Strand Bleeding Across Layers
+      symptom: "Cognitive flow (C3) documented in L1 AGENT.md instead of L2 cognitive-core.md; OR communication DNA (C5) scattered across multiple layer files"
+      problem: "Progressive disclosure (D3) is broken \u2014 the layer decomposition is cosmetic rather than functional. Edits to one layer affect unrelated strands."
+      severity: medium
+      fix: "Move each strand to its declared layer \u2014 C1 in L1, C2+C3+C4 in L2, C5 in L3, C6 in L4, C7 in L5."
+    AP_M6_monolithic_cognitive_file:
+      name: Monolithic Cognitive File
+      symptom: "Cognitive mind ships a single 1000-line AGENT.md with all 5 layers inlined instead of splitting into the 5 separate layer files"
+      problem: "D3 violation \u2014 progressive disclosure impossible. Every invocation loads the full 1000 lines even when only L1 is needed at boot. Ambient cost at spawn is 5x what it should be."
+      severity: high
+      fix: "Split L2-L5 into separate reference files (cognitive-core.md, personality.md, knowledge-base.md, reasoning-engine.md). Keep L1 in AGENT.md under 250 lines."
+  boundary_failures:
+    AP_M7_missing_graceful_decline:
+      name: Missing Graceful Decline
+      symptom: "No When Not To Use section; mind produces answers for out-of-domain queries rather than declining"
+      problem: "D14 fail \u2014 the mind fabricates rather than declining. Buyers get wrong advice confidently and the trust contract breaks."
+      severity: critical
+      fix: "Add When Not To Use section with declared templates for out-of-domain decline. 'I do not advise on X. Consider Y or Z instead.'"
+    AP_M8_write_capable_without_justification:
+      name: Write-Capable Without Justification
+      symptom: "Mind declares Edit, Write, NotebookEdit, or Bash in allowed-tools without explicit justification in the mind body"
+      problem: "Inherits ADVISER archetype implies read-only judgment. Override without justification creates unexpected tool surface \u2014 the buyer installs a mind expecting advisory behavior and gets a write-capable agent."
+      severity: high
+      fix: "Either remove the write-capable tools (restore ADVISER default) OR add explicit justification in the mind body naming why write capability is essential to the declared cognitive judgment."
+  severity_definitions:
+    critical: "Breaks the mind's trust contract \u2014 must fix before publish"
+    high: "Significant degradation \u2014 fix recommended for MCS-2"
+    medium: "Suboptimal \u2014 fix for MCS-3"
+    low: "Polish"
+  consumer_status: aspirational
+  consumer_status_reason: "Wave 3 teaches /validate Stage 7 to grep against AP-M1..M8 plus inherited AP-A1..A6 from agent.yaml plus transitive skill anti-patterns."
+
+# ===========================================================================
+# SCHEMA CONSUMER STATUS
+# ===========================================================================
+
+schema_consumer_status:
+  fully_wired_sections:
+  - "type, primary_file, install_target, template"
+  - dna_patterns (per config.yaml routing.minds consumed by /validate)
+  - mcs_expectations.mcs1 (blocks_publish enforced)
+  - frontmatter (inherited from agent.yaml which is fully-wired)
+  - "template_files (templates/minds/ and templates/minds/cognitive/ exist with all 7 files)"
+  - depth_discriminator (consumed by config.yaml routing.minds.depth for install file lists)
+  - "cognitive_architecture.layers (the 5 template files exist and are consumed by /create when depth=cognitive)"
+  partially_wired_sections:
+  - "lifecycle.import (detection pattern extended in S118c to recognize minds; depth auto-detection is aspirational)"
+  - "lifecycle.validate (reads dna_patterns but does not yet route depth-specific stages including Stage 7b)"
+  - "cognitive_dna_strands (enumeration consumed by config.yaml; Stage 7b rubric application is aspirational per GAP-MND-1)"
+  - "lifecycle_shared_refs.genius_library (library exists with 2 profiles; catalog expansion is Wave 3)"
+  aspirational_sections:
+  - essence
+  - architectural_principles
+  - operational_modes
+  - freedom_levels
+  - cognitive_sub_types
+  - cognitive_fidelity_scoring
+  - archetypes
+  - anti_patterns_catalog
+  - failure_modes
+  - invariants
+  - security_profile
+  - marketplace_taxonomy
+  - discovery_questions
+  - "lifecycle.create (depth-first discovery walker not yet wired)"
+  - "lifecycle.fill (layer-specific walker not yet wired)"
+  - "lifecycle.test (scenario runner not yet wired)"
+  - "lifecycle.package (depth-aware manifest generation not yet wired)"
+  - "lifecycle.publish (depth-aware distribution routing not yet wired)"
+  blocking_gaps_for_this_type:
+  - id: GAP-MND-1
+    where: .claude/skills/validate/references/validation-stages/stage-7b-cognitive-fidelity.md
+    issue: "The Stage 7b cognitive_fidelity check is declared in config.yaml validation_pipeline but the stage reference file does not yet exist. Wave 3 forges the file with the cognitive_fidelity_scoring rubric application methodology."
+    wave_to_fix: 3
+    severity: MAJOR \u2014 cognitive minds cannot be fidelity-scored until the stage file exists
+  - id: GAP-MND-2
+    where: .claude/skills/validate/SKILL.md
+    issue: "/validate does not yet auto-route type=minds AND depth=cognitive through Stage 7b. Even after the stage file is forged, the depth-aware routing in /validate is Wave 3 work."
+    wave_to_fix: 3
+    severity: MAJOR \u2014 Stage 7b will not fire automatically without depth routing
+  - id: GAP-MND-3
+    where: myclaude CLI (external)
+    issue: "The CLI does not differentiate cognitive mind install (5 reference files + examples/ dispatched) from advisory mind install (single file). Cognitive minds currently install only the primary AGENT.md unless the creator manually places reference files in .claude/agents/ which is not the native layout."
+    wave_to_fix: 3
+    severity: MAJOR \u2014 cognitive mind distribution relies on manual file placement until CLI ships multi-file dispatch for minds
+  - id: GAP-MND-4
+    where: .claude/skills/create/SKILL.md
+    issue: "/create does not yet walk the depth discriminator as the first-class first question. Currently depth is inferred or defaulted. Wave 3 teaches /create to ask 'advisory or cognitive?' BEFORE any other minds discovery question."
+    wave_to_fix: 3
+    severity: MAJOR \u2014 depth is discovered implicitly rather than explicitly, producing half-built cognitive minds that were actually intended as advisory
+  - id: GAP-MND-5
+    where: cognitive_dna_strands.composition_rules.strand_semantic_coherence
+    issue: "Stage 7b verifies structural presence of each strand but does not verify semantic coherence across layers (e.g., C3 cognitive flow steps matching C7 reasoning patterns, C6 knowledge domains matching L4 content depth). Wave 3 adds cross-layer coherence checks."
+    wave_to_fix: 3
+    severity: MINOR \u2014 structural presence is a good first gate; semantic coherence relies on creator discipline until Wave 3
+  - id: GAP-MND-6
+    where: templates/genius-library/
+    issue: "The genius library has only 2 profiles today (_template and one exemplar). Catalog expansion to 10-15 curated profiles is Wave 3 content work."
+    wave_to_fix: 3
+    severity: MINOR \u2014 GENIUS sub-type is available but the catalog is small; SELF and DOMAIN sub-types are not affected
+  - id: GAP-MND-7
+    where: references/genius-library-licensing.md
+    issue: "Attribution and licensing policy for historical-figure genius profiles is undeclared. Public domain status for long-deceased figures is generally clear, but commercial use, derivative works, and persona likeness rights may have jurisdictional complications. Creators must resolve licensing before publishing genius-sub-type cognitive minds."
+    wave_to_fix: 3
+    severity: MINOR \u2014 legal hygiene before broader catalog expansion; does not block individual cognitive mind publish with creator's own legal discipline

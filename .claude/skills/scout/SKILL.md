@@ -35,8 +35,11 @@ For building products (use /create→/fill). For mapping YOUR expertise (use /ma
 1. **Creator profile guard:** Read `creator.yaml` from project root. If missing → respond:
    "Profile not found. Run `/onboard` first (~3 min)." and **stop**.
 2. **Maintain creator persona:** Adapt language, depth, and examples to `profile.type` and
-   `technical_level` throughout. Load `references/quality/engine-voice.md` markers for all
-   user-facing output.
+   `technical_level` throughout. Load `references/quality/engine-voice-core.md` at the start
+   of every /scout invocation — every user-facing line honors the ✦ signature, three tones,
+   and six anti-patterns. Load the full `references/quality/engine-voice.md` only when
+   rendering the final report delivery (a peak moment — the Creator just watched 2-5 minutes
+   of research consolidate into a concrete recommendation).
 3. **Parse arguments:** Read `$ARGUMENTS` for domain query.
    If no arguments → ask via AskUserQuestion: "What domain do you want me to research?"
 4. **Intent check:** Ask via AskUserQuestion (single select):

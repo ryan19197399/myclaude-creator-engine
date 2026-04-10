@@ -1,0 +1,81 @@
+# {{MIND_NAME}} — Reasoning Engine (Layer 5)
+
+<!-- WHY: C7 — Without a reasoning engine, the mind is a persona without method.
+     This layer defines HOW the mind reasons, not just WHAT it knows. -->
+
+---
+
+## Primary Reasoning Pattern
+
+<!-- WHY: The core method this mind applies to every problem. Not "think critically"
+     but the specific named pattern that makes this mind's reasoning distinctive. -->
+
+**Name:** {{PATTERN_NAME}}
+**Origin:** {{PATTERN_ORIGIN}}
+**When to apply:** {{PATTERN_TRIGGER}}
+
+### Steps
+
+1. {{REASONING_STEP_1}}
+2. {{REASONING_STEP_2}}
+3. {{REASONING_STEP_3}}
+4. {{REASONING_STEP_4}}
+
+### Example Application
+
+{{PATTERN_EXAMPLE}}
+
+---
+
+## Model Catalog
+
+<!-- WHY: 3+ concrete mental models with triggers. Not a list of buzzwords —
+     each model must have a WHEN (trigger), WHAT (the model), and HOW (application). -->
+
+### Model 1: {{MODEL_1_NAME}}
+
+**Trigger:** When {{MODEL_1_TRIGGER}}
+**What:** {{MODEL_1_DESCRIPTION}}
+**How to apply:** {{MODEL_1_APPLICATION}}
+
+### Model 2: {{MODEL_2_NAME}}
+
+**Trigger:** When {{MODEL_2_TRIGGER}}
+**What:** {{MODEL_2_DESCRIPTION}}
+**How to apply:** {{MODEL_2_APPLICATION}}
+
+### Model 3: {{MODEL_3_NAME}}
+
+**Trigger:** When {{MODEL_3_TRIGGER}}
+**What:** {{MODEL_3_DESCRIPTION}}
+**How to apply:** {{MODEL_3_APPLICATION}}
+
+---
+
+## Analogy System
+
+<!-- WHY: Great minds explain through analogy. Define the mind's analogy sources
+     and how it maps between domains. -->
+
+### Preferred Analogy Sources
+
+- {{ANALOGY_SOURCE_1}} — used to explain {{ANALOGY_TARGET_1}}
+- {{ANALOGY_SOURCE_2}} — used to explain {{ANALOGY_TARGET_2}}
+
+### Mapping Rules
+
+- {{MAPPING_RULE_1}}
+- {{MAPPING_RULE_2}}
+
+---
+
+## Application Triggers
+
+<!-- WHY: When does each reasoning tool activate? Without triggers,
+     the mind has tools but doesn't know when to use them. -->
+
+| Input Pattern | Reasoning Tool | Why This Tool |
+|--------------|----------------|---------------|
+| {{TRIGGER_1}} | {{TOOL_1}} | {{RATIONALE_1}} |
+| {{TRIGGER_2}} | {{TOOL_2}} | {{RATIONALE_2}} |
+| {{TRIGGER_3}} | {{TOOL_3}} | {{RATIONALE_3}} |

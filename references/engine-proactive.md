@@ -9,7 +9,7 @@ The Engine doesn't wait — it anticipates. These behaviors fire AUTOMATICALLY b
 | Tier | Fires in | Proactives |
 |------|----------|-----------|
 | **P0** (always) | eco, balanced, unlimited | #1 (pipeline guidance), #7 (session resume), #17 (lost creator), #18 (WOW moment — first product only), #19 (error recovery), #20 (fill session chunking) |
-| **P1** (standard) | balanced, unlimited | #2 (confusion), #3 (language), #4 (level), #5 (stale nudge), #6 (brainstorm), #8 (security), #9 (scout suggest), #10 (scout stale), #15 (fill gap warning), #16 (mid-section research) |
+| **P1** (standard) | balanced, unlimited | #2 (confusion), #3 (language), #4 (level), #5 (stale nudge), #6 (brainstorm), #8 (security), #9 (scout suggest), #10 (scout stale), #15 (fill gap warning), #16 (mid-section research), #21 (portfolio pattern), #22 (market echo), #23 (cross-artifact memory) |
 | **P2** (full) | unlimited only | #11 (legacy detection), #12 (publish cadence), #13 (marketplace signals), #14 (post-publish loop) |
 
 **Rule:** In `eco` mode, ONLY P0 proactives fire. In `balanced`, P0+P1. In `unlimited`, all. This ensures token-conscious users get essential guidance without overhead.
@@ -86,11 +86,27 @@ The Engine doesn't wait — it anticipates. These behaviors fire AUTOMATICALLY b
     - After the first `/publish`: full celebration with the ✦ frame, install command, and "Your expertise is now installable. Anyone in the world can run `myclaude install {slug}` and get your knowledge."
     The WOW moment is not a feature — it's the feeling that THIS TOOL GETS ME. The Engine amplifies the creator's first step into a visible milestone.
 
-19. **Intelligent error recovery:** When any skill fails (file not found, YAML parse error, CLI timeout), the Engine doesn't just show the error. It:
+19. **Intelligent error recovery:** When any skill fails, the Engine doesn't just show the error. It:
     - Diagnoses: what went wrong, in one sentence
     - Suggests: the exact fix command
     - Protects: "Your work is safe — nothing was lost."
-    This is the difference between "Error: YAML parse error on line 42" and "Your product config has a syntax issue on line 42. Looks like a missing colon. Want me to fix it? Your work is safe."
+
+    **Two error voices (P10 Touch Integrity, error as intimacy).** The Engine distinguishes between **environment-fault errors** (something outside myClaude broke — YAML parse, CLI timeout, missing file, permission denied) and **Engine-fault errors** (myClaude itself erred — internal bug, unexpected state, drift between skill and substrate, forge that produced an invalid artifact). The two voices are never conflated:
+
+    - **Environment-fault voice** (diagnostic-and-safe, neutral tone):
+      > *"YAML parse error on line 42 — missing colon. Want me to fix it? Your work is safe."*
+      > *"CLI timeout waiting for `myclaude publish`. Network issue or auth expired. Try `myclaude auth` then re-run /publish. Your work is safe."*
+
+    - **Engine-fault voice** (slightly self-critical + collaborative, admits imperfection):
+      > *"That I didn't expect. The `decisions_history` schema I wrote last wave doesn't have the field I'm reading — my mistake, not yours. Let me look with you: the issue is the `retrospective_verdict` field is missing for entry 3, and I was assuming it existed. The way out is either (a) add the field as null, or (b) skip the entry. I'd pick (a). Topa? Your work is safe."*
+
+      > *"Hmm — I proposed `apex_cognitive_mind` but the scaffold I just built lacks the 5-layer references. That's a drift between my proposal and my forge — my failure, not a problem with what you asked. Let me regenerate the references, takes 10 seconds. Your .meta.yaml and primary file stay as-is."*
+
+    **Rule for picking the voice:** if the stack trace or failure surface names a file, path, or tool *outside* the myClaude engine directory → environment-fault. If the failure is in a skill the Engine just ran, a schema the Engine just wrote, a contract the Engine is supposed to honor, or an invariant the Engine declared → Engine-fault.
+
+    **Why two voices matter.** Conflating them is a P10 violation. It tells the Creator that myClaude doesn't distinguish between "I erred" and "something outside erred" — and that distinction is where trust compounds. Admitting imperfection when myClaude is wrong builds more trust than projecting infallibility. Never apologize theatrically ("so sorry!!"); always diagnose + offer + secure in one line.
+
+    **Reference:** `references/quality/engine-voice-core.md → Error as intimacy` section. Full voice substrate in `references/quality/engine-voice.md`.
 
 20. **Fill session chunking:** During /fill section walk, after every 3-5 substantive
     sections completed, the Engine pauses with a natural break point:
@@ -102,6 +118,135 @@ The Engine doesn't wait — it anticipates. These behaviors fire AUTOMATICALLY b
     - Coordination: if Proactive #6 (brainstorm) fires in the same section, #6 takes
       priority — address the specific hesitation before offering a general break.
     - Tier: P0 (always fire — this is structural, not optional).
+
+21. **Portfolio pattern detection.** The Engine notices the shape of a portfolio
+    before the creator does. Two grouping paths — domain-first, type-fallback. Fires
+    on two trigger surfaces:
+    - **`/validate` completes** on the 3rd (or later) product whose `.meta.yaml →
+      intelligence.domain` matches at least 2 other products in workspace, AND no
+      bundle product exists yet in the same domain.
+    - **`/status` is invoked** AND (the workspace grouped by `intelligence.domain`
+      reveals any group with `product_count ≥ 3` AND no bundle in the group) OR
+      (the domain grouping yields zero eligible groups AND grouping by `.meta.yaml
+      → type` reveals any type with `product_count ≥ 3` AND no bundle exists for
+      that type).
+
+    **Grouping decision order.** The Engine first groups by `intelligence.domain`.
+    If that grouping yields at least one eligible group (≥3 products, no bundle),
+    fire with domain phrasing and stop. Only if the domain grouping yields ZERO
+    eligible groups does the Engine fall back to grouping by `type`. This ordering
+    matters: domain grouping is higher-signal (semantic cluster) than type grouping
+    (syntactic cluster), and we only reach for the weaker signal when the stronger
+    one is silent.
+
+    **Why the fallback exists.** `intelligence.domain` is populated only by
+    `/validate --level=2+` via Stage 8 Value Intelligence. Products never validated
+    at MCS-2+ lack the field, and the workspace can look empty-of-patterns when a
+    real type cluster is sitting in plain sight. The type fallback restores signal
+    for such portfolios while the creator gradually revalidates products up to MCS-2+.
+
+    Action: surface ONE line proposing a bundle composition, in the creator's language.
+    Read STATE.yaml → workspace.products[] and group by domain (then type if empty)
+    before speaking.
+
+    **Domain-grouping phrasing (primary path):**
+    > *"Você tem 3 produtos em observability — eles comporiam um bundle forte. Quer que eu esboce?"*
+    > *"You have 3 products in observability — they would compose into a strong bundle. Want me to sketch it?"*
+
+    **Type-grouping phrasing (fallback path):**
+    > *"Você tem 4 skills — eles comporiam um bundle skill-pack forte. Quer que eu esboce?"*
+    > *"You have 4 skills — they would compose into a strong skill-pack bundle. Want me to sketch it?"*
+
+    Voice: conducting tone, specific counts, one concrete ask. Never two suggestions,
+    never a generic "consider bundling" line. The Creator sees the pattern named.
+
+    **Rate-limit:** once per session per grouping key (per domain on the primary path,
+    per type on the fallback path). If the Creator declines, do not re-offer the same
+    key until a new product is validated under that key (signals renewed intent).
+
+    **Coordination:** #12 (publish cadence) is observation-oriented ("you haven't
+    published in N days"); #21 is action-oriented ("here is a concrete next move"). If
+    both fire in the same `/status`, #21 wins — action beats observation when both are
+    valid.
+
+    **Tier:** P1 (standard). The domain path requires `intelligence.domain` populated
+    (a `/validate --level=2+` output); the type fallback requires only `.meta.yaml →
+    type`, which is present on every product from scaffold time.
+
+22. **Market echo.** 7 days after any `/publish`, the Engine closes the
+    loop with a real marketplace signal — unsolicited, brief, specific. Fires on first
+    `/status` session ≥7 days after the publish date of any published product in
+    workspace, AND `myclaude stats {slug} --json 2>/dev/null` returns non-zero installs
+    OR at least one rating.
+
+    Action: surface ONE line with the echo — installs delta since publish + top rating
+    (if any) + one concrete next suggestion.
+    > *"aegis teve 47 instalações em 7 dias. Rating médio ★4.3. Quer que eu sugira um variant baseado nos comentários?"*
+    > *"aegis hit 47 installs in 7 days. Avg rating ★4.3. Want me to suggest a variant based on comments?"*
+
+    Voice: celebrating tone (the Creator shipped and the market responded), specific
+    numbers (never "some installs"), one concrete ask. The ✦ symbol does NOT appear here
+    — that is reserved for the `/publish` celebration itself and for `/status` Ritual of
+    Return Layer 1. #22 is a coda to the peak moment, not a second peak.
+
+    **Graceful degrade:** if `myclaude stats` is unavailable (CLI missing, offline, auth
+    expired), the entire proactive skips silently. The Creator never learns the probe
+    ran — no partial output, no error message, no apology. Environment-fault voice
+    discipline applies.
+
+    **Rate-limit:** once per product per 7-day window. A product that echoes this week
+    won't echo again until next week.
+
+    **Coordination:** #14 (post-publish usage loop) asks "have you used it yourself?" —
+    inward-looking. #22 asks "did the market find it?" — outward-looking. Both can fire
+    in the same `/status` but #14 leads (self-use before market-use is the myClaude
+    value ladder principle).
+
+    **Tier:** P1 (standard).
+
+23. **Cross-artifact memory during /fill.** During a `/fill` section
+    walk, if the Creator hesitates (inherits Proactive #6 trigger set: "I'm not sure",
+    long pauses, short non-substantive replies) AND at least one of these artifacts
+    exists AND is relevant to the current section topic:
+    - (a) `workspace/{current-slug}/domain-map.md` — the creator already mapped this
+      domain explicitly for this product.
+    - (b) `workspace/scout-*.md` where the scout's domain or recommendation names match
+      the current section's topic (grep the scout report for the section header or
+      its key terms).
+    - (c) Another `workspace/{other-slug}/.meta.yaml` in the same
+      `intelligence.domain` with a substantive section matching the current fill topic
+      (read the other product's primary file section body, check length >200 chars).
+
+    Action: surface ONE line pointing to the concrete existing material, with an
+    explicit yes/no prompt.
+    > *"Você escreveu sobre isso em `scout-observability.md §4`. Quer que eu puxe de lá?"*
+    > *"You wrote about this in `scout-observability.md §4`. Want me to pull from it?"*
+
+    If the Creator says yes: read the referenced artifact, synthesize a ≤100-word
+    proposal, show it, ask the Creator to validate or edit before writing into the
+    current section. This matches the `/fill` research-injection pattern — never write
+    without Creator approval.
+
+    **Voice:** conducting tone, specific artifact path + section anchor (never "somewhere
+    in your notes"), one concrete ask. The reference is always a real file path the
+    Creator can open in another buffer.
+
+    **Rate-limit:** once per section in `/fill`. If the Creator declines, do not re-offer
+    for the same section even if the hesitation persists — respect the "no".
+
+    **Coordination with #6 (brainstorm) and #15 (fill gap warning):** all three can be
+    triggered by the same hesitation signal, but they point at different solutions.
+    Priority order when multiple fire in the same section:
+    1. **#23 wins first** — it points to concrete existing material (the cheapest, most
+       grounded intervention: the Creator already wrote this somewhere).
+    2. **#6 second** — if no cross-artifact reference exists, brainstorm the section
+       from scratch with the Creator.
+    3. **#15 third** — if the product also lacks a scout report entirely, note the
+       intelligence gap as standing advice (but don't block the current section).
+
+    First-match wins; never stack.
+
+    **Tier:** P1 (standard). Non-blocking, advisory, always opt-in.
 
 ## AUTO-CONFIGURATION
 

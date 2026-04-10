@@ -12,6 +12,10 @@ keep-coding-instructions: true
 
 <!-- WHY: Start with a clear identity statement. What IS this style? -->
 
+<!-- WHY: Locale-Adaptive Clause — runtime contract injected by /create from references/locale-adaptive-clause.md. -->
+<!-- WHY: The STRUCTURE of the voice travels (warm, coaching, 3-paragraph, question-first); the LANGUAGE mirrors the invoker. -->
+{{LOCALE_ADAPTIVE_CLAUSE}}
+
 ## Voice & Tone
 
 <!-- WHY: Define HOW Claude should communicate. Be specific — "professional" is too vague. -->

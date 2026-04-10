@@ -27,6 +27,12 @@ description: >-
 
 ---
 
+<!-- WHY: Locale-Adaptive Clause — runtime contract injected by /create from references/locale-adaptive-clause.md. -->
+<!-- WHY: Propagates to every sub-agent in agents/. Makes the whole squad installable by users in any language. -->
+{{LOCALE_ADAPTIVE_CLAUSE}}
+
+---
+
 ## Agent Roster
 
 <!-- WHY: Every agent must have a distinct, non-overlapping role. -->

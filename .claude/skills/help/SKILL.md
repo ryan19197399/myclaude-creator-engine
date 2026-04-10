@@ -24,7 +24,8 @@ Display all available commands and quick start guide.
 4. **Load UX stack (in order):**
    - `references/ux-experience-system.md` §1 Context Assembly, §2.1 Experience Level Scaling, §2.2 Archetype-Aware
    - `references/ux-vocabulary.md` — translate type names and pipeline terms
-   - `references/quality/engine-voice.md` — brand DNA, ✦ marker, box frame
+   - `references/quality/engine-voice-core.md` — vocabulary, three tones, ✦ signature, six anti-patterns, error voices
+   - `references/quality/engine-voice.md` — brand DNA, box frame (load only when rendering the PRO edition box frame, a peak moment)
 5. **Adapt output** based on creator context:
    - Non-dev → use human type names from ux-vocabulary.md, non-dev pipeline terms
    - Beginner → show full pipeline with descriptions

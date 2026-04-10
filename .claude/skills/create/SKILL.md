@@ -25,45 +25,67 @@ Generate complete, MCS-1-valid project structure for any product type with guida
 
 ## Activation Protocol
 
-1. Read `creator.yaml` — load defaults. Missing → **micro-onboard**: scan silently, infer defaults, ask ONE name question, generate minimal `creator.yaml`. Never block.
-2. **Persona**: Adapt to `profile.type` + `technical_level`. Load `references/quality/engine-voice.md`.
-3. **Gates**: Read `config.yaml → gates.confirm_create`. Confirm if `true`; proceed if `false`.
-4. **Brownfield check**: Glob `workspace/*/`. If same `product.type` or overlapping tags found, surface slugs and ask before continuing.
-5. **Exemplar guard**: Glob `references/exemplars/{category}*`. If found: show condensed preview. If not: skip gracefully — never halt.
-6. Load `product-dna/{category}.yaml` → DNA requirements.
-7. Load `${CLAUDE_SKILL_DIR}/references/discovery-questions.md` → category questions.
-8. Load `references/product-specs/{category}-spec.md` + `templates/{category}/`.
-9. Load `workspace/domain-map.md` if exists → prefill scaffold sections.
-9b. **Link scout report** if used — record `scout_source: "scout-{slug}.md"` in `.meta.yaml`. Do NOT inject domain content — that's /fill's job.
-9c. **Portfolio intelligence (back-reference from /validate)**: Read `STATE.yaml → workspace.products[]` AND `STATE.yaml → mcs_results`. Group by domain. If domain has existing products:
+1. Read `creator.yaml` — load defaults. Check `schema_version`:
+   - **`< 3`** → invoke `/onboard` skill to run Phase 2.5d silent migration first. Migration is atomic + backed up to `creator.yaml.bak.v2`. After migration succeeds, re-read the v3 file and continue.
+   - **Missing** → **micro-onboard**: scan silently, infer defaults, ask ONE name question, generate minimal `creator.yaml` (v3). Never block.
+2. **Persona**: Adapt to `profile.type` + `technical_level`. Load `references/quality/engine-voice-core.md`. Load the full `references/quality/engine-voice.md` only when composing peak moments (scaffold celebration, Step 10 proposal rendering, first-product WOW).
+2b. **Load architectural DNA:** Read `structural-dna.md`. The 10 architectural principles and the Tier 1 DNA patterns (D1-D4, D13, D14) govern every scaffold — the skill applies them during Step 11 template generation and flags any violation before the scaffold is written to disk.
+3. **Discovery Mode Routing (W3.2 — PRIMARY ROUTER):** Load `${CLAUDE_SKILL_DIR}/references/create-router.md` **Section 0** — the 12-step discovery walk. Apply the Mode Selection table (Express vs Guided) based on `creator.profile.technical_level` + `creator.preferences.workflow_style` + any `--express`/`--discovery` flag.
+   - **Express mode** → run the "12 Steps — Express Mode Fast Path" section of create-router.md Section 0. Reads type + sub-type flags, applies defaults from `config.yaml routing.{type}.intent_topology`, skips interactive questions, derives the full 19-field `intent_declaration` in one pass, and writes it at Step 11 of the walk.
+   - **Guided mode** → run the "12 Steps — Guided Mode Walk". Asks Q1 (verb family) interactively, reads `creator.intent_profile` silently for Steps 2/3/6, escalates at Step 6 if cognitive justification incomplete, proposes form at Step 10 with confirmation, writes `intent_declaration` at Step 11.
+   - **Discovery returns unroutable (Step 9 zero-match)** → fall through to create-router.md **Section 1** legacy Q1/Q2/Q3 tree (Contract C4). The creator is never blocked. `unroutable: true` + `unroutable_reason` recorded in `intent_declaration`.
+   - **Creator chose "I don't know yet" at Step 1** → route to `/scout` suggestion OR legacy tree, at creator's choice.
+4. **Gates**: Read `config.yaml → gates.confirm_create`. Confirm if `true`; proceed if `false`.
+5. **Brownfield check**: Glob `workspace/*/`. If same `product.type` or overlapping tags found, surface slugs and ask before continuing.
+6. **Exemplar guard**: Glob `references/exemplars/{category}*`. If found: show condensed preview. If not: skip gracefully — never halt.
+7. Load `product-dna/{category}.yaml` → DNA requirements.
+8. Load `${CLAUDE_SKILL_DIR}/references/discovery-questions.md` → category questions.
+9. Load `references/product-specs/{category}-spec.md` + `templates/{category}/`.
+10. Load `workspace/domain-map.md` if exists → prefill scaffold sections.
+10b. **Link scout report** if used — `scout_source` is already recorded in `intent_declaration.scout_source` by Section 0 Step 11. No additional action needed here; the canonical home for scout_source is `intent_declaration`, not a parallel field.
+10c. **Portfolio intelligence (back-reference from /validate)**: Read `STATE.yaml → workspace.products[]` AND `STATE.yaml → mcs_results`. Group by domain. If domain has existing products:
    - Show: "Your {domain} portfolio: {slugs}. This will be product #{N}."
    - If N >= bundle threshold (`config.yaml → intelligence.portfolio.bundle_suggestion_threshold`): suggest bundling.
    - If complementary type opportunity exists: surface composition suggestion.
    - **MCS target calibration**: If domain has 0 products → default MCS-1 (ship fast, test market). If domain has 2+ validated products → default MCS-2 (quality matters, audience exists).
    - Record `intelligence.domain` and `intelligence.market_position` in `.meta.yaml`.
-10. Generate scaffold in `workspace/{product-slug}/` with DNA patterns + WHY comments.
-11. Create `.meta.yaml` (see template below).
-12. Move `workspace/domain-map.md` → `workspace/{product-slug}/domain-map.md` if loaded.
-13. Engine voice: "Scaffold ready. {N} sections with WHY guidance. Run /fill to start."
+11. Generate scaffold in `workspace/{product-slug}/` with DNA patterns + WHY comments. The scaffold's type + structure come from the `matched_cell.canonical_form` decided at Section 0 Step 10.
+11b. **Locale-adaptive clause substitution (W3.6 — MANDATORY for 6 certified types):** For each template file written (SKILL.md, AGENT.md, SQUAD.md, CLAUDE.md for system, AGENT.md for minds, OUTPUT-STYLE.md), perform placeholder substitution for `{{LOCALE_ADAPTIVE_CLAUSE}}`:
+    a. Read the canonical clause block from `references/locale-adaptive-clause.md §2` (the fenced markdown block between `<<< LOCALE-ADAPTIVE CLAUSE ... >>>` and `<<< END CLAUSE >>>`, inclusive).
+    b. Read the localized header from `config.yaml → routing.common.locale_adaptive_clause.localized_header_catalog.{creator.language}`. If the creator's language is not in the catalog, use the `fallback` entry and emit an advisory note.
+    c. Build the substitution block: `<!-- {localized_header} -->\n\n{canonical_clause}`.
+    d. Replace the literal string `{{LOCALE_ADAPTIVE_CLAUSE}}` in each written template file with the substitution block. Use a literal-string replace, not a regex — the placeholder is unique and must not be interpreted.
+    e. Verify post-substitution: the forged file must contain both marker strings (`<<< LOCALE-ADAPTIVE CLAUSE (runtime contract, do not edit) >>>` and `<<< END CLAUSE >>>`). If either marker is missing after substitution, the forge fails + rollback.
+    f. For type `squad`, also perform the substitution on every file in `workspace/{slug}/agents/*.md` (sub-agents inherit the clause per `references/locale-adaptive-clause.md §4`).
+    g. For type `system`, also perform the substitution on every sub-part file (claude-md fragment, sub-agents, sub-squads) per §4.
+    h. Record `intent_declaration.language` (already populated at Section 0 Step 11) as the source language used for the lookup — this becomes the `source_language` field in vault.yaml at /package time.
+12. Create `.meta.yaml` (see template below). The `intent_declaration` block is already populated from Section 0 Step 11; the rest of the template is filled by this step (product, state, history, intelligence).
+13. Move `workspace/domain-map.md` → `workspace/{product-slug}/domain-map.md` if loaded.
+14. **Atomic commit (Contract C5):** both `.meta.yaml` (with intent_declaration) AND `STATE.yaml decisions_history` append must succeed before reporting `forge_ready`. If either fails, roll back scaffold + announce failure.
+15. Engine voice: "Scaffold ready. {N} sections with WHY guidance. Run /fill to start." In Guided mode, also include one-line summary of the cell matched and why: *"Forjado como {canonical_form} — {rationale}."*
 
 ---
 
 ## Router Logic
 
-**Read `${CLAUDE_SKILL_DIR}/references/create-router.md`** for:
-- Scout-aware routing (check for existing scout reports first)
-- Level-based menu (advanced/expert creators vs. beginner/intermediate)
-- Full Q1/Q2/Q3 Decision Tree routing all 13 types
-- Per-category scaffold structures (all 13 types)
-- Prefilling strategy for SKILL.md and README.md
+**Read `${CLAUDE_SKILL_DIR}/references/create-router.md`** — the file has two sections:
 
-**Direct sub-commands** skip the menu and go straight to category flow:
-`/create skill` | `/create agent` | `/create squad` | `/create workflow` | `/create ds` | `/create claude-md` | `/create app` | `/create system` | `/create bundle` | `/create statusline` | `/create hooks` | `/create minds` | `/create output-style`
+- **Section 0 — DISCOVERY MODE (PRIMARY ROUTER, W3.2):** the 12-step decision algorithm from `references/capability-matrix.md §3`. Runs in either Express or Guided mode per Activation Protocol step 3. Writes the 19-field `intent_declaration` to `.meta.yaml`. This is the primary path for **every** /create invocation in schema v3.
+- **Section 1 — LEGACY DECISION TREE (FALLBACK):** the Q1/Q2/Q3 tree preserved verbatim from pre-Wave-3. Runs when Section 0 Step 9 returns `unroutable` (Contract C4) or when the creator explicitly picks "I don't know yet" at Section 0 Step 1 or invokes `--legacy-router`. Also contains: per-category scaffold structures (Section 2), prefilling strategy (Section 3).
 
-**Quick mode** (`--quick` flag or `creator.preferences.workflow_style: autonomous` + `products_published >= 5`):
-Skip discovery questions, marketplace scan, and exemplar preview. Go straight to: name → scaffold → done.
-Example: `/create skill my-tool --quick` → generates scaffold with minimal interaction.
-For experienced creators who know exactly what they want. All structural quality (MCS-1) still verified.
+**Direct sub-commands** trigger Express mode (skip the interactive walk, apply type+sub-type defaults, write `intent_declaration` with `mode: express`):
+`/create skill [my-tool]` | `/create agent` | `/create squad` | `/create workflow` | `/create ds` | `/create claude-md` | `/create app` | `/create system` | `/create bundle` | `/create statusline` | `/create hooks` | `/create minds` | `/create output-style`
+
+**Depth flags** (Express mode only, pairs with type sub-command):
+`--procedural` | `--advisory` | `--cognitive` | `--genius [profile_name]` (for minds)
+
+**Mode override flags:**
+`--express` — force Express mode regardless of creator profile
+`--discovery` — force Guided walk (synonym: `--guided`) regardless of creator profile
+`--legacy-router` — skip Section 0 entirely, go straight to Section 1 legacy tree
+`--quick` — Express mode + skip marketplace scan + skip exemplar preview (legacy alias, retained for backward compatibility)
+
+For experienced creators who know exactly what they want, Express mode + sub-command is the one-motion path. For creators discovering what to build, Guided mode walks them through. For creators in unmapped territory, Section 1 legacy fallback guarantees they always have a path forward.
 
 ---
 
@@ -170,6 +192,65 @@ history:
   packaged_at: null
   published_at: null
   version: "1.0.0"
+
+# Intent Declaration — the canonical record of how /create reasoned from creator intent
+# to forged form. Written by /create at Step 11 of the 12-step algorithm (express or
+# guided mode). Consumed by: /validate Stage 0 (Intent Coherence), /fill (natureza-aware
+# section walks), /package (manifest shape), and STATE.yaml decisions_history
+# (longitudinal feedback loop per capability-matrix.md §6).
+#
+# Schema source of truth: references/capability-matrix.md §3 Step 11 (19 fields).
+# Enum sources:
+#   - references/intent-topology.md §2 (delivery, nature, depth axis enums)
+#   - references/intent-topology.md §4 (habitable cells v1)
+#   - references/capability-matrix.md §3 Step 1 (verb_family enum)
+#   - references/capability-matrix.md §3 Step 9 (unroutable_reason enum)
+#   - references/capability-matrix.md §4 (mode enum: express | guided)
+#
+# Null-safe discipline (Contract C9): every field is populated on every forge. Fields
+# not applicable to the current mode/path are set to null (single-value) or [] (list).
+# Never omit a field — downstream consumers must not distinguish "absent" from "null".
+#
+# This block is the canonical home for scout_source (Activation Protocol step 9b).
+intent_declaration:
+  captured_at: null       # ISO-8601 when /create resolved the triple (Step 11)
+  creator_said: null      # verbatim intent text (guided mode), or "(express mode)"
+  mode: null              # express | guided (see references/capability-matrix.md §4)
+  mode_switches: []       # appended by §5 transition protocol; each entry: {from, to, trigger, at_step, at_time}
+  language: null          # mirror of creator.yaml → creator.language at forge time (drives locale-adaptive clause + announcements)
+  scout_source: null      # "scout-{slug}.md" if a scout report informed this forge (canonical location for Activation Protocol step 9b)
+
+  # engine_parsed — per-step outputs of the 12-step algorithm. In express mode, these
+  # are populated from sub-command flags + type defaults. In guided mode, from the walk.
+  engine_parsed:
+    verb_family: null         # do_X | advise_on_X | coordinate_X | observe_X | enforce_X | react_to_X  (Step 1)
+    continuity_bias: null     # parent | isolated | unclear  (Step 2)
+    invocation_mode: null     # remembered | needs_auto  (Step 3)
+    pollution_risk: null      # pollutes | safe  (Step 4)
+    output_shape: null        # amplified_reasoning | structured_report  (Step 5)
+    depth: null               # procedural | advisory | cognitive  (Step 6)
+    nature: null              # executor | advisor | orchestrator | observer  (Step 7)
+    delivery_mechanism: null  # ambient_constitutional | ambient_path_scoped | invoked_slash_command | invoked_task_spawn | reflex_hook_binding | composed_system  (Step 8 primary)
+    host_set: []              # derived from (delivery, nature) per references/runtime-host-dag.md §2 — NEVER declared, always computed
+
+  # Canonical cell lookup result (Step 9)
+  matched_cell: null          # habitable cell id from intent-topology.md §4 (e.g. "reasoning_skill_cognitive"), or null if unroutable
+  ranked_alternatives: []     # up to 2 alternative cell ids surfaced in the proposal
+
+  # Creator-facing proposal (Step 10)
+  proposed_form: null         # canonical_form from matched_cell, or null if unroutable
+  creator_choice: null        # accepted | overridden
+  override_to: null           # creator's chosen form if overridden
+  override_reason: null       # creator's one-line explanation if overridden
+
+  # Unroutable handling (Contract C4 — fall-through is a feature, not a failure)
+  unroutable: false
+  unroutable_reason: null     # no_habitable_cell | v2_cell_deferred | blocked_by_composition_gap | ambiguous_between_cells
+  unroutable_gap_id: null     # gap marker from composition-anatomy.md (e.g. "GAP-COMPOSITION-1") when unroutable_reason == blocked_by_composition_gap
+
+  # Audit markers for post-hoc schema evolution + default-tracking
+  discriminators_applied: [] # which of [continuity, invocation, pollution, output, depth] actually fired (not just defaults)
+  defaults_applied: []       # intent_profile field names that fell back to declared defaults (schema v3 gap tracking)
 
 # Intelligence Layer fields (populated by /validate Stage 8, /scout, /package)
 # Reference: references/intelligence-layer.md + config.yaml intelligence section

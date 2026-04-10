@@ -103,6 +103,10 @@ description: >-
 <!-- WHY: Order matters: load general context first, specific context second. -->
 <!-- WHY: The protocol runs ONCE per invocation, before any other processing. -->
 
+<!-- WHY: Locale-Adaptive Clause — runtime contract injected by /create from references/locale-adaptive-clause.md. -->
+<!-- WHY: Makes this skill installable by users in any language Claude speaks, without retranslation. -->
+{{LOCALE_ADAPTIVE_CLAUSE}}
+
 Before responding to any invocation of this skill, execute in this order:
 
 1. **Load domain knowledge:** Read `references/domain-knowledge.md`

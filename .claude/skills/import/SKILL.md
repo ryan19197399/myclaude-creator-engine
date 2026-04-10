@@ -30,6 +30,7 @@ Bring existing skills into the Studio Engine pipeline for validation, packaging,
 4. Read `creator.yaml` — if missing, suggest `/onboard`
 5. **Maintain creator persona**: Adapt language and depth to `profile.type` and `technical_level` throughout this skill's execution.
 6. Verify `workspace/` exists
+7. **Load voice identity:** Load `references/quality/engine-voice-core.md`. Every user-facing line in this skill honors the ✦ signature, three tones, and six anti-patterns.
 
 ---
 
@@ -44,22 +45,37 @@ Check if `.claude/skills/{slug}/` exists. If not:
 
 **Step 2 — Detect product type**
 
-Scan the directory for primary files:
+Scan the directory for primary files and structural signatures. Detection is
+ordered from most specific to least specific — the first match wins.
 
-| File Found | Detected Type |
+| Signature | Detected Type |
 |-----------|---------------|
-| SKILL.md | skill |
+| CLAUDE.md + STATE.yaml + config/routing.yaml + (agents/ OR squads/ OR skills/) | **system** |
+| SQUAD.md + routing.yaml + agents/*.md | **squad** |
+| AGENT.md + references/cognitive-core.md (or 5-layer cognitive references) | **minds** (cognitive) |
 | AGENT.md | agent |
-| SQUAD.md | squad |
+| SKILL.md with frontmatter `context: fork` | skill (fork-bridge) |
+| SKILL.md | skill |
 | WORKFLOW.md | workflow |
-| DESIGN-SYSTEM.md | design-system |
-| PROMPT.md | prompt |
-| CLAUDE.md (and NOT other primary files) | claude-md |
+| hooks.json + scripts/ | hooks |
+| OUTPUT-STYLE.md OR file in output-styles/ | output-style |
+| DESIGN-SYSTEM.md + tokens/ | design-system |
 | APPLICATION.md | application |
-| SYSTEM.md | system |
+| statusline.sh + settings-fragment.json | statusline |
+| vault.yaml (and no primary file) | bundle |
+| CLAUDE.md (and NOT other primary files, and NOT STATE.yaml) | claude-md |
 
-If multiple primary files found, ask which type to use.
-If no primary file found: "Cannot detect product type. What type is this? (skill/agent/squad/...)"
+**Detection rules:**
+- The `system` signature is the most specific: requires CLAUDE.md AND STATE.yaml
+  AND config/routing.yaml. A plain CLAUDE.md alone is a claude-md product.
+- The `squad` signature requires BOTH routing.yaml AND an agents/ subdirectory
+  with at least one .md file. A lone SQUAD.md without routing.yaml is incomplete
+  and should be reported as an error, not auto-converted to agent.
+- `minds` detection looks for cognitive depth references. If the agent ships
+  only AGENT.md + README.md, it is a regular agent.
+
+If multiple signatures match ambiguously, ask which type to use.
+If no signature matches: "Cannot detect product type. What type is this? (skill/agent/squad/system/minds/workflow/hooks/claude-md/output-style/design-system/application/statusline/bundle)"
 
 **Step 3 — Check for duplicates**
 

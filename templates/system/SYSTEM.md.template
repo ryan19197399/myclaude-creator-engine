@@ -28,6 +28,13 @@ description: >-
 
 ---
 
+<!-- WHY: Locale-Adaptive Clause — runtime contract injected by /create from references/locale-adaptive-clause.md. -->
+<!-- WHY: Propagates to every composed sub-part (sub-agents, sub-squads, hooks, output-style, claude-md fragment). -->
+<!-- WHY: Makes the whole system installable by users in any language Claude speaks, without retranslation. -->
+{{LOCALE_ADAPTIVE_CLAUSE}}
+
+---
+
 ## What This System Does
 
 <!-- WHY: Explain the emergent capability — what can users do with the SYSTEM -->

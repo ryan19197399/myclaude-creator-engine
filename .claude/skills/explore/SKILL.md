@@ -30,6 +30,7 @@ allowed-tools:
 2. Check CLI: `myclaude --version 2>/dev/null` — if unavailable, explain install and offer offline alternatives
 3. Parse `$ARGUMENTS` for query intent
 4. Route to the appropriate exploration mode
+5. **Load voice identity:** Load `references/quality/engine-voice-core.md`. Every user-facing line in this skill honors the ✦ signature, three tones, and six anti-patterns.
 
 ---
 

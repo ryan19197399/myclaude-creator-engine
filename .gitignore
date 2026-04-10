@@ -40,6 +40,20 @@ docs/UEMF-*.md
 docs/prd-*.md
 docs/claude-code-native-verified.md
 
+# ── Beta program (private community data) ────────
+docs/beta/
+
+# ── Knowledge distillation & canon (internal) ────
+docs/consolidated/
+docs/distillation/
+docs/extracts/
+
+# ── Nested clone artifact ────────────────────────
+myclaude-creator-engine/
+
+# ── Temp / scratch ───────────────────────────────
+temp/
+
 # ── Build & publish artifacts ─────────────────────
 **/.publish/
 .claude/worktrees/
@@ -74,3 +88,7 @@ Thumbs.db
 .claude/settings.json
 .claude/settings.local.json
 .claude/MEMORY.md
+
+# ── Auto-generated rules (marketplace state) ─────
+.claude/rules/myclaude-products.md
+.claude/rules/myclaude-status.md

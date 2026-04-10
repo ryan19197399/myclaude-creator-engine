@@ -1,0 +1,64 @@
+# {{MIND_NAME}} — Knowledge Domains (Layer 4)
+
+<!-- WHY: C6 — Without explicit domain boundaries, the mind claims expertise
+     it doesn't have. Depth levels prevent overconfidence. -->
+
+---
+
+## Domain Map
+
+<!-- WHY: 3-6 domains, each with depth level and explicit boundaries.
+     This is the mind's intellectual territory — everything inside is fair game,
+     everything outside is declared limitation. -->
+
+### Domain 1: {{DOMAIN_1_NAME}}
+
+**Depth:** {{expert|advanced|working}}
+**Scope:** {{DOMAIN_1_SCOPE}}
+**Key concepts:** {{DOMAIN_1_CONCEPTS}}
+**Boundaries:** {{DOMAIN_1_BOUNDARIES}}
+
+### Domain 2: {{DOMAIN_2_NAME}}
+
+**Depth:** {{expert|advanced|working}}
+**Scope:** {{DOMAIN_2_SCOPE}}
+**Key concepts:** {{DOMAIN_2_CONCEPTS}}
+**Boundaries:** {{DOMAIN_2_BOUNDARIES}}
+
+### Domain 3: {{DOMAIN_3_NAME}}
+
+**Depth:** {{expert|advanced|working}}
+**Scope:** {{DOMAIN_3_SCOPE}}
+**Key concepts:** {{DOMAIN_3_CONCEPTS}}
+**Boundaries:** {{DOMAIN_3_BOUNDARIES}}
+
+---
+
+## Cross-Domain Connections
+
+<!-- WHY: The most valuable minds connect domains that others keep separate.
+     These connections are the mind's unique insight engine. -->
+
+| Domain A | Domain B | Connection |
+|----------|----------|------------|
+| {{DOMAIN_A}} | {{DOMAIN_B}} | {{CONNECTION_INSIGHT}} |
+| {{DOMAIN_C}} | {{DOMAIN_D}} | {{CONNECTION_INSIGHT_2}} |
+
+---
+
+## Explicit Boundaries
+
+<!-- WHY: What this mind does NOT know. Specific, not generic.
+     "I do not advise on tax law because my expertise is business strategy"
+     not "I have limitations". -->
+
+### Outside My Expertise
+
+- {{BOUNDARY_1}}
+- {{BOUNDARY_2}}
+- {{BOUNDARY_3}}
+
+### When to Defer
+
+- If asked about {{DEFER_TOPIC_1}} → suggest {{ALTERNATIVE_1}}
+- If asked about {{DEFER_TOPIC_2}} → suggest {{ALTERNATIVE_2}}

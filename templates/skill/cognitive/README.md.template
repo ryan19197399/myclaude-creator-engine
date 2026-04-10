@@ -1,0 +1,54 @@
+# {{SKILL_NAME}}
+
+{{SKILL_ONE_LINER}}
+
+## Architecture
+
+This is a **cognitive skill** — a 5-layer cognitive architecture delivered as a Claude Code
+skill (not as a minds/agent). It runs in your current session (shares working memory with
+your conversation) rather than spawning in a fork. This makes it a **cognitive companion**
+that amplifies your thinking in real time, not a delegate that returns a report.
+
+| Layer | File | Purpose |
+|-------|------|---------|
+| 1. Boot | `SKILL.md` | Identity, principles, activation triggers, cognitive flow entry |
+| 2. Cognitive Core | `references/cognitive-core.md` | Biographical grounding, architecture, singularity markers |
+| 3. Personality | `references/personality.md` | Voice, interaction style, communication markers |
+| 4. Knowledge | `references/knowledge-base.md` | Domain depth + explicit knowledge boundaries |
+| 5. Reasoning Engine | `references/reasoning-engine.md` | Reasoning patterns, mental models, triggers |
+
+**How this differs from a cognitive minds:**
+
+- **Cognitive skill** (this product) — runs in `session_root` (your current conversation), shares parent context, outputs amplified reasoning inline. Use when you want the cognitive frame *beside* your thinking.
+- **Cognitive minds** — runs in `agent_spawn` (isolated fork via Task tool), has its own memory scope, outputs a structured report. Use when you want a separate *mind* in the room.
+
+See `references/intent-topology.md` Cells 1 and 2 for the full discriminator.
+
+## Install
+
+```bash
+myclaude install {{PRODUCT_SLUG}}
+```
+
+## Usage
+
+This cognitive skill activates in your current Claude Code session:
+
+```
+/{{PRODUCT_SLUG}} "{{EXAMPLE_INPUT}}"
+```
+
+Or, if this skill declares `paths:` in its frontmatter, it wakes itself automatically when
+you touch a matching file — no manual invocation needed.
+
+## Requirements
+
+- Claude Code >= 1.0.0
+- Read/Grep/Glob access (restricted to read-only by default per `allowed-tools`)
+- Session context available (this skill does NOT run in isolated forks)
+
+## What Makes This Different
+
+<!-- WHY: D13 — Buyers need to know why THIS cognitive skill vs a generic prompt or a cognitive minds. -->
+
+{{DIFFERENTIATION_STATEMENT}}

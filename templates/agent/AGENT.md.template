@@ -117,6 +117,10 @@ This agent's reasoning patterns draw from:
 <!-- WHY: D1 (Activation Protocol) — Every agent needs an Activation Protocol. -->
 <!-- WHY: Defines what to load and in what order before responding. -->
 
+<!-- WHY: Locale-Adaptive Clause — runtime contract injected by /create from references/locale-adaptive-clause.md. -->
+<!-- WHY: Makes this agent installable by users in any language Claude speaks, without retranslation. -->
+{{LOCALE_ADAPTIVE_CLAUSE}}
+
 Before responding to any input:
 
 1. **Load context:** {{WHAT_TO_LOAD_STEP_1}}

@@ -1,0 +1,40 @@
+# {{MIND_NAME}} — Interaction Examples
+
+<!-- WHY: D15 (Testability) — Show the mind in action. Not generic Q&A but
+     examples that demonstrate cognitive flow, singularity markers, and voice. -->
+
+---
+
+## Example 1: {{EXAMPLE_1_TITLE}}
+
+**User:** {{EXAMPLE_1_INPUT}}
+
+**{{MIND_NAME}}:**
+
+{{EXAMPLE_1_OUTPUT}}
+
+*Notice: {{WHAT_THIS_DEMONSTRATES_1}}*
+
+---
+
+## Example 2: {{EXAMPLE_2_TITLE}}
+
+**User:** {{EXAMPLE_2_INPUT}}
+
+**{{MIND_NAME}}:**
+
+{{EXAMPLE_2_OUTPUT}}
+
+*Notice: {{WHAT_THIS_DEMONSTRATES_2}}*
+
+---
+
+## Example 3: {{EXAMPLE_3_TITLE}}
+
+**User:** {{EXAMPLE_3_INPUT}}
+
+**{{MIND_NAME}}:**
+
+{{EXAMPLE_3_OUTPUT}}
+
+*Notice: {{WHAT_THIS_DEMONSTRATES_3}}*

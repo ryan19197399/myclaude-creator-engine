@@ -29,7 +29,7 @@ Publish a packaged product to the MyClaude marketplace via CLI delegation.
 4. Check CLI: `which myclaude` — if not found, show install instructions
 5. Check CLI auth: run `myclaude whoami` — if "not logged in", show: "Not authenticated. Run `myclaude login` first." and stop.
 6. Read `creator.yaml` → load author metadata. If missing — "Creator profile not found. Run `/onboard` first." and stop.
-7. **Load voice identity**: Read `references/quality/engine-voice.md` → use publish celebration format. "Published to myclaude.sh — live now." + install command + distribution vector note. Brief, proud, specific.
+7. **Load voice identity**: Load `references/quality/engine-voice-core.md`. Load the full `references/quality/engine-voice.md` only when composing the publish celebration (Step 6) — that is a peak moment. Use publish celebration format: "Published to myclaude.sh — live now." + install command + distribution vector note. Brief, proud, specific.
 
 ---
 
@@ -96,6 +96,66 @@ state:
   published_at: "{ISO timestamp}"
   version: "{version}"
 ```
+
+**Step 5b — Seed creator-memory publish milestones (silent, idempotent)**
+
+After the `.meta.yaml` state update succeeds, write up to two events to
+`creator-memory.yaml`: `first_publish` and `first_celebration`. Both are idempotent —
+each type writes exactly once across the Creator's entire history, ever.
+
+**Why two events?** `first_publish` records the infrastructural milestone ("the Creator
+has now shipped something to a marketplace"). `first_celebration` records the emotional
+peak ("the WOW frame rendered, the ✦ arrived, the identity shifted"). On the very first
+publish they happen in the same second and look redundant, but they are semantically
+distinct: a future version of /publish could suppress the WOW frame (e.g., `--silent` or
+a re-publish scenario) without suppressing the milestone. Keeping them as separate events
+lets the memory layer express "shipped" separately from "celebrated".
+
+**Procedure for `first_publish`:**
+
+1. Read `creator-memory.yaml`. If absent or malformed, skip silently (Phase 5b of /onboard
+   owns file creation).
+2. Scan `events[]` for any entry with `type == "first_publish"`. If one exists, skip this
+   event (idempotent).
+3. If none exists, append:
+   ```yaml
+   - date: "{ISO-8601 now UTC}"
+     type: first_publish
+     slug: "{slug}"
+     note: "First publish — {displayName} live at myclaude.sh/p/{slug}"
+   ```
+
+**Procedure for `first_celebration`:**
+
+1. Compute `pre_publish_count`: count `.meta.yaml` files in `workspace/*/` where
+   `state.phase == "published"` EXCLUDING the product being published in this invocation.
+   Since Step 5 just wrote `phase: "published"`, a Glob that captures the in-flight state
+   would return 1, not 0 — subtract 1 to get the pre-publish count.
+   Easier approach: read the in-memory value of `.meta.yaml.state.phase` *before* the
+   Step 5 write, compute the count at that moment, and carry it forward.
+2. If `pre_publish_count == 0` (this publish is the Creator's first ever), proceed to
+   step 3. Otherwise, skip the celebration event entirely — it only fires on the first
+   publish. The `first_publish` event already fired above if applicable.
+3. Scan `creator-memory.yaml events[]` for any entry with `type == "first_celebration"`.
+   Idempotent guard — if one exists, skip (this should be impossible given the count
+   check above, but belt-and-suspenders).
+4. If none exists, append:
+   ```yaml
+   - date: "{ISO-8601 now UTC}"
+     type: first_celebration
+     slug: "{slug}"
+     note: "First celebration — WOW frame rendered for {slug}"
+   ```
+
+**Validation and rollback.** After each append, run `python scripts/creator-memory-validate.py`.
+On validation failure, roll back the append and surface an Engine-fault voice line at
+the end of Step 6's output, never blocking the publish:
+> *"(Memory layer — failed to seed first_publish/first_celebration event. The publish itself is safe; only the memory echo is missing.)"*
+
+**Voice register.** Silent infrastructure. Step 5b does not render any line to the
+Creator — the celebration voice belongs entirely to Step 6. The payoff arrives on future
+Ritual of Return invocations, where `/status` Layer 2 can echo the memory grounded in
+the real date and slug.
 
 **Step 6 — Report**
 

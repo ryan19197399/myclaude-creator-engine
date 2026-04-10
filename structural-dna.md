@@ -1,16 +1,180 @@
 ---
 document: structural-dna
 product: MyClaude Studio Engine
-version: 2.2.0
+version: 3.0.0
 status: CANONICAL
-date: 2026-04-04
+date: 2026-04-08
 ---
 
-# Structural DNA — 20 Patterns for State-of-the-Art Claude Code Products
+# Structural DNA — Architectural Principles and 20 Patterns
 
 > Every DNA pattern is a lesson extracted from production systems. Each one represents
 > a failure mode that has caused real products to underperform or be abandoned.
 > Apply them and your products inherit structure that took years to discover.
+>
+> The 20 DNA patterns are the **operational** layer. They exist because 9 deeper
+> **architectural** principles demand them. The principles are the why; the patterns
+> are the how. If the patterns conflict with the principles, the principles win.
+
+---
+
+## Architectural Principles — The 9 Upstream Laws
+
+These nine principles govern every resource the Engine forges. They are upstream of the
+20 DNA patterns: when a forge decision is ambiguous, trace back to the principles. The
+patterns implement the principles; the principles are not negotiable.
+
+### P1 — Purpose Before Shape
+
+The resource's reason to exist is declared before its structure. "What capability does
+this amplify, for whom, measured how?" is answered before "skill or agent or workflow?"
+A resource scaffolded from a template without a declared purpose inherits the template's
+purpose by default — which is almost never the creator's real intent.
+
+**Implication:** `/scout` and `/create` both begin with purpose elicitation. A scaffold
+built without an answer to "what changes when someone uses this?" is a shell, not a product.
+
+### P2 — Constraint Before Feature
+
+What the resource refuses to do is specified before what it does. "This tool does NOT X"
+is written first; "this tool does Y" is written second. Boundaries prevent scope creep,
+reduce false expectations, and make the resource composable with others.
+
+**Implication:** Every forged resource has a "When Not To Use" section (DNA pattern D14
+is the operational form). Missing this section blocks validation.
+
+### P3 — Composition Over Monolith
+
+Small resources that compose beat large resources that try to do everything. A 2000-line
+resource is suspect until proven irreducible. Composition is the path to scale, reuse,
+and maintainability in a marketplace of thousands of resources built by thousands of creators.
+
+**Implication:** `/create` coaches toward the smallest viable surface. Bundle and system
+types exist explicitly to compose smaller resources, not to justify monoliths.
+
+### P4 — Contract Before Narrative
+
+The public interface — inputs, outputs, side effects, preconditions — is specified
+formally. Prose that describes "how the resource thinks" is secondary to the contract
+that describes "what the resource promises and requires." A contract can be tested;
+narrative cannot.
+
+**Implication:** `context_contract` in `config.yaml → routing.{type}` is load-bearing.
+Every type declares `needs_in_window`, `provides_to_window`, `strips_from_window`.
+Forged resources inherit and specialize these.
+
+### P5 — Failure Mode Before Happy Path
+
+Every resource declares how it degrades before how it succeeds. What happens when input
+is ambiguous? When a dependency is missing? When the resource is uncertain? These
+answers are first-class artifacts, not footnotes. A resource that can only succeed on
+perfect input is brittle by design.
+
+**Implication:** DNA pattern D14 (Graceful Degradation) is universal — required for
+every type at every tier. `/validate` blocks resources without an explicit degradation section.
+
+### P6 — State at the Edge
+
+State lives in files at the boundary of the resource — `STATE.yaml`, `.meta.yaml`,
+`creator.yaml` — never in implicit conversation memory. A resource that depends on
+conversation history to function fails when context compresses, when sessions restart,
+or when another resource shares the window. Files are durable; memory is not.
+
+**Implication:** DNA pattern D8 (State Persistence) operationalizes this. The Engine's
+own `/compact` instructions in `CLAUDE.md` encode the same law for the Engine itself.
+
+### P7 — Read Before Write
+
+Every operation reads real state before writing new state. The ratio is ≥2:1 — for every
+Write tool call, at least two Read tool calls precede it. Abstract reasoning without
+grounding in real state produces confident wrong answers. Reading is cheap; rewriting
+over wrong assumptions is expensive.
+
+**Implication:** Every skill's activation protocol reads product state, creator profile,
+and workspace before any Write tool call. `/validate` audits this ratio per skill and
+flags skills whose ratio falls below 2:1.
+
+### P8 — Invisibility of Mechanism
+
+Users experience capability, not machinery. Internal vocabulary — framework names, model
+names, academic references, author names, methodology acronyms — stays internal. User-facing
+strings speak the user's language. A resource that requires the user to learn vocabulary
+before extracting value is a tax, not an amplifier.
+
+**Implication:** `/validate` runs a user-facing grep that blocks any resource whose README,
+SKILL.md user-facing sections, or UX strings contain internal vocabulary the creator did
+not define as user-facing. The coaching layer translates mechanism to user terms.
+
+### P9 — Recursive Integrity
+
+The resource passes its own validator. A linting skill that fails its own lints is not
+trustworthy. A framework generator whose framework fails its own generator is not
+trustworthy. A Studio Engine that fails its own `/validate --level=3` is not trustworthy
+to produce state-of-the-art resources for anyone else.
+
+**Implication:** The Engine dogfoods itself. `/validate --target=engine` runs the full
+pipeline against the Engine's own files. Every release must pass before ship. This is
+how the Engine earns the right to validate others.
+
+### P10 — Touch Integrity
+
+Every user touchpoint is the product, not a mechanism of it. The voice, the visual rhythm,
+the emotional register, and the sense of continuity must be identical across every skill,
+every error path, every idle moment, every return session. A single inconsistent touch
+degrades the whole — the Creator does not distinguish between `/status` and `/package`
+and `/validate` and an error message; they experience **one thing** called myClaude, and
+any seam shows.
+
+This is the principle P1-P9 converge toward. Purpose, constraint, composition, contract,
+failure mode, state at the edge, read-before-write, invisibility of mechanism, and
+recursive integrity each produce technical rigor inside the forge. P10 is what the Creator
+**feels** when that rigor meets them. A technically perfect Engine with five inconsistent
+voices degrades to a tool; a technically perfect Engine with one unified voice becomes an
+environment the Creator cannot bear to leave.
+
+**Implication.** Every Engine skill that produces Creator-facing output loads
+`references/quality/engine-voice-core.md` at activation — the micro voice contract is
+the floor, not a peak-moment option. The full `references/quality/engine-voice.md`
+loads only at specific peak moments inside a skill (publish celebration, first-impression
+onboard closing, validate verdict, WOW frames) where the extended substrate earns its
+cost. Concurrent-skill ambient load is bounded by Clause VIII; voice-core's fixed size
+keeps the bound reachable.
+
+The `✦` symbol, the Master Craftsperson archetype, the three tones (conducting /
+celebrating / confronting), the six anti-patterns, and the error-as-intimacy distinction
+are inherited by every touchpoint automatically — not re-invented per skill. `/validate`
+Stage 9 Voice Coherence audits the enforcement as advisory.
+
+**Implication for error paths:** an error is not a degraded output — it is a first-class
+touchpoint and carries the same voice discipline. Engine-fault errors (internal bug, drift,
+unexpected state) adopt a slightly self-critical collaborative tone; environment-fault
+errors (YAML parse, CLI timeout, missing file) stay diagnostic-and-safe. Conflating the
+two is a P10 violation because it tells the Creator that the Engine does not distinguish
+between "I erred" and "something outside erred" — and that distinction is where trust
+compounds.
+
+The nine earlier principles produce a system that is structurally correct. P10 is what
+makes a system of rigorous principles feel like one thing — the texture the Creator
+touches instead of the architecture the Creator would otherwise see.
+
+### How the 10 Principles Map to the 20 Patterns
+
+| Principle | Primary DNA patterns |
+|---|---|
+| P1 Purpose Before Shape | D1 (Activation Protocol) — defines purpose at boot |
+| P2 Constraint Before Feature | D2 (Anti-Pattern Guard), D14 (Graceful Degradation) |
+| P3 Composition Over Monolith | D3 (Progressive Disclosure), D16 (Composability), D20 (Cache-Friendly) |
+| P4 Contract Before Narrative | D5 (Question System), D10 (Handoff Specification) |
+| P5 Failure Mode Before Happy Path | D6 (Confidence Signaling), D14 (Graceful Degradation), D7 (Pre-Execution Gate) |
+| P6 State at the Edge | D8 (State Persistence), D12 (Compound Memory) |
+| P7 Read Before Write | D1 (Activation Protocol), D7 (Pre-Execution Gate) |
+| P8 Invisibility of Mechanism | D13 (Self-Documentation), D19 (Attention-Aware Authoring) |
+| P9 Recursive Integrity | D4 (Quality Gate), D11 (Socratic Pressure), D15 (Testability) |
+| P10 Touch Integrity | D13 (Self-Documentation), D14 (Graceful Degradation), D19 (Attention-Aware Authoring) |
+
+When a DNA pattern fails validation, the coaching message names the principle it violates
+— not the abstract pattern number. Creators learn the why through the patterns, and the
+patterns earn their weight through the principles.
 
 ---
 
@@ -306,415 +470,53 @@ PASS if critical sections in last 30%. PARTIAL if mixed. COACHING if critical se
 
 ---
 
-## TIER 2 — ADVANCED
-*8 patterns. Required for MCS-2. Products with nontrivial execution logic.*
+## TIER 2 & TIER 3 — load-on-demand
+
+Tier 2 (8 patterns) and Tier 3 (5 patterns) are NOT loaded at boot. They live in
+`references/structural-dna/` and are read on-demand by `/validate` (level ≥ 2 or 3)
+and `/create` when scaffolding products that cross MCS-1. This honors Constitutional
+Clause VIII (Every Token Earns Its Place) and DNA D3 (Progressive Disclosure) — the
+patterns earn their cost only when a forge actually needs them.
+
+### TIER 2 — ADVANCED (8 patterns, MCS-2)
+
+Required for any product with nontrivial execution logic. Full bodies (problem,
+rule, example, validation check) in `references/structural-dna/tier2.md`.
+
+- **D5 Question System** — ambiguous input → one clarifying question, never five.
+- **D6 Confidence Signaling** — graduated certainty markers; never bare claims.
+- **D7 Pre-Execution Gate** — verify preconditions before work, not after failure.
+- **D8 State Persistence** — cross-session learning lives in files, not memory.
+- **D15 Testability** — ≥3 scenarios with verifiable expected outputs.
+- **D16 Composability** — relative paths, domain-specific commands, zero global mutations.
+- **D17 Hook Integration** — document lifecycle automation surface explicitly.
+- **D20 Cache-Friendly Design** — claude-md products under 2K chars, no dynamic content.
+
+### TIER 3 — EXPERT (5 patterns, MCS-3)
+
+Required only for multi-agent products (squad, system). Full bodies in
+`references/structural-dna/tier3.md`.
+
+- **D9 Orchestrate, Don't Execute** — orchestrators route; specialists do the work.
+- **D10 Handoff Specification** — every agent-to-agent transfer is contractual.
+- **D11 Socratic Pressure** — agents self-challenge before delivering output.
+- **D12 Compound Memory** — cross-session memory configured via native scopes.
+- **D18 Subagent Isolation** — `context: fork`; semantic boundaries reinforce it.
+
+### Reference files (load-on-demand only)
+
+- `references/structural-dna/tier2.md` — full Tier 2 definitions
+- `references/structural-dna/tier3.md` — full Tier 3 definitions
+- `references/structural-dna/dependency-graph.md` — Requires/Enables/Therefore table
+- `references/structural-dna/applicability-matrix.md` — R/o/— per type × pattern
+
+`/validate` reads these per the level requested. `/create` reads tier2/tier3 only
+when the type's applicability matrix marks ≥1 pattern as Required at that tier.
+The Engine is recursively coherent: P3 (Composition Over Monolith) and D3
+(Progressive Disclosure) demand exactly this split.
 
 ---
 
-### D5: Question System
-
-**Tier:** 2 — Advanced
-
-**Problem it solves:**
-A product that assumes input produces misaligned output. When input is ambiguous,
-guessing is worse than asking — it produces confident wrong output that takes longer
-to correct than if the product had simply asked.
-
-**Rule:**
-Every product with variable input must define a question system: what to ask, when to
-ask it, and what to do with the answer. Questions must be minimal (one at a time),
-specific (not "tell me more"), and actionable (the answer must change behavior).
-
-**Validation check:**
-```
-grep -i "question\|if missing.*ask\|ask.*if\|clarif\|\$ARGUMENTS\|\$0" {PRIMARY_FILE}
-AND presence of argument handling table or "if not provided" pattern
-```
-PASS if question/argument handling found. PARTIAL if $ARGUMENTS used but no handling logic.
-
----
-
-### D6: Confidence Signaling
-
-**Tier:** 2 — Advanced
-
-**Problem it solves:**
-Claims stated without certainty markers are indistinguishable from facts. A product
-that says "This code has a race condition" with the same confidence as "I'm 40% sure
-this code has a race condition" misleads users and erodes trust when it's wrong.
-
-**Rule:**
-Every product that makes claims or recommendations must use graduated confidence signals.
-Use explicit markers: (high confidence), (moderate confidence), (low confidence),
-or quantitative ranges. Never present uncertain output as certain.
-
-**Validation check:**
-```
-grep -i "confidence\|high confidence\|moderate confidence\|low confidence\|certainty\|likely\|may be\|possible" {PRIMARY_FILE}
-```
-PASS if confidence signaling pattern found with at least 2 levels. PARTIAL if only one level.
-
----
-
-### D7: Pre-Execution Gate
-
-**Tier:** 2 — Advanced
-
-**Problem it solves:**
-Acting without precondition checks causes silent failures deep in execution.
-A product that starts work before verifying that required files exist, auth is valid,
-or dependencies are present will fail in unpredictable ways that are hard to debug.
-
-**Rule:**
-Every product with external dependencies or required context must define and run
-pre-execution checks BEFORE starting work. Checks must be explicit (not assumed),
-automated where possible, and must produce clear failure messages with remediation steps.
-
-**Validation check:**
-```
-grep -i "precondition\|pre-execution\|before executing\|verify.*before\|check.*exists\|requires.*present" {PRIMARY_FILE}
-```
-PASS if pre-execution check pattern found. PARTIAL if checks described but not gated.
-
----
-
-### D8: State Persistence
-
-**Tier:** 2 — Advanced
-
-**Problem it solves:**
-Without state, every session starts from zero. Patterns discovered, decisions made,
-and preferences learned disappear when the session closes. State persistence is what
-distinguishes a product from a one-shot prompt.
-
-**Rule:**
-Any product that learns, tracks, or builds across sessions must define a state file
-(YAML or JSON) with explicit schema. State must be append-safe (reading never breaks
-if state is partial) and the schema must be documented in the product.
-
-**Validation check:**
-```
-glob: *.yaml OR *.json in product directory (excluding vault.yaml, plugin.json)
-AND grep "state\|session\|persist\|memory\|track" in that file or PRIMARY file
-```
-PASS if state file exists with documented schema. PARTIAL if state section documented but no file.
-
----
-
-### D15: Testability
-
-**Tier:** 2 — Advanced
-
-**Problem it solves:**
-A product that can't be tested can't be improved. Without test scenarios, creators
-ship products they can't verify and buyers can't trust. Testability is not optional
-for products that execute nontrivial logic.
-
-**Rule:**
-Every product with execution logic must include test scenarios with expected outputs.
-Minimum 3 scenarios: happy path, edge case, adversarial input. Expected output must
-be specific enough to verify (not "output should be good").
-
-**Validation check:**
-```
-grep -i "## test\|## example\|## scenario\|expected output\|sample input\|test case" {PRIMARY_FILE_OR_README}
-AND count examples → must be ≥3
-```
-PASS if 3+ scenarios with expected outputs. PARTIAL if examples exist but <3 or without expected output.
-
----
-
-### D16: Composability
-
-**Tier:** 2 — Advanced
-
-**Problem it solves:**
-A product that conflicts with other products gets uninstalled. Hardcoded absolute paths,
-common command names that clash, and global state mutations make products incompatible
-with real-world Claude Code environments where many products coexist.
-
-**Rule:**
-All file references must be relative. Command names must be specific to the product
-domain (not /help, /status, /run, /start, /stop). No modifications to global config
-or shared state. Product must be installable alongside any other MyClaude product.
-
-**Validation check:**
-```
-grep -n "absolute path\|^/[a-z]" {ALL_FILES} → must be 0 matches
-AND grep -n "^command: /help\|^command: /status\|^command: /run\b" SKILL.md → must be 0
-AND grep -n "globalconfig\|global state\|~/" {ALL_FILES} → must be 0 matches
-```
-PASS if zero violations. PARTIAL if references are relative but command name conflicts.
-
----
-
-### D17: Hook Integration
-
-**Tier:** 2 — Advanced
-
-**Problem it solves:**
-Manual steps that could be automated become bottlenecks and are frequently skipped.
-Hooks (PostToolUse, FileChanged, SessionStart, Stop) allow products to automate
-workflow integration without requiring the user to remember to trigger them.
-
-**Rule:**
-Any product that benefits from lifecycle automation must document which Claude Code hooks
-it uses (or could use), what they trigger, and how to configure them. Hook documentation
-belongs in README or a dedicated hooks section in the primary file.
-
-**Validation check:**
-```
-grep -i "hook\|sessionstart\|posttooluse\|filechanged\|stop\|automation" {PRIMARY_FILE_OR_README}
-```
-PASS if hooks section documented with at least 1 hook. PARTIAL if hooks mentioned but not documented.
-
----
-
-### D20: Cache-Friendly Design
-
-**Tier:** 2 — Advanced
-
-**Problem it solves:**
-claude-md products are loaded every turn as part of the prompt's dynamic zone. Unoptimized
-claude-md products waste tokens on every turn, increase ambient cost, and can fragment the
-prompt cache. Products without scope limitation load even when irrelevant.
-
-**Rule:**
-Products of type claude-md must be optimized for ambient cost:
-1. Use `paths:` frontmatter to scope activation to relevant file types
-2. Keep primary file under 2K chars (stricter than general 4K — always in context)
-3. Use @include for modular composition when content exceeds 2K
-4. Never include dynamic content (dates, counters) that would bust the prompt cache
-
-**Evidence:**
-[SOURCE: prompts.ts:106-115] — Static/Dynamic boundary in system prompt
-[SOURCE: claudemd.ts:254-279] — Path-scoped conditional rules
-[SOURCE: systemPromptSections.ts:32-38] — DANGEROUS_uncached requires reason
-
-**Validation check:**
-```
-For claude-md products:
-1. Check paths: frontmatter exists → PASS if specific globs, COACHING if absent
-2. Check primary file char count → PASS if <2K, WARNING if 2K-4K, BLOCKING if >4K
-3. Check for dynamic content patterns (date, time, counter) → WARNING if found
-```
-PASS if all 3 checks pass. PARTIAL if paths missing but size OK. FAIL if >4K chars.
-
----
-
-## TIER 3 — EXPERT
-*5 patterns. Required for MCS-3. Multi-agent systems only.*
-
----
-
-### D9: Orchestrate, Don't Execute
-
-**Tier:** 3 — Expert
-
-**Problem it solves:**
-An orchestrator that does specialist work produces mediocre output across all domains.
-When the squad leader also does the code review AND the security audit AND the
-documentation check, none of them get specialist-quality attention.
-
-**Rule:**
-Orchestrators route and coordinate. They do NOT contain domain instructions. A squad
-orchestrator's SQUAD.md must contain a routing table with specialist assignments —
-not the actual logic for how to do any of the specialties. Domain expertise lives
-in the specialist agents.
-
-**Validation check:**
-```
-For squad/system types:
-grep "routing table\|route to\|delegate to\|assign to\|orchestrat" SQUAD.md OR SYSTEM.md → must match
-AND grep -i "domain instruction\|specifically.*you should check\|step.*by.*step.*how to" SQUAD.md → must be 0
-```
-PASS if routing table found and no domain instructions in orchestrator. PARTIAL if orchestrator has both
-routing AND some domain instructions.
-
----
-
-### D10: Handoff Specification
-
-**Tier:** 3 — Expert
-
-**Problem it solves:**
-Vague context at agent handoffs causes cascade degradation — each agent compounds the
-ambiguity of the previous one, producing output that drifts progressively further from
-the original intent.
-
-**Rule:**
-Every agent-to-agent handoff must specify exactly: what was done, what was decided
-(including rejected alternatives), and what the next agent specifically needs.
-The handoff template must be embedded in the product and used consistently.
-
-**Example:**
-```
-HANDOFF: {source} → {target}
-WHAT_DONE: {completed work summary}
-WHAT_DECIDED: {decisions made + alternatives rejected}
-WHAT_NEXT_NEEDS: {specific context for target}
-FILES_MODIFIED: {list}
-```
-
-**Validation check:**
-```
-grep -i "handoff\|what_done\|what_decided\|what_next\|files_modified" {AGENT_FILES}
-AND all agent files have handoff section
-```
-PASS if handoff template found in all agent files. PARTIAL if found in some but not all.
-
----
-
-### D11: Socratic Pressure
-
-**Tier:** 3 — Expert
-
-**Problem it solves:**
-Agents that accept their first output produce consistent but not improving quality.
-Socratic pressure — challenging the output before delivering it — catches errors,
-weak reasoning, and incomplete analysis that would otherwise reach the user.
-
-**Rule:**
-Agents that produce analysis or recommendations must include a self-challenge step:
-"What is wrong with this output?" or "What would a critic say?" before finalizing.
-The challenge must be genuine (not rhetorical) — it must be capable of changing the output.
-
-**Validation check:**
-```
-grep -i "socratic\|challenge.*output\|what.*wrong\|critic\|falsif\|counter.*argument\|self.*challenge" {AGENT_FILES}
-```
-PASS if self-challenge pattern in ≥1 agent. PARTIAL if language suggests challenge but not structured.
-
----
-
-### D12: Compound Memory
-
-**Tier:** 3 — Expert
-
-**Problem it solves:**
-Without cross-session memory, agents start fresh every session. Patterns discovered,
-anti-patterns encountered, and architectural decisions made disappear. Compound memory
-is what allows a system to improve over time rather than plateau.
-
-**Rule:**
-Multi-agent systems must define memory configuration using Claude's native memory scopes
-(user, project, local). Project memory persists patterns per-project. User memory
-persists creator preferences across projects. At least one memory scope must be
-configured in agent frontmatter.
-
-**Validation check:**
-```
-grep -i "memory:\|user memory\|project memory\|local memory" {AGENT_FRONTMATTER}
-AND at least one agent has memory: project or memory: user
-```
-PASS if ≥1 agent has memory configuration. PARTIAL if memory section present but scope unspecified.
-
----
-
-### D18: Subagent Isolation
-
-**Tier:** 3 — Expert
-
-**Problem it solves:**
-Agents without context isolation bleed session state into each other. When one agent's
-conversation history is visible to another, it introduces bias, context pollution,
-and makes the second agent's output dependent on the first's phrasing choices rather
-than the actual task.
-
-**Rule:**
-Every subagent in a squad or system must run in isolated context (context: fork in
-skill frontmatter OR defined as a separate subagent with own context window). Agents
-must communicate through explicit handoffs, not shared session state.
-
-**Semantic boundaries** reinforce isolation beyond `context:fork`:
-- Use explicit scope instructions: "Within this agent, your function is X and ONLY X"
-- Use XML-style delimiters (`<agent role="analyst">...</agent>`) in handoff payloads
-- Never let one agent's domain knowledge leak into another — each loads its own references/
-- The handoff spec (D10) IS the boundary contract between agents
-
-**Validation check:**
-```
-grep "context: fork\|context:fork" {AGENT_SKILL_FILES} → must match ≥1
-AND each agent is defined as separate subagent (own SKILL.md or AGENT.md)
-```
-PASS if context:fork present in all multi-agent definitions. PARTIAL if present in some agents but not all.
-
----
-
-## Pattern Dependency Graph
-
-Each pattern declares what it enables and what it requires. This transforms
-the DNA from a catalog of isolated checks into a connected language where
-patterns reinforce each other.
-
-### Connections
-
-| Pattern | Requires | Enables | Therefore |
-|---------|----------|---------|-----------|
-| D1 Activation Protocol | — | D3, D7 | "Load context first → disclose progressively and gate execution" |
-| D2 Anti-Pattern Guard | — | D11 | "Codified failures → enable genuine self-challenge" |
-| D3 Progressive Disclosure | D1 | D20 | "On-demand loading → enables cache-friendly design" |
-| D4 Quality Gate | — | D15 | "Verification criteria → enable testability" |
-| D5 Question System | D1 | D6 | "Structured questions → enable graduated confidence" |
-| D6 Confidence Signaling | D5 | D11 | "Graduated certainty → enables meaningful challenge" |
-| D7 Pre-Execution Gate | D1 | D14 | "Precondition checks → enable graceful failure" |
-| D8 State Persistence | D7 | D12 | "Session state → enables cross-session memory" |
-| D9 Orchestrate Don't Execute | D10 | D18 | "Routing without doing → enables isolated execution" |
-| D10 Handoff Specification | D8 | D9 | "Explicit context transfer → enables clean orchestration" |
-| D11 Socratic Pressure | D2, D6 | — | "Challenge output → terminal quality improvement" |
-| D12 Compound Memory | D8 | — | "Cross-session learning → terminal capability growth" |
-| D13 Self-Documentation | — | D16 | "Clear README → enables ecosystem compatibility" |
-| D14 Graceful Degradation | D7 | — | "Fail gracefully → terminal trust preservation" |
-| D15 Testability | D4 | — | "Test scenarios → terminal quality verification" |
-| D16 Composability | D13 | — | "No conflicts → terminal ecosystem compatibility" |
-| D17 Hook Integration | — | — | "Lifecycle automation → standalone enhancement" |
-| D18 Subagent Isolation | D9, D10 | — | "Context isolation → terminal multi-agent reliability" |
-| D19 Attention-Aware | D3 | — | "Critical rules positioned for maximum compliance" |
-| D20 Cache-Friendly | D3, D19 | — | "Optimized ambient cost → terminal token efficiency" |
-
-### Reading the Graph
-
-- **Requires** = this pattern needs its prerequisites to deliver full value
-- **Enables** = this pattern creates conditions for another to work
-- **Therefore** = the generative connection (why this sequence produces quality)
-- **Terminal** patterns (no Enables) = leaf nodes delivering final user value
-- **Foundation** patterns (no Requires) = D1, D2, D4, D13, D17 — always start here
-
-### Future Validation Implication
-
-/validate could check pattern COHERENCE beyond presence: if D9 (Orchestrate) exists
-but D10 (Handoff) is missing, the product has orchestration without handoff contracts.
-This is a TIER 3 evolution — not implemented in current /validate.
-
----
-
-## Reference: DNA Applicability Matrix
-
-| Pattern | skill | agent | squad | workflow | ds | claude-md | app | system | bundle | statusline | hooks | minds |
-|---------|-------|-------|-------|----------|----|-----------|-----|--------|--------|------------|-------|-------|
-| D1  | R | R | R | R | o | R | o | R | — | R | R | R |
-| D2  | R | R | R | R | R | R | R | R | R | R | R | R |
-| D3  | R | R | R | o | o | R | o | R | — | o | o | R |
-| D4  | R | R | R | R | R | o | R | R | R | R | R | R |
-| D5  | R | R | R | o | — | — | o | R | — | — | — | R |
-| D6  | o | R | R | o | — | — | o | R | — | — | — | R |
-| D7  | R | R | R | R | — | o | R | R | — | R | R | — |
-| D8  | o | R | R | o | — | — | o | R | — | — | — | — |
-| D9  | — | — | R | — | — | — | — | R | — | — | — | — |
-| D10 | — | — | R | o | — | — | — | R | — | — | — | — |
-| D11 | o | R | R | — | — | — | — | R | — | — | — | o |
-| D12 | — | o | R | — | — | — | — | R | — | — | — | — |
-| D13 | R | R | R | R | R | R | R | R | R | R | R | R |
-| D14 | R | R | R | R | o | o | R | R | R | R | R | R |
-| D15 | o | R | R | o | — | — | o | R | — | o | R | o |
-| D16 | R | R | R | R | R | R | R | R | o | R | R | o |
-| D17 | o | o | o | o | — | o | o | o | — | o | o | — |
-| D18 | — | — | R | — | — | — | — | R | — | — | — | — |
-| D19 | o | o | o | o | — | R | o | o | — | — | — | o |
-| D20 | — | — | — | — | — | R | — | o | — | — | — | — |
-
-`R` = Required for MCS of that tier | `o` = Optional bonus | `—` = Not applicable
-
----
-
-*structural-dna.md v2.1.0 — MyClaude Studio Engine*
+*structural-dna.md — MyClaude Studio Engine*
+*Boot-resident: 10 architectural principles + Tier 1 universal patterns + Tier 2/3 pointers.*
+*Full Tier 2 / Tier 3 / dependency graph / applicability matrix in `references/structural-dna/`.*
