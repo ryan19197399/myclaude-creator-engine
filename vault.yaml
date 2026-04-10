@@ -3,10 +3,10 @@
 # Type: bundle — meta-package containing 11 skills + engine reference files
 name: studio-engine
 slug: "creator-studio-engine"
-version: "2.2.0"
+version: "3.0.0"
 type: bundle
 author: "@lznnn"
-description: "Create, validate, package, and publish Claude Code products. 15 skills, 20 DNA patterns, 10-stage validation (7+3 sub-stages), MCS quality scoring, baseline delta, cognitive minds with genius library."
+description: "Create, validate, package, and publish Claude Code products. 16 skills, 20 DNA patterns, 10-stage validation (7+3 sub-stages), 3-axis intent topology, locale-adaptive clause, MCS quality scoring, baseline delta, cognitive minds with genius library."
 entry: CLAUDE.md
 license: MIT
 price: 0

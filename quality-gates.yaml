@@ -2,8 +2,8 @@
 # quality-gates.yaml — Product State Transitions
 # Defines the state machine for product lifecycle in the Studio Engine
 # Read by /validate, /package, /publish, /status skills
-# Schema version: 2.0.0
-# Reference: PRD v2.0 §7 (Product Lifecycle)
+# Schema version: 3.0.0
+# Reference: PRD v2.0 §7 (Product Lifecycle), updated for v3.0.0
 
 # ---------------------------------------------------------------------------
 # STATE MACHINE

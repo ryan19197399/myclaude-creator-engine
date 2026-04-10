@@ -5,6 +5,7 @@
 
 # ── Personal & State ──────────────────────────────
 creator.yaml
+creator-memory.yaml
 STATE.yaml
 .engine-meta.yaml
 handoff.md

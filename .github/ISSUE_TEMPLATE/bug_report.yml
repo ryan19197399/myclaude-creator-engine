@@ -33,7 +33,7 @@ body:
     attributes:
       label: Engine version
       description: "Run `/status` to find this"
-      placeholder: "2.2.0"
+      placeholder: "3.0.0"
     validations:
       required: true
   - type: input
