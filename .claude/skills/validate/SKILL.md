@@ -37,6 +37,13 @@ Run MCS quality checks on any product in `workspace/` and return actionable, sco
 4. Load DNA requirements: `product-dna/{type}.yaml`
 4b. **Load architectural DNA:** Read `structural-dna.md`. The 10 architectural principles and the Tier 1 DNA patterns (D1-D4, D13, D14) are the canonical audit baseline — Stages 3 and 5 grep the product against them, and any violation surfaces as coaching.
 5. Load product spec: `references/product-specs/{type}-spec.md`
+5b. **Load entity ontology (squad/system/agent/workflow/minds):** If type ∈ {squad, system, agent, minds, workflow}, read `references/entity-ontology.md`. This substrate drives semantic validation:
+    - §HERITAGE: verify the product inherits correct DNA from its lineage (squad must pass all agent DNA + D9/D10/D12/D18)
+    - §COMPOSITION: verify only allowed compositions (squad→agents+minds+skills+workflows; system→everything; workflow→skills only)
+    - §AGENT_ROLES: if `.meta.yaml` has `agent_role`, verify tool boundaries match the role
+    - §SQUAD_ANATOMY: verify all 8 mandatory components exist and have content
+    - §WORKFLOW_VS_SQUAD: verify workflows don't contain agents and squads don't use fixed-sequence-only routing
+    - §HEURISTICS: surface coaching if product shows signs of wrong type (skill >800 lines → suggest agent)
 6. Load config: `config.yaml` → scoring weights, thresholds, placeholder patterns
 7. Load gates: `quality-gates.yaml` → state transition rules
 7b. **Load proactives:** Load `references/engine-proactive.md` — wire #1 (pipeline guidance: after validate passes, guide to /test then /package), #19 (error recovery: on validation failure, propose specific fixes), #20 (test mandate: if MCS-2+ and not tested, block /package suggestion).
@@ -108,6 +115,34 @@ When `product.type == "squad"`, the following additional checks run regardless o
 - **Routing completeness:** Verify `config/routing-table.md` covers all agents listed in SQUAD.md roster. Every agent in roster must appear in at least one routing rule.
 - **Task registry coherence:** If `tasks/task-registry.yaml` exists, verify each task references an agent that exists in `agents/`.
 - **Chain registry coherence:** If `chains/chain-registry.yaml` exists, verify each chain references only agents that exist in `agents/`.
+- **Heritage coherence (entity-ontology.md §HERITAGE):** Verify squad inherits DNA from agent lineage — each specialist agent in `agents/*.md` must independently pass agent-level DNA (D1, D2, D4, D6, D8, D11, D14, D15). The family-skill inheritance chain enforced at validation time.
+- **Composition coherence (entity-ontology.md §COMPOSITION):** Verify squad only composes allowed entities: agents(2+), minds(0+), skills(0+), workflows(0+). If squad references hooks or claude-md fragments, flag coaching: "Squads don't contain hooks or claude-md directly — that's system-level. Consider promoting to system."
+- **Role coherence (entity-ontology.md §AGENT_ROLES):** If `tasks/task-registry.yaml` exists, verify each task's `assigned_agent` has a ROLE consistent with the task type:
+  - Write/create tasks → assigned to EXECUTOR or TRANSFORMER agents
+  - Analyze/report tasks → assigned to SPECIALIST or VALIDATOR agents
+  - Route/coordinate tasks → assigned to ORCHESTRATOR or ROUTER agents
+  - Advise/reason tasks → assigned to ADVISOR agents
+  Mismatch is coaching (not blocking): "Task '{task_id}' is a write task assigned to {agent} which has SPECIALIST role (read-only). Consider reassigning."
+- **Anatomy completeness (entity-ontology.md §SQUAD_ANATOMY):** Verify all 8 squad anatomy components have content beyond WHY comments:
+  1. agents/ has ≥2 files with substantive content
+  2. config/routing-table.md has routing rules (not just placeholder)
+  3. config/handoff-protocol.md has envelope format defined
+  4. workflows/ has ≥1 workflow with steps
+  5. skills/ directory exists (advisory — some squads don't need shared skills)
+  6. SQUAD.md has quality/checklist section with ≥2 items
+  7. kernel/ has output format standards
+  8. SQUAD.md has escalation section with confidence thresholds
+  Missing anatomy = coaching warning with specific fix instruction.
+- **Type fitness heuristic (entity-ontology.md §HEURISTICS):** Apply promotion/demotion checks:
+  - Squad with only 1 specialist agent → "This squad has only 1 specialist. Consider demoting to agent."
+  - Agent primary file >800 lines → "This agent has {N} lines. Consider splitting into a squad."
+  - Workflow with LLM-judgment routing → "This workflow has contextual routing. Consider promoting to squad."
+- **Agent role-tool coherence (entity-ontology.md §AGENT_ROLES):** For each agent, if `.meta.yaml → agent_role` is populated:
+  - EXECUTOR: must NOT deny Write/Edit/Bash
+  - SPECIALIST/VALIDATOR: should deny Write/Edit/Bash (read-only)
+  - ORCHESTRATOR: must have Agent tool, must deny Write/Edit/NotebookEdit
+  - ADVISOR: must deny Write/Edit/Bash/NotebookEdit
+  Mismatch → coaching: "Agent role is {role} but tool boundary doesn't match. Expected: {expected}."
 
 Stage 9 (Voice Coherence) is the last stage at every level. Advisory — never blocks publish. Stage 9 audits the product against the myClaude voice contract (P10 Touch Integrity anchor).
 

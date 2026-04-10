@@ -56,6 +56,16 @@ Extract domain expertise from creator conversation and inject into product files
 4b. **Load proactives:** Load `references/engine-proactive.md` — wire #1 (pipeline guidance: after fill completes, guide to /validate), #17 (lost creator: if stuck on a section for 3+ questions, offer /think or skip), #19 (error recovery: if fill encounters malformed scaffold, suggest re-scaffolding).
 5. Load product spec from `references/product-specs/{type}-spec.md`
 6. Load product DNA from `product-dna/{type}.yaml`
+6b. **Load entity ontology (squad/system/agent/workflow/minds):** If type ∈ {squad, system, agent, minds, workflow}, read `references/entity-ontology.md`. This substrate drives semantic elicitation:
+    - §AGENT_ROLES: suggest specific roles during composition discovery, adapt questions per role (EXECUTOR gets tool/output questions, ADVISOR gets reasoning questions, VALIDATOR gets criteria questions)
+    - §SQUAD_ANATOMY: verify all 8 components are addressed during fill — flag any missing component before completion
+    - §COMPOSITION: know what this type can compose with and what's forbidden — guide toward valid compositions
+    - §HERITAGE: explain to the creator why certain DNA patterns apply (squad inherits from agent lineage)
+    - §INTELLIGENCE_GRADIENT: calibrate autonomy level in routing questions — workflows get deterministic, squads get judgment-based
+    - §WORKFLOW_VS_SQUAD: when filling a workflow, enforce YAML-decides (not LLM routing). When filling a squad, surface LLM judgment points
+    - §HEURISTICS: if evidence suggests wrong type (e.g., squad with 1 useful agent), surface demotion heuristic as coaching
+    - §RUNTIME_BEHAVIOR: calibrate token budget expectations and explain context isolation to the creator
+    - §ISOMORPHIC: use human cognitive analogies to explain product role to non-dev creators
 7. Load `domain-map.md` if it exists (from /map) → use as knowledge source
 8. **Load scout report** if `.meta.yaml` has `intent_declaration.scout_source` field (canonical location) OR `.meta.yaml` root-level `scout_source` field (legacy fallback) → read `workspace/{scout_source}` for research context. Extract: baseline (Section 1), gaps (Section 2), research findings (Section 4). This intelligence drives research injection in the section walk.
 8b. **Domain intelligence back-reference:** Read `STATE.yaml → workspace.products[]`. Find products in the same `intelligence.domain` as the current product. If any exist with `intelligence.value_score` populated:
@@ -93,7 +103,10 @@ Extract domain expertise from creator conversation and inject into product files
     - **This branch replaces the standard section walker.** Squads are organism-level products — the standard single-file walk is insufficient. The squad walker iterates across the full directory tree.
     - **Phase 1 — Composition Discovery** (if not already answered in /create):
       - Ask archetype if not in `.meta.yaml`: Sequential Pipeline / Parallel Fan-Out / Conditional Router / Iterative Refinement / Hierarchical Delegation
-      - Ask specialist count and roles: "How many specialists does this squad need? Name each role and its exclusive domain."
+      - **Role-aware composition (entity-ontology.md §AGENT_ROLES):** Instead of generic "how many specialists?", present the 7 functional roles:
+        "Each specialist has a functional ROLE that determines tools and output. Select from: EXECUTOR (acts on files), SPECIALIST (deep analysis, read-only), ORCHESTRATOR (coordinates agents), ROUTER (classifies + directs), ADVISOR (thinks, never acts), VALIDATOR (checks quality), TRANSFORMER (converts formats)."
+        Ask: "Name each specialist, their domain, and their role. Example: 'researcher=SPECIALIST, strategist=ADVISOR, executor=EXECUTOR, reviewer=VALIDATOR'."
+        Record role assignment per agent for Phase 3 frontmatter generation.
       - Ask entity lifecycles: "What objects flow through this squad? (e.g., a CAMPAIGN, a LEAD, an EXPERIMENT). Describe the lifecycle stages."
     - **Phase 2 — Orchestrator Layer** (kernel/):
       - Walk `kernel/orchestration.md` — fill orchestration protocol. Ask: "How does the coordinator decide what to do? Describe its decision cycle step by step."
@@ -102,6 +115,11 @@ Extract domain expertise from creator conversation and inject into product files
     - **Phase 3 — Specialist Agents** (agents/):
       - For EACH agent file in `agents/*.md`:
         - Walk identity, role, tools, escalation rules
+        - **Map to AGENT ROLE from entity-ontology.md §AGENT_ROLES.** The role assigned in Phase 1 determines:
+          - Tool boundary: EXECUTOR=Write/Edit/Bash, SPECIALIST/VALIDATOR=Read-only, ORCHESTRATOR=Agent-only (no Write/Edit), ADVISOR=denied-tools
+          - Handoff format: EXECUTOR→artifacts, ADVISOR→judgment, ORCHESTRATOR→routing decisions, VALIDATOR→score+verdict, TRANSFORMER→converted output
+          - Frontmatter: set `allowed-tools` or `denied-tools` per role mapping in the agent .md file
+          - Question shape: EXECUTOR→"What does it produce?", ADVISOR→"What reasoning framework?", VALIDATOR→"What criteria?", TRANSFORMER→"What's the input/output format?"
         - If agent has a mind-clone source in `minds/`: load `minds/{name}/cognitive-model.md` and use as knowledge substrate
         - Apply D1 (activation protocol), D2 (anti-patterns ≥5), D14 (graceful degradation) per agent
         - Sparring: "What would this specialist REFUSE to do? What's outside its boundary?"
@@ -115,12 +133,40 @@ Extract domain expertise from creator conversation and inject into product files
       - Ask: "Walk me through the main workflow from start to finish. Which agent handles each step? What passes between them?"
     - **Phase 6 — Routing & Handoff** (config/):
       - Walk `config/routing-table.md` — fill declarative routing rules (IF intent → agent)
+      - **Calibrate routing per §WORKFLOW_VS_SQUAD:** Squad routing involves LLM judgment — the orchestrator reads rules BUT interprets contextually. Ensure routing questions surface the judgment points: "When the input is ambiguous, how does the orchestrator decide?" This is what makes it a squad, not a workflow.
+      - **Use §INTELLIGENCE_GRADIENT** to calibrate autonomy: "How much should the orchestrator decide autonomously vs. escalate to the human? Where on the deterministic↔autonomous spectrum should routing sit?"
       - Walk `config/handoff-protocol.md` — define handoff envelope format (XML or structured)
       - Sparring: "What happens when the input doesn't match any route? What's the fallback?"
     - **Phase 7 — Quality & Testing** (tests/):
       - Walk test scenarios: happy path, edge case, adversarial, agent failure recovery
+    - **Anatomy completeness check (entity-ontology.md §SQUAD_ANATOMY):** Before transitioning to content state, verify all 8 squad anatomy components have been addressed:
+      1. Agent Roster — at least 2 agent files in agents/ with substantive content
+      2. Routing Table — config/routing-table.md has routing rules (not just placeholder)
+      3. Handoff Protocols — config/handoff-protocol.md has envelope format
+      4. Workflows — at least 1 workflow with steps defined in workflows/
+      5. Skills-as-Instruments — skills/ directory exists (advisory — some squads don't need shared skills)
+      6. Checklists — SQUAD.md has quality/checklist section with ≥2 items
+      7. Templates — kernel/ has output format standards
+      8. Escalation — SQUAD.md has escalation section with confidence thresholds
+      If any component is missing, flag it: "Your squad is missing {component}. Without it, {consequence}. Want to add it now or defer?"
     - **Completion:** After all phases, update `.meta.yaml` with `fill_metrics` and transition state to `content`.
     - Record `fill_config.squad_organism: true` in `.meta.yaml`
+12d. **Agent ontology-aware elicitation (type=agent only, non-squad).** If type == "agent" AND branch 12c did NOT fire:
+    - Entity ontology already loaded at step 6b
+    - At the START of the section walk, ask the role question: "What functional role does this agent fill? EXECUTOR (acts on files), SPECIALIST (analysis only), ADVISOR (thinks, never acts), VALIDATOR (checks quality), TRANSFORMER (converts formats)?"
+    - Use the selected role to determine:
+      - Which tools to suggest in the frontmatter section (EXECUTOR→Write/Edit/Bash, SPECIALIST→Read-only, ADVISOR→denied-tools)
+      - What output to expect (artifacts vs reports vs reasoning)
+      - What questions to emphasize (EXECUTOR→"What does it produce?", ADVISOR→"What reasoning framework?", VALIDATOR→"What criteria does it check?")
+    - Record role in `.meta.yaml → agent_role` for /validate consumption
+12e. **Workflow ontology-aware elicitation (type=workflow only).** If type == "workflow":
+    - Entity ontology already loaded at step 6b
+    - Enforce §WORKFLOW_VS_SQUAD: workflows use SKILLS (not agents), have FIXED sequences (not LLM routing), are DETERMINISTIC (same input → same execution path)
+    - During the section walk, ask:
+      - "What skills does each step invoke?" (NOT "what agents" — workflows don't use agents)
+      - "Is the sequence always the same regardless of input?" (If answer is "it depends" → suggest squad: "This sounds like it needs contextual routing — that's a squad, not a workflow. Want to switch?")
+      - "What are the gate conditions between steps?" (pass/fail criteria for proceeding)
+    - If evidence suggests LLM judgment needed → surface heuristic from §HEURISTICS as coaching
 13. Begin section-by-section guided extraction (see fill-protocol.md → DISCOVERY PHASE)
 
 ---

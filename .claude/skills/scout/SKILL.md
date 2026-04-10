@@ -55,6 +55,12 @@ For building products (use /create→/fill). For mapping YOUR expertise (use /ma
 5. **Sanitize slug:** lowercase, alphanumeric + hyphens, 3-40 chars.
 6. **Brownfield check:** Glob `workspace/scout-{slug}.md`. If exists → ask:
    "A scout report for '{domain}' already exists ({date}). Refresh it or reuse?"
+7b. **Load entity ontology for type recommendation:** Read `references/entity-ontology.md` §SCOUT_INTELLIGENCE, §INTELLIGENCE_GRADIENT, §COMPOSITION, §HEURISTICS, §ISOMORPHIC. Use these to inform the setup recommendation:
+    - Map domain signals to recommended product types per §SCOUT_INTELLIGENCE (single task→skill, advisory→minds, distinct specialties→squad, etc.)
+    - Use §INTELLIGENCE_GRADIENT to explain WHY a type is recommended: "This domain needs judgment in routing, so squad is better than workflow."
+    - Use §COMPOSITION to suggest how recommended products compose: "The skill handles execution while the mind advises."
+    - Use §HEURISTICS to guard against over-recommendation: if a single skill suffices, don't recommend a squad
+    - Use §ISOMORPHIC for creator-friendly explanations: "You need an advisor (minds) for thinking and a skill for doing."
 7. **Gate check:** Read `config.yaml` → `gates.confirm_create` (default: true).
    If true → "I'll research '{domain}'. This involves generating a baseline, analyzing gaps,
    searching the marketplace, and running web research. Takes 2-5 minutes. Continue?"

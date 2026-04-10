@@ -42,6 +42,16 @@ Generate complete, MCS-1-valid project structure for any product type with guida
 5. **Brownfield check**: Glob `workspace/*/`. If same `product.type` or overlapping tags found, surface slugs and ask before continuing.
 6. **Exemplar guard**: Glob `references/exemplars/{category}*`. If found: show condensed preview. If not: skip gracefully — never halt.
 7. Load `product-dna/{category}.yaml` → DNA requirements.
+7b. **Load entity ontology (squad/system/agent/workflow/minds):** If type ∈ {squad, system, agent, minds, workflow}, read `references/entity-ontology.md`. This substrate governs:
+    - Which agent ROLES to suggest during composition discovery (§AGENT_ROLES — 7 functional archetypes with tool boundaries)
+    - The heritage chain — what this type inherits from and composes with (§HERITAGE, §COMPOSITION)
+    - The 8 squad anatomy components that MUST appear in the scaffold (§SQUAD_ANATOMY)
+    - The intelligence gradient — where this type sits in the determinism↔autonomy spectrum (§INTELLIGENCE_GRADIENT)
+    - The distinction between workflow (YAML decides) and squad (LLM decides) coordination (§WORKFLOW_VS_SQUAD)
+    - Promotion/demotion heuristics — is this really the right type? (§HEURISTICS)
+    - Runtime behavior — how this type activates and its token cost (§RUNTIME_BEHAVIOR)
+    - For /scout-informed creates: type recommendation matrix (§SCOUT_INTELLIGENCE)
+    - Isomorphic human↔CC mapping for creator-facing explanations (§ISOMORPHIC)
 8. Load `${CLAUDE_SKILL_DIR}/references/discovery-questions.md` → category questions.
 9. Load `references/product-specs/{category}-spec.md` + `templates/{category}/`.
 10. Load `workspace/domain-map.md` if exists → prefill scaffold sections.
@@ -56,6 +66,19 @@ Generate complete, MCS-1-valid project structure for any product type with guida
    - **MCS target calibration**: If domain has 0 products → default MCS-1 (ship fast, test market). If domain has 2+ validated products → default MCS-2 (quality matters, audience exists).
    - Record `intelligence.domain` and `intelligence.market_position` in `.meta.yaml`.
 11. Generate scaffold in `workspace/{product-slug}/` with DNA patterns + WHY comments. The scaffold's type + structure come from the `matched_cell.canonical_form` decided at Section 0 Step 10.
+    **Ontology-aware scaffold verification (requires entity-ontology.md loaded at step 7b):**
+    For type=squad: verify scaffold contains all 8 anatomy components from entity-ontology.md §SQUAD_ANATOMY:
+      1. Agent roster (agents/) — each specialist as separate .md file with role-appropriate frontmatter
+      2. Routing table (config/routing-table.md) — IF intent → agent mapping with judgment points
+      3. Handoff protocols (config/handoff-protocol.md) — structured envelope format (from, to, task, state, constraints)
+      4. Workflows (workflows/) — multi-agent sequences with gates and loops
+      5. Skills-as-instruments (skills/) — reusable fragments agents invoke
+      6. Checklists — deterministic verification section in SQUAD.md
+      7. Templates — output format standards in kernel/
+      8. Escalation/quality gates — confidence thresholds and loop limits in SQUAD.md
+    For type=agent or type=minds: apply §AGENT_ROLES — the role selected during discovery determines frontmatter tool boundaries (`allowed-tools`/`denied-tools`) and handoff format expectations. Generate role-appropriate frontmatter.
+    For type=workflow: verify scaffold distinguishes from squad per §WORKFLOW_VS_SQUAD — workflows use skills (not agents), fixed sequence (not LLM routing), deterministic gates (not judgment). If scaffold looks like a squad, surface heuristic coaching.
+    For type=system: apply §HERITAGE — system inherits all squad DNA + adds CLAUDE.md fragment, hooks, output-style, STATE.yaml. Scaffold must include provisions for all composed types per §COMPOSITION.
 11b. **Locale-adaptive clause substitution (W3.6 — MANDATORY for 6 certified types):** For each template file written (SKILL.md, AGENT.md, SQUAD.md, CLAUDE.md for system, AGENT.md for minds, OUTPUT-STYLE.md), perform placeholder substitution for `{{LOCALE_ADAPTIVE_CLAUSE}}`:
     a. Read the canonical clause block from `references/locale-adaptive-clause.md §2` (the fenced markdown block between `<<< LOCALE-ADAPTIVE CLAUSE ... >>>` and `<<< END CLAUSE >>>`, inclusive).
     b. Read the localized header from `config.yaml → routing.common.locale_adaptive_clause.localized_header_catalog.{creator.language}`. If the creator's language is not in the catalog, use the `fallback` entry and emit an advisory note.

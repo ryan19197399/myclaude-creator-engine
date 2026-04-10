@@ -48,15 +48,23 @@ specificity.** Generic answers produce generic products.
 
 ## Agents
 
-1. What role does this agent play?
-   - Strong: "Senior security auditor who reviews code with a red-team mindset"
-   - Weak: "A helpful assistant for security"
+1. What functional ROLE does this agent fill? (determines tools + handoff format — from entity-ontology.md §AGENT_ROLES)
+   - Show options:
+     **EXECUTOR** — acts on files, full tools (Write/Edit/Bash). Produces artifacts.
+     **SPECIALIST** — deep analysis, read-only (Read/Glob/Grep). Produces reports.
+     **ORCHESTRATOR** — coordinates other agents (Agent tool only, no Write/Edit). Routes + synthesizes.
+     **ROUTER** — classifies and directs (minimal tools). Produces classification + direction.
+     **ADVISOR** — thinks alongside, never acts (denied-tools: Write/Edit/Bash). Produces reasoning.
+     **VALIDATOR** — checks quality, read-only. Produces scores + verdicts.
+     **TRANSFORMER** — converts between formats (Read + Write). Produces converted output.
+   - Strong: "SPECIALIST — deep security analysis but should never modify code"
+   - Weak: "A helpful assistant" — that's not a role, it's a description of Claude vanilla
 
-2. What personality/voice should it have?
-   - Strong: "Direct, evidence-based, always cites the specific line of code. Never says 'looks fine' without proof."
-   - Weak: "Friendly and helpful"
+2. What persona and voice does this agent embody?
+   - Strong: "Senior security auditor with a red-team mindset. Direct, evidence-based, always cites the specific line of code. Never says 'looks fine' without proof."
+   - Weak: "Friendly and helpful" — every agent should be helpful; what makes THIS one distinct?
 
-3. What tools does it need access to?
+3. What tools does it need access to? (should match the ROLE selected in Q1)
 4. What decisions can it make autonomously vs. escalate?
    - Strong: "Can flag warnings autonomously. Must escalate to human for: deleting files, modifying production configs, approving deploys."
    - Weak: "It should be smart about what to do"
@@ -83,6 +91,13 @@ specificity.** Generic answers produce generic products.
    - Dev example: "security-scanner (finds vulns), threat-modeler (classifies risk), fix-generator (writes patches), reviewer (validates fixes) — 4 agents, zero overlap"
    - Non-dev example: "researcher (gathers data), strategist (interprets patterns), writer (produces deliverables), editor (quality gate) — each owns one phase"
    - Weak: "A few agents that help" — which agents? doing what? if roles overlap, it's not a squad
+
+3b. What ROLE does each specialist play? (from entity-ontology.md §AGENT_ROLES — determines tool boundary + handoff format)
+   - Map each specialist agent to: EXECUTOR, SPECIALIST, ORCHESTRATOR, ROUTER, ADVISOR, VALIDATOR, or TRANSFORMER
+   - Strong: "researcher=SPECIALIST (read-only analysis), strategist=ADVISOR (reasoning, no action), executor=EXECUTOR (implements changes), reviewer=VALIDATOR (quality gate, read-only verdict)"
+   - Non-dev: "data-gatherer=SPECIALIST, analyst=TRANSFORMER (raw data → insights), writer=EXECUTOR (produces reports), reviewer=VALIDATOR"
+   - Weak: "They all do stuff" — each agent MUST have a clear role that determines its tool boundary and what it produces
+   - This role mapping drives the frontmatter (tools/denied-tools) for each agent file in agents/
 
 4. What is the routing logic? (how does the orchestrator decide who handles what?)
    - Strong: "IF input is raw data → data-compass. IF input is strategic question → brian-balfour. IF input is execution brief → paid-executor. Ambiguous → traffic-chief classifies first."
