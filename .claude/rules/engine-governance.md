@@ -16,6 +16,11 @@ These rules are enforced by Claude Code's rules system for the MyClaude Studio E
 - Skills that depend on creator.yaml MUST check for its existence before proceeding
 - Missing creator.yaml → suggest /onboard, do not proceed with assumptions
 
+## Creator Language
+- All Engine output (messages, questions, confirmations, errors, celebrations) MUST be in `creator.yaml → creator.language`
+- This governs Engine-to-creator communication, NOT product content (product locale is handled by the locale-adaptive clause in forged files)
+- If `creator.language` is absent, default to `en`
+
 ## Quality Gates
 - /validate MUST run before /package
 - /package MUST run before /publish
