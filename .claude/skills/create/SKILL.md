@@ -52,6 +52,8 @@ Generate complete, MCS-1-valid project structure for any product type with guida
     - Runtime behavior — how this type activates and its token cost (§RUNTIME_BEHAVIOR)
     - For /scout-informed creates: type recommendation matrix (§SCOUT_INTELLIGENCE)
     - Isomorphic human↔CC mapping for creator-facing explanations (§ISOMORPHIC)
+    - For type=system ONLY: the 13 functional gears (§SYSTEM_ENGINES) — ask which gears the creator wants active, scaffold coupling declarations
+    - The intelligence pipeline that governs how scout research enters the product (§INTELLIGENCE_PIPELINE)
 8. Load `${CLAUDE_SKILL_DIR}/references/discovery-questions.md` → category questions.
 9. Load `references/product-specs/{category}-spec.md` + `templates/{category}/`.
 10. Load `workspace/domain-map.md` if exists → prefill scaffold sections.
@@ -79,6 +81,16 @@ Generate complete, MCS-1-valid project structure for any product type with guida
     For type=agent or type=minds: apply §AGENT_ROLES — the role selected during discovery determines frontmatter tool boundaries (`allowed-tools`/`denied-tools`) and handoff format expectations. Generate role-appropriate frontmatter.
     For type=workflow: verify scaffold distinguishes from squad per §WORKFLOW_VS_SQUAD — workflows use skills (not agents), fixed sequence (not LLM routing), deterministic gates (not judgment). If scaffold looks like a squad, surface heuristic coaching.
     For type=system: apply §HERITAGE — system inherits all squad DNA + adds CLAUDE.md fragment, hooks, output-style, STATE.yaml. Scaffold must include provisions for all composed types per §COMPOSITION.
+    For type=system: apply §SYSTEM_ENGINES — scaffold a `gears_declaration` section in the system's primary file. Ask the creator: "Which of these organism capabilities do you want active?" Present the 13 gears grouped by function:
+      - Boundary: E0 (clausura) — always required
+      - Metabolism: E1 (token budget), E2 (constitution re-injection)
+      - Memory: E3 (triple memory), E10 (persistent state)
+      - Perception-Reflex: E4 (hooks perception), E5 (cognitive reflex)
+      - Judgment-Coordination: E6 (isolated judgment), E7 (coordination network)
+      - Identity: E8 (external voice)
+      - Integrity: E9 (recursive validation), E11 (longitudinal self-observation — advanced, MCS-3)
+      - Lifecycle: E12 (reversible install/uninstall)
+      For each active gear, the scaffold includes a section with WHY comment and its counterpart declaration.
 11b. **Locale-adaptive clause substitution (W3.6 — MANDATORY for 6 certified types):** For each template file written (SKILL.md, AGENT.md, SQUAD.md, CLAUDE.md for system, AGENT.md for minds, OUTPUT-STYLE.md), perform placeholder substitution for `{{LOCALE_ADAPTIVE_CLAUSE}}`:
     a. Read the canonical clause block from `references/locale-adaptive-clause.md §2` (the fenced markdown block between `<<< LOCALE-ADAPTIVE CLAUSE ... >>>` and `<<< END CLAUSE >>>`, inclusive).
     b. Read the localized header from `config.yaml → routing.common.locale_adaptive_clause.localized_header_catalog.{creator.language}`. If the creator's language is not in the catalog, use the `fallback` entry and emit an advisory note.

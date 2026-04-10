@@ -66,6 +66,8 @@ Extract domain expertise from creator conversation and inject into product files
     - §HEURISTICS: if evidence suggests wrong type (e.g., squad with 1 useful agent), surface demotion heuristic as coaching
     - §RUNTIME_BEHAVIOR: calibrate token budget expectations and explain context isolation to the creator
     - §ISOMORPHIC: use human cognitive analogies to explain product role to non-dev creators
+    - For type=system ONLY: §SYSTEM_ENGINES — the 13 functional gears. Walk each active gear during fill, ask for concrete implementation decisions, verify counterpart coupling
+    - §INTELLIGENCE_PIPELINE — governs how scout research ACTIVELY enters product content (not passively). For EVERY section: check if scout report has relevant findings → propose content from research → creator validates/refines → sparring challenges generic answers. This is the soul of the Engine — condensing intelligence, not just filling templates.
 7. Load `domain-map.md` if it exists (from /map) → use as knowledge source
 8. **Load scout report** if `.meta.yaml` has `intent_declaration.scout_source` field (canonical location) OR `.meta.yaml` root-level `scout_source` field (legacy fallback) → read `workspace/{scout_source}` for research context. Extract: baseline (Section 1), gaps (Section 2), research findings (Section 4). This intelligence drives research injection in the section walk.
 8b. **Domain intelligence back-reference:** Read `STATE.yaml → workspace.products[]`. Find products in the same `intelligence.domain` as the current product. If any exist with `intelligence.value_score` populated:

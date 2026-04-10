@@ -234,6 +234,86 @@ When /scout researches a domain, use this matrix to recommend the optimal produc
 
 ---
 
+## §SYSTEM_ENGINES — 13 Functional Gears of a System (type=system only)
+
+A system is NOT a "squad with extras." It is an **organism** with 13 functional gears that couple together. Each gear has a counterpart — without the counterpart, the gear is a drawer, not a muscle.
+
+| # | Engine | One-line essence | Mechanism | Counterpart | Without it... |
+|---|--------|-----------------|-----------|-------------|---------------|
+| E0 | **Clausura operacional** | Boundary between inside and outside | `omitClaudeMd`, `context: fork`, `tools: ∩ disallowedTools:`, ephemeral MCP | E4 (perception) | No boundary = no organism |
+| E1 | **Metabolismo declarado** | Token cost to exist at rest + operate on demand | `paths:` scoping, `omitClaudeMd`, fork cache, Clause VIII budgets | E0 (clausura) | Cost invisible = death by tokens |
+| E2 | **Constituição re-injetada** | Identity re-declared every turn — active, not passive | `criticalSystemReminder`, CLAUDE.md per-turn reload, `initialPrompt` | E1 (costs tokens) | Identity only in prose = drift |
+| E3 | **Camada mnemônica tripla** | Memory in 3 orthogonal substances: hereditary + procedural + declarative | `skills:` frontmatter (hereditary), STATE.yaml (procedural), `memory:project` (declarative) | E11 (self-observation feeds declarative) | Memory collapses to single layer |
+| E4 | **Percepção ambiental** | System senses what changed since last turn | 4 hook types, `if:` matching, SessionStart/PreToolUse/PostToolUse/Stop events | E0 + E5 (perception needs boundary + reflex) | Blind organism |
+| E5 | **Reflexo cognitivo** | Automatic responses to perceptions — **including responses that need judgment** | AgentHook (reflex that thinks), PromptHook (LLM evaluates), Bash/Http (mechanical) | E6 (deliberate judgment) | Rigid or slow — never both adaptive and fast |
+| E6 | **Julgamento isolado** | Specialized decision units with own context, own tools, own constitution | `context: fork`, `tools: ∩ disallowedTools:`, 7 agent roles | E7 (network connects judgments) | Isolated opinions, not coordinated system |
+| E7 | **Rede de coordenação** | Connective tissue between specialized judgments | routing.yaml, handoff_format_spec, install_manifest, native parallelism | E8 (voice — network without presence is invisible) | Ad hoc coordination |
+| E8 | **Voz externa** | Identity signature to the world — how the system presents itself | output-style composition across agents | E2 (voice without constitution = empty performance) | No recognizable identity |
+| E9 | **Integridade recursiva** | System passes its own validator pointed at itself (Clause VII) | `/validate --target=self`, AgentHook as verifier | E11 (point vs continuous recursion) | Hypocrisy — preaches but doesn't practice |
+| E10 | **Estado persistente** | Serialized artifacts that survive /compact, reinstall, update | STATE.yaml, .meta.yaml, install_manifest, .manifest-lock, memory scopes | E1 (IO has cost) | Amnesia between sessions |
+| E11 | **Auto-observação longitudinal** | Observer agent building semantic dossier on system's own operation over time | PostToolUse hook + AgentHook + memory:project | E3 (bidirectional) + E9 (continuous vs point) | Self-blindness — no learning from own behavior |
+| E12 | **Ciclo de vida reversível** | Install → operate → uninstall, all auditable and reversible via hash-verified manifest | install_manifest, .manifest-lock, `myclaude install/uninstall` | E1 (install cost) | Can't coexist ecologically with other systems |
+| META | **Acoplamento declarado** | For each active gear, creator declares its counterpart and why | `coupling_declaration:` field in system codex | ALL gears | Pile of drawers, not organism |
+
+**Critical chains:**
+- **Sensorimotor chain:** E4 → E5 → E6 → E7 (perception → reflex → judgment → coordination). Break any link = organism can't respond to environment.
+- **Self-narrative pair:** E3 ↔ E11 (memory + self-observation feed each other). This produces the self-narrative — the system that knows itself.
+- **Recursive pair:** E9 ↔ E11 (point recursion + continuous recursion). Together = honest system.
+- **Condition of possibility:** E0 (clausura) must be the first gear declared — without boundary, nothing else matters.
+
+**Discovery for /create system:** Ask the creator which gears they want active. Not all 13 are needed for every system — E11 is optional for MCS-1/MCS-2, E12 only matters for distributed systems. But the creator must **declare** which gears are active and which are deferred.
+
+**Anti-patterns (one per gear):**
+- AP-S1: Pile without counterparts — gears listed but no coupling declared
+- AP-S3: Identity only in prose — E2 constitution not re-injected at runtime
+- AP-S5: Reflex without judgment OR judgment without reflex — E5/E6 must be paired
+- AP-S7: Free-text routing — E7 coordination without structured handoffs
+- AP-S9: Structural hypocrisy — claims P9 but can't pass own validator
+- AP-S11: Self-blindness — no E11, system can't learn from own behavior
+
+---
+
+## §INTELLIGENCE_PIPELINE — How Knowledge Enters Products
+
+The Engine's soul is **condensing intelligence into installable tools**. This pipeline is how:
+
+```
+DOMAIN EXPERTISE (raw, unstructured)
+  ↓ /scout — test Claude's baseline, identify gaps, research via web
+  ↓         Output: scout-{domain}.md with baseline, gaps, findings, recommendations
+  ↓
+  ↓ /create — scaffold WITH scout intelligence injected
+  ↓           Scout findings become WHY comments in the scaffold
+  ↓           Type recommendation comes from §SCOUT_INTELLIGENCE
+  ↓
+  ↓ /fill — ACTIVE distillation (not passive read)
+  ↓         Step 1: Load scout report → extract baseline, gaps, findings
+  ↓         Step 2: For each section, PROPOSE content from research
+  ↓         Step 3: Creator VALIDATES, REFINES, or REJECTS
+  ↓         Step 4: Sparring challenges generic answers
+  ↓         Step 5: Deepening methods extract tacit knowledge
+  ↓         Result: Product carries structured intelligence, not just instructions
+  ↓
+  ↓ /validate — verify substance
+  ↓             Baseline delta: is this better than Claude vanilla?
+  ↓             Anti-commodity: does this have genuine expertise?
+  ↓             Cognitive fidelity: does the knowledge survive compression?
+  ↓
+OUTPUT: Installable tool that carries a domain's intelligence
+        Not a formatted prompt — a cognitive extension
+```
+
+**The discriminator:** A product from the Engine should contain knowledge that the user CANNOT get from vanilla Claude. If `/validate` can't demonstrate this delta, the product is commodity.
+
+**How /fill should actively inject intelligence (not passively read):**
+1. Load scout report findings
+2. For each product section, check: "Does the scout report have relevant research for this section?"
+3. If YES → propose: "Based on research, {finding}. Does this match your experience? What would you change?"
+4. If NO → extract from creator: "The research didn't cover this. What's YOUR insight here?"
+5. After each major section, sparring challenge: "If I removed this section, would the product still be better than Claude vanilla?"
+
+---
+
 ## §ENTITY_LIFECYCLE — From Intent to Install
 
 ```

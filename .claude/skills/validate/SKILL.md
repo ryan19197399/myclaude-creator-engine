@@ -44,6 +44,8 @@ Run MCS quality checks on any product in `workspace/` and return actionable, sco
     - §SQUAD_ANATOMY: verify all 8 mandatory components exist and have content
     - §WORKFLOW_VS_SQUAD: verify workflows don't contain agents and squads don't use fixed-sequence-only routing
     - §HEURISTICS: surface coaching if product shows signs of wrong type (skill >800 lines → suggest agent)
+    - For type=system ONLY: §SYSTEM_ENGINES — verify declared gears have concrete implementations (not just prose), verify counterpart couplings are declared, verify critical chain (E4→E5→E6→E7) is complete if perception gear is active
+    - §INTELLIGENCE_PIPELINE — verify baseline delta (is this better than Claude vanilla?), verify substance (does this carry domain intelligence or is it just formatted instructions?)
 6. Load config: `config.yaml` → scoring weights, thresholds, placeholder patterns
 7. Load gates: `quality-gates.yaml` → state transition rules
 7b. **Load proactives:** Load `references/engine-proactive.md` — wire #1 (pipeline guidance: after validate passes, guide to /test then /package), #19 (error recovery: on validation failure, propose specific fixes), #20 (test mandate: if MCS-2+ and not tested, block /package suggestion).
