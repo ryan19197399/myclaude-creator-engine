@@ -1,6 +1,6 @@
 # Entity Ontology — Operational Reference
 <!-- Loaded by /create, /fill, /validate, /scout when type ∈ {squad, system, agent, minds, workflow} -->
-<!-- Source: S100-uemf-product-taxonomy + S118b-uemf-epistemic-map + S100-ecosystem-anatomy -->
+<!-- Source: Engine internal ontology research (docs/briefs/ + docs/research/). Do not distribute. -->
 <!-- Budget: ~300 lines, ~3K tokens. On-demand only — zero ambient cost. -->
 <!-- Update policy: when source docs change, this extract must be updated in the same session. -->
 
