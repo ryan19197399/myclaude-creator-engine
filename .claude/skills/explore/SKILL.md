@@ -31,6 +31,12 @@ allowed-tools:
 3. Parse `$ARGUMENTS` for query intent
 4. Route to the appropriate exploration mode
 5. **Load voice identity:** Load `references/quality/engine-voice-core.md`. Every user-facing line in this skill honors the ✦ signature, three tones, and six anti-patterns.
+6. **CLI contract:** Load `references/cli-contract.md` for unified error handling. This skill is the heaviest CLI consumer (12+ invocations across 5 modes). Severity map:
+   - **Silent-skip:** `search`, `trending`, `workspace --recommend` — skip without user-visible warning on failure
+   - **Silent-skip:** `--version` check — degrade to offline mode
+   - **Interactive:** `install {slug}` — show manual install instructions on failure
+   - **All queries:** append `--json 2>/dev/null`, parse JSON, treat invalid JSON as CLI absent
+   - **Timeout:** 15s per command. On timeout, skip with offline alternatives
 
 ---
 

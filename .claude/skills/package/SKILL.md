@@ -35,6 +35,11 @@ Stage a product for distribution with triple manifests (MyClaude + Anthropic Plu
 5. Load `product-dna/{type}.yaml` → get install_target
 6. Load `config.yaml` → vault_defaults for missing fields
 7. **Load voice identity:** Load `references/quality/engine-voice-core.md`. Every user-facing line in this skill honors the ✦ signature, three tones, and six anti-patterns.
+8. **CLI contract:** Load `references/cli-contract.md` for unified error handling. This skill has conditional severity based on pricing model. Severity map:
+   - **Blocking (paid products only):** `stripe status` — if product price > 0 and Stripe not connected, halt packaging
+   - **Silent-skip (free products):** `stripe status` — irrelevant for free products, skip without warning
+   - **Silent-skip:** `search --category {type} --sort price-desc` — competitive pricing scan, skip without warning on failure
+   - **All queries:** append `2>/dev/null`, 15s timeout, treat invalid JSON as CLI absent
 
 ---
 
@@ -116,6 +121,8 @@ Append MCS and Available badges to the end of `.publish/README.md`:
 <sub>Built with MyClaude Studio Engine</sub>
 ```
 **Precondition:** Verify `.publish/README.md` exists before injection. If missing (bundle type has no README requirement), skip badge injection silently — do not create a README just for badges.
+
+**README quality gate:** Before badge injection, verify README follows `templates/readme/README.md.template` structure — at minimum: Hero, Install (with `myclaude install {slug}`), Quick Start, Features (3+), Requirements. If missing critical sections, WARN: "README is missing sections that help users decide to install. Consider running `/fill` to complete it." Continue packaging — this is advisory, not blocking.
 
 Rules:
 - Inject ONLY in `.publish/README.md` — never modify the original

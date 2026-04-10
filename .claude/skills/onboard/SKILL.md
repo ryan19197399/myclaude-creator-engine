@@ -114,6 +114,7 @@ Load `${CLAUDE_SKILL_DIR}/references/onboard-protocol.md` for full details on ev
 5. **Using a git handle as `creator.name` without asking** — When `name_type = handle`, always offer name choice
 6. **Blocking onboarding on marketplace/CLI failures** — Phase 6b/6c are non-blocking; skip silently on error
 7. **Triggering AskUserQuestion in Phase 6b** — Setup Intelligence Report is OUTPUT ONLY
+8. **Ignoring CLI contract in Phase 6c** — All 4 CLI commands (`whoami`, `profile sync`, `stripe status`, `setup-mcp`) follow `references/cli-contract.md` unified error handling. All are **warning** severity — no CLI failure prevents onboarding from completing. Phase 6c details are in `references/onboard-protocol.md → Phase 6c`.
 
 ---
 

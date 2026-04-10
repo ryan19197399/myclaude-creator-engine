@@ -113,7 +113,7 @@ Extract domain expertise from creator conversation and inject into product files
 Before promoting to "content" state:
 - [ ] Primary file has at least 3 sections with substantive content
 - [ ] No sections contain ONLY placeholder/template text
-- [ ] README.md has real description (not template boilerplate)
+- [ ] README.md follows `templates/readme/README.md.template` structure: Hero (problem hook), Install, "Is this for me?", Quick Start, Features (with depth — heading + what + why per feature), Use Cases (scenario table), How It Works, type-specific section, Requirements, Compatibility, Language, License, Footer. Trilingual (EN, PT-BR, ES) with anchor navigation. Each language block has FULL content — not just translated headers.
 - [ ] At least one domain-specific insight encoded (not generic)
 
 **Auto-validate honesty rule:** When the silent MCS-1 check at completion finds failures, the creator-facing message MUST name them. "Looking good" is forbidden when checks fail. Use: "Content captured. {N} structural items need attention before validation passes: {list}. Run `/validate --fix` to resolve."

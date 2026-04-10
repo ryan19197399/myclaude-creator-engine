@@ -2,6 +2,40 @@
 
 All notable changes to the MyClaude Studio Engine.
 
+## [3.0.0] — 2026-04-10
+
+### Added
+- **Intent topology** — products declare cognitive intent (advisory, procedural, generative, analytical, creative) that shapes validation criteria and structural expectations
+- **10 validation stages** (was 7+1) — Stage 0: Intent Coherence, Stage 1: Structural, Stage 2: Integrity, Stage 3-5: DNA Tiers 1-3, Stage 6: CLI Preflight, Stage 7: Anti-Commodity, Stage 8: Value Intelligence, Stage 9: Voice Coherence
+- **Voice coherence validation** (Stage 9) — detects persona leakage, tone inconsistency, register drift across product sections
+- **Intent coherence validation** (Stage 0) — verifies the product delivers what the creator set out to build
+- **Fill protocol reference** — structured content-filling guide loaded on-demand by `/fill`
+- **Onboard protocol reference** — extended onboarding flow with 8 persona adaptation paths
+- **GitHub issue templates** — migrated from markdown to YAML forms (bug report, feature request, friction report)
+- **GitHub funding** — FUNDING.yml for sponsorship support
+- **Organization profile** — `.github/profile/README.md` for the myclaude-sh org
+- **Plugin manifest** — `.claude-plugin/marketplace.json` for structured marketplace discovery
+- **README product template** — `templates/readme/README.md.template` with 13-section blueprint
+- **CLI references** — `references/cli-commands.md`, `references/cli-contract.md`, `references/marketplace-ecosystem.md`
+- **System product template** — `templates/system/SYSTEM.md.template`
+
+### Changed
+- **Validation stages decomposed** — monolithic `validation-stages.md` split into 10 individual stage files with dedicated index
+- **Create router expanded** — product creation routing with deeper type-specific guidance (+386 lines)
+- **Status skill rewritten** — richer dashboard with portfolio analytics (+264 lines)
+- **Package skill hardened** — README quality gate added before badge injection, advisory warnings for missing sections
+- **Publish skill expanded** — enhanced pre-flight checks and confirmation flow
+- **Import skill refined** — better type detection and `.meta.yaml` generation
+- **Onboard skill refined** — deeper persona profiling with protocol reference
+- **13 blindspots resolved** — pipeline hardening across create, fill, validate, and package
+- **Version drift aligned** — all version references consolidated to v3.0.0
+- **`.gitignore` hardened** — internal docs, beta data, distillation artifacts, session notes fully excluded
+- **Structural DNA Pattern 10** (README) — expanded from 4 generic sections to 13-section tiered structure with trilingual support (EN/PT-BR/ES)
+- **CLI version references** updated from 0.8.4 to 0.9.0
+
+### Removed
+- Legacy GitHub issue templates (markdown format, replaced by YAML forms)
+
 ## [2.2.0] — 2026-04-06
 
 ### Added

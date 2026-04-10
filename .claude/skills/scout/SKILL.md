@@ -28,6 +28,8 @@ the creator says "what should I build for X?" or "scout X".
 **When NOT to use:** For marketplace browsing without building intent (use /explore).
 For building products (use /create→/fill). For mapping YOUR expertise (use /map).
 
+**CLI contract:** This skill declares `Bash(myclaude *)` permission but delegates all marketplace queries to /explore. No direct CLI invocations here. See `references/cli-contract.md` for unified error handling when /explore is invoked as a sub-step.
+
 ---
 
 ## Activation Protocol

@@ -1,7 +1,7 @@
 <!--
 @name: MyClaude Studio Engine
-@version: 2.2.0
-@description: Creation pipeline for Claude Code products — research, create, validate, and publish skills, agents, squads, minds, and 9 more product types with 20 structural quality patterns.
+@version: 3.0.0
+@description: Creation pipeline for Claude Code products — research, create, validate, and publish skills, agents, squads, minds, and 9 more product types with 10 validation stages and 20 structural quality patterns.
 @install: myclaude studio
 @install-alt: git clone https://github.com/myclaude-sh/myclaude-creator-engine
 @types: skill, agent, squad, workflow, minds, system, claude-md, hooks, statusline, output-style, design-system, application, bundle
@@ -27,8 +27,8 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/myclaude-sh/myclaude-creator-engine/releases"><img src="https://img.shields.io/badge/version-2.2.0-c97632?style=flat-square" alt="Version"></a>
-  <a href="https://myclaude.sh"><img src="https://img.shields.io/badge/marketplace-39_products-d4956b?style=flat-square" alt="Marketplace"></a>
+  <a href="https://github.com/myclaude-sh/myclaude-creator-engine/releases"><img src="https://img.shields.io/badge/version-3.0.0-c97632?style=flat-square" alt="Version"></a>
+  <a href="https://myclaude.sh"><img src="https://img.shields.io/badge/marketplace-50%2B_products-d4956b?style=flat-square" alt="Marketplace"></a>
   <a href="#quality-you-can-measure"><img src="https://img.shields.io/badge/quality_patterns-20-e8c4a0?style=flat-square" alt="Quality Patterns"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-f5f0eb?style=flat-square" alt="License"></a>
 </p>
@@ -148,6 +148,8 @@ Every product is **self-contained** — no engine dependency after install. Port
                    └────────────────────────┘
 ```
 
+**v3.0.0** expanded validation from 7 stages to 10 — adding intent coherence (does the product match what the creator set out to build?), voice coherence (is the tone consistent?), and value intelligence (market positioning and pricing signals).
+
 The engine asks the right questions. You provide the expertise. Each step feeds the next — scout research flows into `/create`, which generates structure for `/fill`, which produces content scored by `/validate`. Nothing is disconnected.
 
 <details>
@@ -205,7 +207,7 @@ Every product is scored: `(DNA x 0.50) + (Structural x 0.30) + (Integrity x 0.20
 | **Premium** | >= 85% | Professional craft — advanced structural patterns |
 | **Elite** | >= 92% | State-of-the-art — deep structural quality |
 
-20 structural patterns check for: activation protocols, error handling, anti-pattern guards, progressive disclosure, quality gates, graceful degradation, cache-friendly design, and more.
+20 structural patterns across 10 validation stages check for: activation protocols, error handling, anti-pattern guards, progressive disclosure, quality gates, graceful degradation, cache-friendly design, and more.
 
 Run `/validate` at any time. The engine shows exactly what passes, what needs work, and how to fix it — with specific instructions, not vague suggestions.
 
@@ -295,7 +297,7 @@ Products created with the Studio Engine and published to [myclaude.sh](https://m
 | **[Architecture](docs/reference/architecture.md)** | Developers | Reference — how Engine, CLI, Marketplace, and CC connect |
 | **[FAQ](docs/faq.md)** | Everyone | Common questions answered |
 | **[Install Guide](docs/install-guide.md)** | Everyone | Detailed installation options |
-| **[Changelog](CHANGELOG.md)** | Everyone | Version history — v1.0 through v2.2.0 |
+| **[Changelog](CHANGELOG.md)** | Everyone | Version history — v1.0 through v3.0.0 |
 
 ---
 

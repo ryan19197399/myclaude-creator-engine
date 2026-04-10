@@ -1,6 +1,6 @@
 <!--
 @name: MyClaude Studio Engine
-@version: 2.2.0
+@version: 3.0.0
 @lang: pt-BR
 -->
 
@@ -16,8 +16,8 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/myclaude-sh/myclaude-creator-engine/releases"><img src="https://img.shields.io/badge/vers%C3%A3o-2.2.0-c97632?style=flat-square" alt="Versao"></a>
-  <a href="https://myclaude.sh"><img src="https://img.shields.io/badge/marketplace-39_produtos-d4956b?style=flat-square" alt="Marketplace"></a>
+  <a href="https://github.com/myclaude-sh/myclaude-creator-engine/releases"><img src="https://img.shields.io/badge/vers%C3%A3o-3.0.0-c97632?style=flat-square" alt="Versao"></a>
+  <a href="https://myclaude.sh"><img src="https://img.shields.io/badge/marketplace-50%2B_produtos-d4956b?style=flat-square" alt="Marketplace"></a>
   <a href="#qualidade-mensuravel"><img src="https://img.shields.io/badge/padr%C3%B5es_qualidade-20-e8c4a0?style=flat-square" alt="Padroes"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/licen%C3%A7a-MIT-f5f0eb?style=flat-square" alt="Licenca"></a>
 </p>
@@ -285,7 +285,7 @@ Produtos criados com o Studio Engine e publicados no [myclaude.sh](https://mycla
 | **[Arquitetura](docs/reference/architecture.md)** | Desenvolvedores | Referencia — como Engine, CLI, Marketplace e CC conectam |
 | **[FAQ](docs/faq.md)** | Todos | Perguntas frequentes |
 | **[Guia de Instalacao](docs/install-guide.md)** | Todos | Opcoes detalhadas de instalacao |
-| **[Changelog](CHANGELOG.md)** | Todos | Historico de versoes — v1.0 ate v2.2.0 |
+| **[Changelog](CHANGELOG.md)** | Todos | Historico de versoes — v1.0 ate v3.0.0 |
 
 ---
 

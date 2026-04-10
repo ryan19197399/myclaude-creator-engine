@@ -434,6 +434,11 @@ This transforms /status from a passive list into an active strategic surface tha
 
 ### CLI Marketplace Intelligence (if myclaude available)
 
+**CLI contract:** Load `references/cli-contract.md` for unified error handling. All marketplace commands in this skill are **silent-skip** severity — dashboard renders without marketplace data if CLI is unavailable, too old, or network is down. Severity map:
+- **Silent-skip:** `stats`, `my-products`, `notifications`, `profile pull`, `trending` — skip section, show install hint
+- **All queries:** append `--json 2>/dev/null`, 15s timeout, treat invalid JSON as CLI absent
+- **Never blocking:** No CLI failure prevents the dashboard from rendering
+
 After the main dashboard, if `myclaude` CLI is in PATH, display marketplace context:
 
 ```bash

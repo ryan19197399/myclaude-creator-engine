@@ -1,7 +1,7 @@
 {
   "name": "studio-engine",
-  "version": "2.2.0",
-  "description": "Creation pipeline for Claude Code products — research, create, validate, and publish skills, agents, squads, minds, and 9 more product types with structural quality scoring.",
+  "version": "3.0.0",
+  "description": "Creation pipeline for Claude Code products — research, create, validate, and publish skills, agents, squads, minds, and 9 more product types with 10 validation stages and 20 structural quality patterns.",
   "author": "myclaude-sh",
   "license": "MIT",
   "homepage": "https://myclaude.sh",

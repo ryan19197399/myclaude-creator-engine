@@ -43,6 +43,9 @@ Generate complete, MCS-1-valid project structure for any product type with guida
 9. Load `references/product-specs/{category}-spec.md` + `templates/{category}/`.
 10. Load `workspace/domain-map.md` if exists → prefill scaffold sections.
 10b. **Link scout report** if used — `scout_source` is already recorded in `intent_declaration.scout_source` by Section 0 Step 11. No additional action needed here; the canonical home for scout_source is `intent_declaration`, not a parallel field.
+10c2. **CLI contract:** Load `references/cli-contract.md` for unified error handling. This skill has minimal CLI surface — one command at Step 1.5. Severity map:
+   - **Silent-skip:** `search --category {type} --sort downloads --limit 3` — marketplace scan for competitive context. Skip without warning on failure. **First-product guard:** skip entirely if `is_first_product` (already documented at Step 1.5)
+   - **All queries:** append `--json 2>/dev/null`, 15s timeout
 10c. **Portfolio intelligence (back-reference from /validate)**: Read `STATE.yaml → workspace.products[]` AND `STATE.yaml → mcs_results`. Group by domain. If domain has existing products:
    - Show: "Your {domain} portfolio: {slugs}. This will be product #{N}."
    - If N >= bundle threshold (`config.yaml → intelligence.portfolio.bundle_suggestion_threshold`): suggest bundling.
@@ -102,7 +105,7 @@ For experienced creators who know exactly what they want, Express mode + sub-com
 | 2 | Discovery Questions | Load + ask from `${CLAUDE_SKILL_DIR}/references/discovery-questions.md`. Ask conversationally. `workflow_style=guided` → AskUserQuestion; `autonomous` → plain text. |
 | 3 | Load Defaults | From `creator.yaml`: license, version (always 1.0.0), author, quality target. |
 | 4 | Generate Scaffold | **Structure only** — files, YAML frontmatter, section headers with WHY comments, template vars for metadata. Never generate substantive prose. Leave `[To be filled — run /fill]` for expertise sections. See router.md for per-category structures. |
-| 5 | MCS-1 Structural Validation | Silently verify: required files present, metadata fields populated, README.md has 4 sections (what/install/usage/requirements), no YAML/JSON syntax errors. Auto-fix and note corrections. |
+| 5 | MCS-1 Structural Validation | Silently verify: required files present, metadata fields populated, README.md follows `templates/readme/README.md.template` structure (Hero, Install, "Is this for me?", Quick Start, Features, How It Works, type-specific, Requirements, Compatibility, Language, License — trilingual EN/PT-BR/ES with anchor nav), no YAML/JSON syntax errors. Auto-fix and note corrections. |
 | 6 | Print Next Steps — Cognitive UX | **Load full UX stack:** `references/ux-experience-system.md` (§1 context assembly, §2.3 moment awareness for "first scaffold"), `references/ux-vocabulary.md` (type naming), `references/quality/engine-voice.md` (brand DNA). Output is REASONED, not templated — adapt based on creator context. |
 
 **Step 6 Cognitive Output Protocol:**
@@ -278,7 +281,7 @@ intelligence:
 Generated scaffold must pass MCS-1 before being shown to the creator:
 - All required files for the product type are present
 - All required metadata fields are populated (even with placeholders)
-- README.md skeleton contains: what it does, install, usage, requirements
+- README.md skeleton follows the structure from `templates/readme/README.md.template` — required sections: Hero (problem hook + description), Install, "Is this for me?", Quick Start, Features, How It Works, type-specific section, Requirements, Compatibility, Language, License, Footer. Trilingual structure (EN, PT-BR, ES) with anchor navigation. /create scaffolds section headers with WHY comments; /fill populates content.
 - No syntax errors in any generated YAML or JSON
 - `.meta.yaml` is valid and contains all required fields
 

@@ -380,23 +380,39 @@ examples, and requirements. A product that assumes context will underperform for
 every new user.
 
 **Rule:**
-Every product must have README.md with four non-empty sections: what it does, how to
-install, how to use, and requirements. Install section must include the
-`myclaude install {slug}` command. Usage section must include at least one example.
+Every product must have README.md following `templates/readme/README.md.template`.
+The README is a product showcase — it sells first, documents second.
+
+**Required sections (MCS-1 minimum — 6 sections):**
+1. Hero — product name + problem hook (what it solves)
+2. Install — must include `myclaude install {slug}`
+3. Quick Start — at least one usage example
+4. Features — at least 3 features with substantive description
+5. Requirements — Claude Code version + any dependencies
+6. License
+
+**Recommended sections (MCS-2 — full showcase):**
+7. "Is this for me?" — qualifier (yes if / not for you if)
+8. Use Cases — scenario table with real workflows
+9. How It Works — method explanation (earns trust)
+10. Type-specific section (Usage/Architecture/Events/etc.)
+11. Compatibility — platform list
+12. Language — locale-adaptive statement
+
+**Trilingual (MCS-2+ recommended):**
+EN, PT-BR, ES language blocks with anchor navigation.
+Each language has FULL content — not just translated headers.
 
 **Validation check:**
 ```
 glob: README.md → must exist
-AND
-grep -i "## what\|## overview\|## description" README.md → must match
-AND
-grep -i "## install\|## setup\|## getting started" README.md → must match
-AND
-grep -i "## usage\|## how to use\|## commands" README.md → must match
-AND
-grep -i "## requirements\|## prerequisites\|## requires" README.md → must match
+AND grep -i "## install" README.md → must match
+AND grep "myclaude install" README.md → must match
+AND grep -i "## quick.start\|## usage\|## how to use\|## commands\|## inicio" README.md → must match
+AND grep -i "## features\|## funcionalidades\|## caracteristicas\|## what it does" README.md → must match
+AND grep -i "## requirements\|## requisitos\|## prerequisites" README.md → must match
 ```
-PASS if all 4 sections found and non-empty. PARTIAL if README exists but missing sections.
+PASS if all required sections found and non-empty. PARTIAL if README exists but missing sections.
 
 ---
 

@@ -30,6 +30,14 @@ Publish a packaged product to the MyClaude marketplace via CLI delegation.
 5. Check CLI auth: run `myclaude whoami` — if "not logged in", show: "Not authenticated. Run `myclaude login` first." and stop.
 6. Read `creator.yaml` → load author metadata. If missing — "Creator profile not found. Run `/onboard` first." and stop.
 7. **Load voice identity**: Load `references/quality/engine-voice-core.md`. Load the full `references/quality/engine-voice.md` only when composing the publish celebration (Step 6) — that is a peak moment. Use publish celebration format: "Published to myclaude.sh — live now." + install command + distribution vector note. Brief, proud, specific.
+8. **CLI contract:** Load `references/cli-contract.md` for unified error handling. This skill has mixed severity — the most critical CLI surface in the pipeline. Severity map:
+   - **Blocking:** `validate --json` (Step 3) — abort publish if validation fails or CLI unavailable
+   - **Blocking:** `publish` (Step 4) — cannot proceed without CLI. Show manual alternative: `myclaude.sh/publish`
+   - **Blocking:** `whoami` (Step 5 pre-flight) — must be authenticated before publish
+   - **Silent-skip:** `search` (Step 8 competitive context) — skip without warning on failure
+   - **Silent-skip:** `profile pull` (Step 9 XP reminder) — skip without warning on failure
+   - **All queries except publish:** append `2>/dev/null`, 15s timeout
+   - **Auth detection:** use contract's auth flow pattern (whoami → check exit code + "not logged" in output)
 
 ---
 

@@ -1,0 +1,540 @@
+<!--
+  README.md — MyClaude Product Showcase Template v3.0.0
+  =====================================================
+
+  This is NOT a template with variables. This is a BLUEPRINT.
+  /create scaffolds from this structure. /fill populates with real content.
+  /package strips WHY comments and injects badges at the bottom.
+  The final README goes to Firestore as raw markdown (50K max) and renders
+  on myclaude.sh/p/{slug} as the product page.
+
+  THE PHILOSOPHY:
+  Everything above the install command is MARKETING — sell the product.
+  Everything below the install command is DOCUMENTATION — support the user.
+  The README is a landing page with a terminal at the bottom.
+
+  STRUCTURE (in order — each section earns the reader's next scroll):
+  1. HERO: Problem hook + one-line solution (5 seconds to decide)
+  2. PROOF: Output example, before/after, or visual demo
+  3. INSTALL: One command. Copy-paste. Done.
+  4. IS THIS FOR ME?: Qualifier — who benefits, who doesn't
+  5. QUICK START: 3 steps or less to first value
+  6. FEATURES: What it does — each feature with enough depth to understand
+  7. USE CASES: Real scenarios — "when you're doing X, use Y"
+  8. HOW IT WORKS: The method behind the magic (earns trust)
+  9. TYPE-SPECIFIC: Usage/Architecture/Events per product type
+  10. REQUIREMENTS: What you need
+  11. COMPATIBILITY: Where it works
+  12. LANGUAGE: Locale-adaptive statement
+  13. LICENSE + FOOTER: Metadata, badges, author
+
+  TRILINGUAL:
+  Primary language section first (full product showcase).
+  Second and third languages follow with the SAME depth and richness.
+  Language navigation bar at the top with anchor links.
+  /fill generates translations from the primary language content.
+
+  VOICE:
+  Professional but warm. Direct but not cold. Confident but not arrogant.
+  Show personality — myClaude products have character.
+  Write for someone scanning 20 products at 11pm deciding which to install.
+-->
+
+<!-- ====== LANGUAGE NAVIGATION ====== -->
+<!-- WHY: Three languages by default. Anchor links let readers jump.
+     myclaude.sh can parse these anchors for locale-specific rendering.
+     Order: EN first (global default), then PT-BR, then ES. -->
+
+<div align="center">
+
+**[English](#english)** | **[Portugus (BR)](#portugues-br)** | **[Espaol](#espanol)**
+
+</div>
+
+---
+
+<!-- ====================================================================== -->
+<!-- ENGLISH                                                                -->
+<!-- ====================================================================== -->
+
+<a id="english"></a>
+
+<!-- ====== 1. HERO — THE PROBLEM HOOK ====== -->
+<!-- WHY: Open with the PAIN, not the product. Name the frustration.
+     Then resolve it in one sentence. The reader decides in 5 seconds.
+     This paragraph becomes the `description` in vault.yaml. -->
+
+# Product Name
+
+**The problem in one sentence.** Then what this product does about it.
+
+<!-- Example for aegis:
+# AEGIS
+
+**Security vulnerabilities hide in every codebase.** AEGIS finds them, fixes them, and
+hardens your project — so you ship with confidence, not anxiety.
+-->
+
+<!-- ====== 2. PROOF — SHOW, DON'T TELL ====== -->
+<!-- WHY: Visual proof within the first scroll. Show the OUTPUT, not the architecture.
+     A real example of what the user gets is worth 500 words of docs.
+     Use a code block showing actual product output, or a before/after comparison. -->
+
+### What you get
+
+```
+[Show real output here — what the user actually sees when they use this product.
+ For a skill: show the output of running the command.
+ For a minds: show a conversation excerpt.
+ For a squad: show the coordinated result.
+ Make it real. Make it impressive. Make it specific.]
+```
+
+<!-- Example for aegis:
+```
+================================================================
+AEGIS SECURITY AUDIT — my-saas-app
+================================================================
+Threat Model: STRIDE | Patterns: 312 | Stacks: Next.js + Stripe
+
+CRITICAL  2   SQL injection in /api/users (L47) — AUTO-FIXABLE
+HIGH      5   XSS in 3 components, CSRF missing on 2 routes
+MEDIUM    12  Outdated deps (3 CVEs), missing CSP headers
+LOW       8   Console.log with user data, verbose errors
+
+Risk Score: 7.2/10 — HIGH
+Auto-fixable: 14/27 findings
+
+Run /aegis fix to auto-remediate. Run /aegis harden for prevention.
+================================================================
+```
+-->
+
+<!-- ====== 3. INSTALL — ONE COMMAND ====== -->
+<!-- WHY: The install command is the MOST SATISFYING line in the README.
+     It makes the product real. One command, copy-paste, done.
+     Keep it prominent and isolated. -->
+
+## Install
+
+```bash
+myclaude install product-slug
+```
+
+<!-- ====== 4. IS THIS FOR ME? ====== -->
+<!-- WHY: Qualifier. Builds trust by being honest about scope.
+     Two lists: who benefits, and who should look elsewhere.
+     Reduces "install and regret" — the reader self-selects. -->
+
+## Is this for me?
+
+**Yes, if you:**
+- First qualifier — a situation or role where this product shines
+- Second qualifier — another scenario
+- Third qualifier — another scenario
+
+**Not for you if:**
+- First disqualifier — when this product is NOT the right choice
+- Second disqualifier — an honest limitation
+
+<!-- Example for aegis:
+**Yes, if you:**
+- Ship web apps and worry about security blind spots
+- Need to pass compliance audits (OWASP, SOC 2, PCI DSS, HIPAA)
+- Want security checks integrated into your dev workflow, not a separate tool
+
+**Not for you if:**
+- You need runtime/DAST testing (AEGIS is static analysis only)
+- Your project has no source code to audit (binary-only, compiled)
+-->
+
+<!-- ====== 5. QUICK START ====== -->
+<!-- WHY: 3 steps or less to first value. If it takes more, you've lost half.
+     Show the fastest path from install to "wow, that worked." -->
+
+## Quick Start
+
+```bash
+# 1. Install
+myclaude install product-slug
+
+# 2. Use it
+/product-slug
+
+# 3. See results
+# [What happens — one line describing the immediate payoff]
+```
+
+<!-- ====== 6. FEATURES — DEPTH, NOT BULLETS ====== -->
+<!-- WHY: This is where you SELL capabilities. Not a bullet list — each feature
+     gets a heading, a sentence explaining WHAT it does, and a sentence
+     explaining WHY that matters. 4-8 features. Rich enough to understand,
+     concise enough to scan. -->
+
+## Features
+
+### Feature Name One
+
+What it does in one sentence. Why that matters for the user in a second sentence.
+
+### Feature Name Two
+
+What it does in one sentence. Why that matters for the user in a second sentence.
+
+### Feature Name Three
+
+What it does in one sentence. Why that matters for the user in a second sentence.
+
+<!-- Example for aegis:
+### STRIDE Threat Modeling
+
+Maps your entire attack surface — entry points, trust boundaries, data flows,
+dependencies. You see your app the way an attacker would, before they do.
+
+### 300+ Vulnerability Patterns
+
+Detects SQL injection, XSS, CSRF, path traversal, secrets in code, insecure
+dependencies, and 290+ more patterns. Stack-specific: knows Next.js, Django,
+FastAPI, Express, Firebase, Stripe, Docker, Kubernetes, Terraform.
+
+### Auto-Fix
+
+14 vulnerability types get fixed automatically — parameterized queries replace
+SQL injection, sanitization wraps XSS vectors, basename() blocks path traversal.
+You review and approve. No manual rewriting.
+
+### 8 Compliance Frameworks
+
+OWASP Top 10, NIST 800-53, CIS Controls, PCI DSS, SOC 2, ISO 27001, GDPR
+(technical), HIPAA (technical). 52 checks mapped across all 8. One command
+to know where you stand.
+
+### Hardening Pipeline
+
+After fixing: security headers (CSP, HSTS), input validation schemas (Zod),
+pre-commit hooks (gitleaks), CI/CD security workflows, Semgrep rules.
+Prevention, not just detection.
+-->
+
+<!-- ====== 7. USE CASES ====== -->
+<!-- WHY: Real scenarios ground the product in the reader's daily life.
+     "When you're doing X, use Y" is more persuasive than "Y can do X".
+     3-5 scenarios. Specific enough to feel real. -->
+
+## Use Cases
+
+| When you... | Use this | What happens |
+|-------------|----------|-------------|
+| Scenario one | Command or mode | Outcome |
+| Scenario two | Command or mode | Outcome |
+| Scenario three | Command or mode | Outcome |
+
+<!-- Example for aegis:
+| When you... | Use this | What happens |
+|-------------|----------|-------------|
+| Are about to deploy to production | `/aegis --mode=deep` | Full PASTA threat model + attack trees + supply chain audit |
+| Want a quick security check during development | `/aegis --mode=rapid` | Top 25 patterns + secrets scan + deps check in ~15 min |
+| Need to pass a compliance audit | `/aegis compliance` | 52 checks across 8 frameworks with gap report |
+| Just fixed security issues and want prevention | `/aegis harden` | Headers, validation, hooks, CI/CD pipeline — all generated |
+| Are reviewing a PR with security concerns | `/aegis` (default) | Full standard audit with auto-fix suggestions |
+-->
+
+<!-- ====== 8. HOW IT WORKS ====== -->
+<!-- WHY: The method earns trust. Show the approach, not just the output.
+     Numbered steps or a brief narrative. This is where experts decide
+     "this is well-engineered" or "this is superficial." -->
+
+## How It Works
+
+1. **Step One** — What happens and why
+2. **Step Two** — What happens and why
+3. **Step Three** — What happens and why
+
+<!-- ====== 9. TYPE-SPECIFIC SECTION ====== -->
+<!-- WHY: Different product types need different showcase sections.
+     Keep ONLY the section matching the product type. Delete the rest. -->
+
+<!-- TYPE:skill -->
+<!--
+## Commands
+
+| Command | Description |
+|---------|------------|
+| `/slug` | Default mode — what it does |
+| `/slug --mode=quick` | Quick mode — when to use |
+| `/slug --mode=deep` | Deep mode — when to use |
+| `/slug target` | With argument — what target means |
+-->
+
+<!-- TYPE:minds -->
+<!--
+## How to Talk to [Name]
+
+[Name] is an advisory mind — it thinks alongside you without modifying your files.
+
+**Great questions to start with:**
+- "Help me think through [specific scenario]"
+- "What am I missing about [specific problem]?"
+- "Challenge my approach to [specific decision]"
+
+**What to expect:**
+- Structured reasoning with confidence signals
+- Multiple perspectives before a recommendation
+- Honest uncertainty — it says "I don't know" when it doesn't
+-->
+
+<!-- TYPE:squad -->
+<!--
+## The Team
+
+| Agent | Role | When It Activates |
+|-------|------|-------------------|
+| Agent Name | What it does | Under what conditions |
+
+**How orchestration works:** [Brief explanation of routing logic]
+-->
+
+<!-- TYPE:hooks -->
+<!--
+## Events & Triggers
+
+| Event | When It Fires | What It Does |
+|-------|---------------|-------------|
+| Event name | Trigger condition | Action taken |
+
+All hooks run in the background. Your workflow is never blocked.
+-->
+
+<!-- TYPE:system -->
+<!--
+## Architecture
+
+| Component | Type | Responsibility |
+|-----------|------|---------------|
+| Component | skill/minds/hooks | What it handles |
+
+**How they compose:** [Brief explanation of the system's flow]
+-->
+
+<!-- TYPE:statusline -->
+<!--
+## Preview
+
+```
+[Show the status line as it appears in the terminal]
+```
+
+**Segments:** [Explain each segment]
+-->
+
+<!-- ====== 10-13. SUPPORT SECTIONS ====== -->
+
+## Requirements
+
+- Claude Code >= 1.0.0
+<!-- Add product-specific requirements only if they exist -->
+
+## Compatibility
+
+Works with Claude Code CLI, VS Code, JetBrains, and 33+ Agent Skills platforms including Cursor, Codex, Gemini CLI, and Copilot.
+
+## Language
+
+Built in English. Adapts to your language at runtime — output always mirrors your language.
+
+## License
+
+MIT
+
+---
+
+<!-- WHY: Metadata footer. The install command appears one more time —
+     it's the last thing the reader sees before deciding.
+     /package Step 2c injects the badge block after this. -->
+
+**Product Name** v1.0.0 by [@username](https://myclaude.sh/u/@username) | [myclaude.sh/p/product-slug](https://myclaude.sh/p/product-slug)
+
+```bash
+myclaude install product-slug
+```
+
+<!-- /package Step 2c injects badge block below this line -->
+
+
+<!-- ====================================================================== -->
+<!-- PORTUGUES (BR)                                                         -->
+<!-- ====================================================================== -->
+
+<a id="portugues-br"></a>
+
+<!-- WHY: Full product showcase in PT-BR. Same depth, same richness.
+     NOT a translation of headers only — every feature, every use case,
+     every example fully localized. /fill generates this from the EN content. -->
+
+<!-- STRUCTURE: Mirror the EXACT same sections as EN above.
+     1. Hero (problema + solucao)
+     2. Proof (exemplo de output)
+     3. Install (mesmo comando)
+     4. E pra mim? (qualificadores)
+     5. Inicio Rapido
+     6. Funcionalidades (mesma profundidade)
+     7. Casos de Uso
+     8. Como Funciona
+     9. Secao especifica do tipo
+     10-13. Requisitos, Compatibilidade, Idioma, Licenca
+     Footer com install command repetido -->
+
+# Nome do Produto
+
+**O problema em uma frase.** E o que este produto faz a respeito.
+
+## Instalar
+
+```bash
+myclaude install product-slug
+```
+
+## E pra mim?
+
+**Sim, se voce:**
+- Primeiro qualificador
+- Segundo qualificador
+
+**Nao e pra voce se:**
+- Primeiro desqualificador
+
+## Inicio Rapido
+
+```bash
+# 1. Instalar
+myclaude install product-slug
+
+# 2. Usar
+/product-slug
+
+# 3. Ver resultados
+```
+
+## Funcionalidades
+
+### Nome da Funcionalidade
+
+O que faz. Por que isso importa.
+
+## Casos de Uso
+
+| Quando voce... | Use isto | O que acontece |
+|----------------|----------|---------------|
+| Cenario | Comando | Resultado |
+
+## Como Funciona
+
+1. **Passo Um** — O que acontece
+2. **Passo Dois** — O que acontece
+3. **Passo Tres** — O que acontece
+
+## Requisitos
+
+- Claude Code >= 1.0.0
+
+## Compatibilidade
+
+Funciona com Claude Code CLI, VS Code, JetBrains e 33+ plataformas Agent Skills.
+
+## Idioma
+
+Construido em ingles. Adapta-se ao seu idioma em tempo de execucao.
+
+## Licenca
+
+MIT
+
+---
+
+**Nome do Produto** v1.0.0 por [@username](https://myclaude.sh/u/@username) | [myclaude.sh/p/product-slug](https://myclaude.sh/p/product-slug)
+
+```bash
+myclaude install product-slug
+```
+
+
+<!-- ====================================================================== -->
+<!-- ESPANOL                                                                -->
+<!-- ====================================================================== -->
+
+<a id="espanol"></a>
+
+<!-- WHY: Full product showcase in ES. Same structure, same depth as EN and PT-BR. -->
+
+# Nombre del Producto
+
+**El problema en una frase.** Y lo que este producto hace al respecto.
+
+## Instalar
+
+```bash
+myclaude install product-slug
+```
+
+## Es para mi?
+
+**Si, si tu:**
+- Primer calificador
+- Segundo calificador
+
+**No es para ti si:**
+- Primer descalificador
+
+## Inicio Rapido
+
+```bash
+# 1. Instalar
+myclaude install product-slug
+
+# 2. Usar
+/product-slug
+
+# 3. Ver resultados
+```
+
+## Caracteristicas
+
+### Nombre de la Caracteristica
+
+Que hace. Por que importa.
+
+## Casos de Uso
+
+| Cuando tu... | Usa esto | Que pasa |
+|--------------|----------|----------|
+| Escenario | Comando | Resultado |
+
+## Como Funciona
+
+1. **Paso Uno** — Que sucede
+2. **Paso Dos** — Que sucede
+3. **Paso Tres** — Que sucede
+
+## Requisitos
+
+- Claude Code >= 1.0.0
+
+## Compatibilidad
+
+Funciona con Claude Code CLI, VS Code, JetBrains y 33+ plataformas Agent Skills.
+
+## Idioma
+
+Construido en ingles. Se adapta a tu idioma en tiempo de ejecucion.
+
+## Licencia
+
+MIT
+
+---
+
+**Nombre del Producto** v1.0.0 por [@username](https://myclaude.sh/u/@username) | [myclaude.sh/p/product-slug](https://myclaude.sh/p/product-slug)
+
+```bash
+myclaude install product-slug
+```

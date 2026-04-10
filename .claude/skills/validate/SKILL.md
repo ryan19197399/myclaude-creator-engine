@@ -37,6 +37,10 @@ Run MCS quality checks on any product in `workspace/` and return actionable, sco
 5. Load product spec: `references/product-specs/{type}-spec.md`
 6. Load config: `config.yaml` → scoring weights, thresholds, placeholder patterns
 7. Load gates: `quality-gates.yaml` → state transition rules
+8. **CLI contract:** Load `references/cli-contract.md` for Stage 6 (CLI Preflight). Severity map:
+   - **Warning:** `validate --json` — CLI validation is advisory during /validate (blocking only during /publish)
+   - **Warning:** `doctor --json` — health check is advisory, score < 8.0 triggers suggestion
+   - Stage 6 detail protocol: `references/validation-stages/stage-6-cli-preflight.md`
 
 ---
 
