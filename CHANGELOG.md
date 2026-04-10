@@ -32,6 +32,9 @@ All notable changes to the MyClaude Studio Engine.
 - **`.gitignore` hardened** — internal docs, beta data, distillation artifacts, session notes fully excluded
 - **Structural DNA Pattern 10** (README) — expanded from 4 generic sections to 13-section tiered structure with trilingual support (EN/PT-BR/ES)
 - **CLI version references** updated from 0.8.4 to 0.9.0
+- **CLI contract wired into all 9 skills** — every skill that invokes `myclaude` CLI now references `references/cli-contract.md` with per-skill severity maps (blocking/warning/silent-skip) and context-dependent escalation rules
+- **`/think` permission fix** — added missing `Bash(myclaude *)` permission (had marketplace commands but no tool access)
+- **CLI contract expanded** — severity table updated with escalation rules, 5 missing commands added (`--version`, `install`, `my-products`, `profile sync`, `setup-mcp`), conventions section completed
 
 ### Removed
 - Legacy GitHub issue templates (markdown format, replaced by YAML forms)
