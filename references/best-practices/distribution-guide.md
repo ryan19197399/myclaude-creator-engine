@@ -135,7 +135,7 @@ repeat purchases.
 
 ### Layer 3: Attribution Comment (Source-level indexing)
 ```html
-<!-- Published on MyClaude (myclaude.sh) | Quality: MCS-{level} ({score}%) | Engine: Studio v2 -->
+<!-- Published on MyClaude (myclaude.sh) | Quality: MCS-{level} ({score}%) | Engine: Studio v3 -->
 ```
 Invisible to Claude, visible in raw source on GitHub, indexable by search engines.
 Every product file on every GitHub repo in the ecosystem carries this reference.

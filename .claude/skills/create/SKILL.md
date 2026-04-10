@@ -56,12 +56,16 @@ Generate complete, MCS-1-valid project structure for any product type with guida
     c. Build the substitution block: `<!-- {localized_header} -->\n\n{canonical_clause}`.
     d. Replace the literal string `{{LOCALE_ADAPTIVE_CLAUSE}}` in each written template file with the substitution block. Use a literal-string replace, not a regex — the placeholder is unique and must not be interpreted.
     e. Verify post-substitution: the forged file must contain both marker strings (`<<< LOCALE-ADAPTIVE CLAUSE (runtime contract, do not edit) >>>` and `<<< END CLAUSE >>>`). If either marker is missing after substitution, the forge fails + rollback.
+    e2. **Duplication guard:** Before substitution in step (d), check if the target file ALREADY contains the marker `<<< LOCALE-ADAPTIVE CLAUSE`. If found, skip substitution for that file and emit advisory: "Locale clause already present in {file} — skipping to prevent duplication." This handles re-forge (`--force`) scenarios where the template already carried a clause from a prior run.
     f. For type `squad`, also perform the substitution on every file in `workspace/{slug}/agents/*.md` (sub-agents inherit the clause per `references/locale-adaptive-clause.md §4`).
     g. For type `system`, also perform the substitution on every sub-part file (claude-md fragment, sub-agents, sub-squads) per §4.
     h. Record `intent_declaration.language` (already populated at Section 0 Step 11) as the source language used for the lookup — this becomes the `source_language` field in vault.yaml at /package time.
 12. Create `.meta.yaml` (see template below). The `intent_declaration` block is already populated from Section 0 Step 11; the rest of the template is filled by this step (product, state, history, intelligence).
 13. Move `workspace/domain-map.md` → `workspace/{product-slug}/domain-map.md` if loaded.
-14. **Atomic commit (Contract C5):** both `.meta.yaml` (with intent_declaration) AND `STATE.yaml decisions_history` append must succeed before reporting `forge_ready`. If either fails, roll back scaffold + announce failure.
+14. **Atomic commit (Contract C5):** write order matters — `.meta.yaml` first (it is the local source of truth), then `STATE.yaml decisions_history` append.
+    - If `.meta.yaml` write fails: abort, announce failure. Nothing else proceeds.
+    - If `STATE.yaml` append fails after `.meta.yaml` succeeds: **do not roll back the scaffold**. The scaffold on disk is recoverable; a deleted scaffold is not. Instead: log `state.tracking_sync: false` in `.meta.yaml`, emit Engine-fault voice line — *"Scaffold forged but Engine lost tracking. Run /status to resync."* — and continue. `/status` will detect the orphan on next run and surface it for recovery.
+    - Only report `forge_ready` when both writes succeed without error.
 15. Engine voice: "Scaffold ready. {N} sections with WHY guidance. Run /fill to start." In Guided mode, also include one-line summary of the cell matched and why: *"Forjado como {canonical_form} — {rationale}."*
 
 ---

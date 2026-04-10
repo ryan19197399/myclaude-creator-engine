@@ -102,7 +102,7 @@ Rules:
 
 **2. Attribution comment at end of file:**
 ```html
-<!-- Published on MyClaude (myclaude.sh) | Quality: MCS-{level} ({score}%) | Engine: Studio v2 -->
+<!-- Published on MyClaude (myclaude.sh) | Quality: MCS-{level} ({score}%) | Engine: Studio v3 -->
 ```
 This attribution comment is:
 - Invisible to Claude (HTML comment, does not affect behavior)
@@ -133,6 +133,14 @@ Rules:
 **Step 2b — Verify WHY Removal**
 
 Grep all files in `.publish/` for the pattern `WHY:`. If match count > 0, re-run stripping on the matched files. If still > 0 after second pass, report error with file paths and line numbers — do not proceed to manifest generation with unstripped WHY comments.
+
+**Step 2d — Post-Strip Integrity Check**
+
+After WHY removal, verify the stripped files are still structurally valid:
+- For `.md` files: verify YAML frontmatter still parses (regex for `^---\n` ... `\n---\n`)
+- For `.json` files (hooks.json, settings-fragment.json): parse with JSON validator after `_`-prefixed key removal. If parse fails → abort with file path and error. Never ship invalid JSON.
+- For `.sh` files: verify shebang line survived stripping (first line must start with `#!`)
+- If any check fails: report the specific file + line + issue. Do NOT proceed to manifest generation.
 
 **Step 3 — Generate vault.yaml**
 
@@ -324,6 +332,10 @@ Create `workspace/{slug}/.publish/` with:
 - Any file starting with `.` (hidden files, including `.env`)
 - Files matching secret patterns: `*.pem`, `*.key`, `*.p12`, `credentials*.json`, `*.env`
 - If any excluded-for-secrets file is found, WARN: "Sensitive file `{file}` excluded from package. If this is intentional, rename it."
+
+**Step 6c — Double-Source Secrets Scan**
+
+Run the same secrets scan patterns (from `config.yaml → secret_content_patterns`) against BOTH `.publish/` AND `workspace/{slug}/` originals. Compare results. If `.publish/` has MORE matches than originals (stripping logic injected content), this is a CRITICAL error — abort packaging immediately and report the discrepancy.
 
 **Step 6b — Verify Type-Specific Install Artifacts**
 

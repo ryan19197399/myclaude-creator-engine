@@ -32,6 +32,7 @@ Run sandbox tests on a product in an isolated environment.
 3. Load product-dna/{type}.yaml → get install_target pattern
 4. Verify product has content (state != scaffold)
 5. Create worktree isolation (this skill runs with `isolation: worktree`)
+5b. **Stale worktree check:** Before creating a new worktree, glob `.claude/worktrees/`. If stale entries exist (>1 hour old by directory mtime), attempt removal. If removal fails, proceed anyway — never block testing on cleanup.
 6. **Load voice identity:** Load `references/quality/engine-voice-core.md`. Test result reporting — pass verdicts (celebrating tone), fail verdicts (confronting tone), diagnostics (conducting tone) — honors the ✦ signature, three tones, and six anti-patterns.
 
 ---
@@ -145,6 +146,16 @@ state:
 ```
 
 If any test fails, record `test_result: "fail"` but do NOT change `state.phase` — testing does not regress product state.
+
+### WORKTREE CLEANUP PROTOCOL
+
+After all test scenarios complete (pass or fail):
+
+1. **Record results first** — write test results to the ORIGINAL `.meta.yaml` (not the worktree copy) before any cleanup attempt. Results must survive cleanup failure.
+2. **Attempt cleanup** — the `isolation: worktree` frontmatter handles automatic cleanup. If the worktree persists after skill completion:
+   - On next `/test` invocation: check for stale worktrees via `glob .claude/worktrees/*`. If found, attempt removal before creating a new one.
+   - On Windows: file lock contention is common. If removal fails, log the path and proceed — never block the test pipeline on cleanup failure.
+3. **Disk budget guard** — if `.claude/worktrees/` contains more than 3 directories, emit advisory: "Stale worktrees detected ({N} found). Run cleanup manually: remove `.claude/worktrees/` contents."
 
 ---
 

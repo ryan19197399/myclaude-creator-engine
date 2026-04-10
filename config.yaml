@@ -1,7 +1,7 @@
 ---
 # config.yaml — MyClaude Studio Engine quality configuration
 # Read by /validate, /create, /package skills
-# Schema version: 2.2.0
+# Schema version: 3.0.0
 
 # ---------------------------------------------------------------------------
 # MCS SCORING WEIGHTS

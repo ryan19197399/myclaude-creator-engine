@@ -102,8 +102,8 @@ Extract domain expertise from creator conversation and inject into product files
 | Checkpointing | Write fill_progress to .meta.yaml after every section (compact-safe) | MID-FILL STATE PERSISTENCE |
 | Progress | Pulse every 2-3 sections: filled/total + live MCS estimate | PROGRESS TRACKER |
 | Conversational | Narrative extraction mode for non-dev creators | CONVERSATIONAL MODE |
-| Size Check | Auto-split primary file if >4K chars; suggest @include for claude-md | INSTRUCTION SIZE OPTIMIZATION |
-| Completion | Promote to content, auto-validate MCS-1, persona-aware message, clear fill_progress | AFTER ALL SECTIONS FILLED |
+| Size Check | Auto-split primary file if >4K chars; suggest @include for claude-md; **enforce calibration budget** — if intent-aware calibration set a size target, warn when exceeded | INSTRUCTION SIZE OPTIMIZATION |
+| Completion | Promote to content, auto-validate MCS-1, **report result honestly** (pass → celebrate; fail → name the failures), clear fill_progress | AFTER ALL SECTIONS FILLED |
 
 ---
 
@@ -114,6 +114,8 @@ Before promoting to "content" state:
 - [ ] No sections contain ONLY placeholder/template text
 - [ ] README.md has real description (not template boilerplate)
 - [ ] At least one domain-specific insight encoded (not generic)
+
+**Auto-validate honesty rule:** When the silent MCS-1 check at completion finds failures, the creator-facing message MUST name them. "Looking good" is forbidden when checks fail. Use: "Content captured. {N} structural items need attention before validation passes: {list}. Run `/validate --fix` to resolve."
 
 ---
 

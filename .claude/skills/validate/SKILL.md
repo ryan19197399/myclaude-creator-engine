@@ -133,6 +133,7 @@ The Validator skill itself passes if:
 3. **Generic fix instructions** — Every failure needs a specific, actionable fix
 4. **Modifying creator content in --fix** — Only structural/formatting fixes
 5. **Running Stage 8 for MCS-1** — Value intelligence adds noise at MCS-1, skip it
+6. **Blocking cascade hiding downstream issues** — When Stage 1-2 fails, downstream stages don't run. But the creator loses visibility into DNA/content issues that exist independently. After blocking failure, emit an advisory note: "Structural issues block full validation. After fixing these, re-run to see content-level results." Never silently hide what wasn't checked.
 
 ## Compact Instructions
 

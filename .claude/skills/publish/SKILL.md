@@ -66,6 +66,14 @@ Buyers must manually copy the rules file to ~/.claude/rules/ or .claude/rules/ i
 their project. Include this instruction in your README.md.
 ```
 
+**Step 1c — Version Bump Guard**
+
+Read `.meta.yaml → history.version` AND check if this slug+version combination was already published:
+- Glob `workspace/{slug}/.meta.yaml` → read `state.published_at` and `history.version`
+- If `state.phase == "published"` AND `history.version` matches the current version in `.publish/vault.yaml`:
+  - BLOCKING: "Version {version} is already published. Bump the version in `.meta.yaml → history.version` (e.g., 1.0.0 → 1.0.1) before re-publishing. This prevents 71+ users from receiving a silent no-change update."
+- If `state.phase != "published"` (first publish): proceed — no version check needed.
+
 **Step 2 — Confirmation**
 
 Wait for explicit "yes" from creator. Do NOT proceed without confirmation.

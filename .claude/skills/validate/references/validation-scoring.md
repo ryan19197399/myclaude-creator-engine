@@ -361,7 +361,7 @@ The Validator skill itself passes if:
 
 ## Decision Notes
 
-> **Note:** CE-D references are from Creator Engine v1.1.0. SE-D references are from Studio Engine v2.0 PRD.
+> **Note:** CE-D references are from Creator Engine v1.1.0. SE-D references are from Studio Engine v2.0 PRD. Updated for Studio Engine v3.0.0.
 
 **CE-D13:** Validation is non-destructive by default. `--fix` has a conservative scope: structural and formatting only. Protecting existing creator content is more important than perfect automation.
 

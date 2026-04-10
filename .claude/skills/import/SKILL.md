@@ -81,7 +81,8 @@ If no signature matches: "Cannot detect product type. What type is this? (skill/
 
 If `workspace/{slug}/` already exists:
 - "Product `{slug}` already exists in workspace. Use `/fill` to continue or `/create --force` to reset."
-- Do NOT overwrite.
+- Do NOT overwrite — BLOCKING. Return immediately without copying any files.
+- If `--force` flag is provided: require explicit confirmation via AskUserQuestion before overwriting. Show file count diff between source and target.
 
 **Step 4 — Copy to workspace**
 

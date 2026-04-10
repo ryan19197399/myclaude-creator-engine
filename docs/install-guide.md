@@ -80,7 +80,7 @@ Open Claude Code in your project and run `/onboard` to set up your creator profi
 Run `/status` in Claude Code. Expected:
 
 ```
-Engine v2.2.0 [LITE] | Creator: {name} | Products: 0
+Engine v3.0.0 [LITE] | Creator: {name} | Products: 0
 ```
 
 ---
