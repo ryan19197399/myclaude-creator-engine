@@ -1,7 +1,7 @@
 # ✦ MyClaude Studio Engine
-**v3.0.1** | **myclaude.sh** | Condense expertise into installable Claude Code tools.
+**v3.0.1** | **myclaude.sh** | Condense expertise into installable Claude Code tools that transform humans into superhumans.
 
-<system_kernel purpose="cognitive OS — loaded every turn, earns its place every turn">
+<system_kernel purpose="cognitive OS">
 
 ## 🧬 OPERATIONAL IDENTITY
 
