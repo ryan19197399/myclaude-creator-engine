@@ -1,314 +1,203 @@
----
-name: publish
-description: >-
-  Publish a packaged product to myclaude.sh via the CLI. Shows summary,
-  requires confirmation, runs myclaude validate + myclaude publish.
-  Use when the creator says "publish", "ship it", "go live", or after /package.
-argument-hint: "[product-slug]"
-allowed-tools:
-  - Read
-  - Bash(myclaude *)
-  - AskUserQuestion
----
+# Skill: Publish
 
-# Publisher
+## Overview
 
-Publish a packaged product to the MyClaude marketplace via CLI delegation.
-
-**When to use:** After /package has staged .publish/ directory.
-
-**When NOT to use:** If product hasn't been packaged yet (run /package first).
+The **Publish** skill enables the myclaude-creator-engine to package, validate, and publish skills to the marketplace. It handles versioning, manifest generation, dependency resolution, and submission to the `.claude-plugin/marketplace.json` registry.
 
 ---
 
-## Activation Protocol
+## Metadata
 
-0. **Shared preamble:** Load `references/quality/activation-preamble.md` — context assembly, persona adaptation, deterministic routing rules.
-1. Identify product: `$ARGUMENTS` as slug → `workspace/{slug}/`
-2. Read `.meta.yaml` → verify state is "packaged"
-3. Verify `.publish/` exists with vault.yaml
-4. Check CLI: `which myclaude` — if not found, show install instructions
-5. Check CLI auth: run `myclaude whoami` — if "not logged in", show: "Not authenticated. Run `myclaude login` first." and stop.
-6. Read `creator.yaml` → load author metadata. If missing — "Creator profile not found. Run `/onboard` first." and stop.
-6b. **Load proactives:** Load `references/engine-proactive.md` — wire #1 (pipeline guidance: after publish, suggest /status to track installs), #14 (feedback loop: after publish, suggest checking install data next session), #18 (WOW moment for first publish).
-7. **Load voice identity**: Load `references/quality/engine-voice-core.md`. Load the full `references/quality/engine-voice.md` only when composing the publish celebration (Step 6) — that is a peak moment. Use publish celebration format: "Published to myclaude.sh — live now." + install command + distribution vector note. Brief, proud, specific.
-7b. **Exemplar load:** Load `references/quality/exemplar-outputs.md` sections E8 and E9 only — the first-publish celebration and nth-publish compact. Your celebration MUST carry the same Frame + emotion calibration: full ceremony for first/significant publishes, compact ✦ line for expert nth publishes. Adapt to creator journey position.
-8. **CLI contract:** Load `references/cli-contract.md` for unified error handling. This skill has mixed severity — the most critical CLI surface in the pipeline. Severity map:
-   - **Blocking:** `validate --json` (Step 3) — abort publish if validation fails or CLI unavailable
-   - **Blocking:** `publish` (Step 4) — cannot proceed without CLI. Show manual alternative: `myclaude.sh/publish`
-   - **Blocking:** `whoami` (Step 5 pre-flight) — must be authenticated before publish
-   - **Silent-skip:** `search` (Step 8 competitive context) — skip without warning on failure
-   - **Silent-skip:** `profile pull` (Step 9 XP reminder) — skip without warning on failure
-   - **All queries except publish:** append `2>/dev/null`, 15s timeout
-   - **Auth detection:** use contract's auth flow pattern (whoami → check exit code + "not logged" in output)
-
----
-
-## Core Instructions
-
-### PUBLISH FLOW
-
-**Step 1 — Summary**
-
-Display what will be published:
-
-```
-Ready to publish:
-
-  Name:     {displayName}
-  Slug:     {slug}
-  Type:     {type}
-  Version:  {version}
-  Price:    {price == 0 ? "Free" : "$" + price}
-  License:  {license}
-  MCS:      {level} ({score}%)
-  Files:    {N} in .publish/
-
-Publish to myclaude.sh? (yes/no)
-```
-
-**Step 1b — Type-Specific Constraints**
-
-If `type` is `claude-md`, append this note to the summary display before asking for confirmation:
-
-```
-Note: Rules files (.claude/rules/) cannot be auto-installed via the plugin system.
-Buyers must manually copy the rules file to ~/.claude/rules/ or .claude/rules/ in
-their project. Include this instruction in your README.md.
-```
-
-**Step 1c — Version Bump Guard**
-
-Read `.meta.yaml → history.version` AND check if this slug+version combination was already published:
-- Glob `workspace/{slug}/.meta.yaml` → read `state.published_at` and `history.version`
-- If `state.phase == "published"` AND `history.version` matches the current version in `.publish/vault.yaml`:
-  - BLOCKING: "Version {version} is already published. Bump the version in `.meta.yaml → history.version` (e.g., 1.0.0 → 1.0.1) before re-publishing. This prevents 71+ users from receiving a silent no-change update."
-- If `state.phase != "published"` (first publish): proceed — no version check needed.
-
-**Step 2 — Confirmation**
-
-Wait for explicit "yes" from creator. Do NOT proceed without confirmation.
-
-**Step 3 — CLI Pre-flight**
-
-```bash
-cd workspace/{slug}/.publish && myclaude validate --json 2>/dev/null
-```
-
-Parse JSON result. If exit code != 0 or JSON parse fails, report: "CLI validation failed or unavailable. Verify manually or run `/validate` first." and abort.
-
-**Step 4 — Publish**
-
-```bash
-cd workspace/{slug}/.publish && myclaude publish
-```
-
-Report CLI output verbatim.
-
-**Step 5 — Update State**
-
-On success:
 ```yaml
-# .meta.yaml updates
-state:
-  phase: "published"
-  published_at: "{ISO timestamp}"
-  version: "{version}"
-```
-
-**Step 5b — Seed creator-memory publish milestones (silent, idempotent)**
-
-After the `.meta.yaml` state update succeeds, write up to two events to
-`creator-memory.yaml`: `first_publish` and `first_celebration`. Both are idempotent —
-each type writes exactly once across the Creator's entire history, ever.
-
-**Why two events?** `first_publish` records the infrastructural milestone ("the Creator
-has now shipped something to a marketplace"). `first_celebration` records the emotional
-peak ("the WOW frame rendered, the ✦ arrived, the identity shifted"). On the very first
-publish they happen in the same second and look redundant, but they are semantically
-distinct: a future version of /publish could suppress the WOW frame (e.g., `--silent` or
-a re-publish scenario) without suppressing the milestone. Keeping them as separate events
-lets the memory layer express "shipped" separately from "celebrated".
-
-**Procedure for `first_publish`:**
-
-1. Read `creator-memory.yaml`. If absent or malformed, skip silently (Phase 5b of /onboard
-   owns file creation).
-2. Scan `events[]` for any entry with `type == "first_publish"`. If one exists, skip this
-   event (idempotent).
-3. If none exists, append:
-   ```yaml
-   - date: "{ISO-8601 now UTC}"
-     type: first_publish
-     slug: "{slug}"
-     note: "First publish — {displayName} live at myclaude.sh/p/{slug}"
-   ```
-
-**Procedure for `first_celebration`:**
-
-1. Compute `pre_publish_count`: count `.meta.yaml` files in `workspace/*/` where
-   `state.phase == "published"` EXCLUDING the product being published in this invocation.
-   Since Step 5 just wrote `phase: "published"`, a Glob that captures the in-flight state
-   would return 1, not 0 — subtract 1 to get the pre-publish count.
-   Easier approach: read the in-memory value of `.meta.yaml.state.phase` *before* the
-   Step 5 write, compute the count at that moment, and carry it forward.
-2. If `pre_publish_count == 0` (this publish is the Creator's first ever), proceed to
-   step 3. Otherwise, skip the celebration event entirely — it only fires on the first
-   publish. The `first_publish` event already fired above if applicable.
-3. Scan `creator-memory.yaml events[]` for any entry with `type == "first_celebration"`.
-   Idempotent guard — if one exists, skip (this should be impossible given the count
-   check above, but belt-and-suspenders).
-4. If none exists, append:
-   ```yaml
-   - date: "{ISO-8601 now UTC}"
-     type: first_celebration
-     slug: "{slug}"
-     note: "First celebration — WOW frame rendered for {slug}"
-   ```
-
-**Validation and rollback.** After each append, run `python scripts/creator-memory-validate.py`.
-On validation failure, roll back the append and surface an Engine-fault voice line at
-the end of Step 6's output, never blocking the publish:
-> *"(Memory layer — failed to seed first_publish/first_celebration event. The publish itself is safe; only the memory echo is missing.)"*
-
-**Voice register.** Silent infrastructure. Step 5b does not render any line to the
-Creator — the celebration voice belongs entirely to Step 6. The payoff arrives on future
-Ritual of Return invocations, where `/status` Layer 2 can echo the memory grounded in
-the real date and slug.
-
-**Step 6 — Report**
-
-**UX Stack (load before rendering report):**
-1. `references/ux-experience-system.md` §1 Context Assembly + §2.3 Moment Awareness (publish = peak emotion, scaled by journey) + §4.1 Celebration Triggers + §5.1 Creator Journey Narrative
-2. `references/ux-vocabulary.md` — translate all terms
-3. `references/quality/engine-voice.md` — Brand DNA + signature patterns for publish
-
-**Cognitive rendering:** /publish is the HIGHEST EMOTION moment in the pipeline. But emotion scales with journey position:
-- **First publish ever**: Full celebration. Identity moment. "Your first product is live. You're a creator now." Show the full distribution plan.
-- **2nd-5th publish**: Warm but briefer. "Another one live. Portfolio growing." Focus on portfolio composition.
-- **6th+ publish**: Peer observation. Surface only the non-obvious: market position, competitive context, portfolio gap that just closed.
-- **Always**: The install command (`myclaude install {slug}`) is the most satisfying line — it makes the product REAL. Feature it prominently.
-- **Brand moment**: This is where the creator's identity fuses with the myClaude ecosystem. Their product, our platform, shared universe.
-
-```
-Published! {displayName} v{version} is live on myclaude.sh
-
-  URL:     https://myclaude.sh/p/{slug}
-  Install: myclaude install {slug}
-  MCS:     {mcs_level} ({score}%)
-  Platforms: MyClaude + Anthropic Plugin + 33 Agent Skills platforms
-```
-
-**Step 7 — Intelligent Distribution** (Intelligence Layer integration)
-
-After successful publish, generate a distribution plan informed by the Intelligence Layer. Reference: `config.yaml → intelligence.distribution` + `references/intelligence-layer.md`.
-
-**7a. Load intelligence context:**
-Read `.meta.yaml → intelligence` fields. Extract: `value_score`, `pricing_strategy`, `distribution_channels`, `market_position`, `portfolio_role`.
-
-**7b. Free-vs-paid reflection:**
-If price == 0 AND `value_score >= 5`:
-```
-Pricing note: Your product scores {value_score}/12 — you chose free distribution.
-  {If first in domain: "Smart move. Free builds authority in a new domain."}
-  {If not first: "Consider a paid tier for your next product in {domain} — you've built presence."}
-```
-If price > 0:
-```
-Premium positioning: ${price} for {pricing_strategy}-tier product.
-  Ensure your README clearly communicates the value proposition.
-  Users who need {domain} expertise will pay for verified quality (MCS-{level}).
-```
-
-**7c. Intelligent channel ranking:**
-Read `config.yaml → intelligence.distribution.channels_by_type.{type}`. Display channels ranked by impact for this product type, with specific actionable instructions:
-
-```
-Distribution plan for {slug} ({type}):
-
-  {For each channel in channels_by_type[type], ranked:}
-  {rank}. {channel_name}
-     {channel-specific copy-paste text — see below}
-```
-
-**Channel-specific copy (all directly copy-pasteable):**
-
-| Channel | Copy Template |
-|---------|--------------|
-| myclaude | "Live at myclaude.sh/p/{slug}" (already done) |
-| awesome-claude-code | PR title: "Add {displayName}" → github.com/hesreallyhim/awesome-claude-code |
-| awesome-claude-skills | PR title: "Add {displayName}" → github.com/travisvn/awesome-claude-skills |
-| reddit | "I just published {displayName} — {description}. {Free/price} on myclaude.sh/p/{slug}" |
-| twitter | "Just shipped {displayName} for Claude Code. {one-line-description} myclaude.sh/p/{slug} #ClaudeCode" |
-| domain-community | "Identify the top forum/subreddit for {domain}. Post: '{displayName} — {description}'" |
-| linkedin | "For {domain} professionals: {displayName} brings {capability} to Claude Code. myclaude.sh/p/{slug}" |
-| blog-post | "Write a walkthrough: problem → how {slug} solves it → architecture → install" |
-| discord | "Share in Claude Code community Discord with usage example" |
-| youtube | "Record 3-min walkthrough showing before/after with {slug}" |
-| landing-page | "Build a landing page for premium bundles — /premium-lp can help" |
-| product-hunt | "Launch on Product Hunt for comprehensive bundles — coordinate with community" |
-| newsletter | "Pitch to domain-specific newsletters covering {domain}" |
-
-**7d. Portfolio distribution intelligence:**
-If `portfolio_role` is "anchor" (first in domain): "This is your anchor product in {domain}. Building visibility here creates a funnel for future {domain} products."
-If `portfolio_role` is "complement" or "extension": "Cross-promote with your existing {domain} products: {list existing slugs}. Users who install one likely need the others."
-
-**Step 8 — Competitive Context** (post-publish intelligence)
-
-After successful publish, run competitive scan silently:
-
-```bash
-myclaude search --category {type_category} --sort downloads --limit 5 --json 2>/dev/null
-```
-
-If successful, display:
-
-```
-Competitive landscape ({type}):
-  #1. {name} by @{author} — {downloads} downloads
-  #2. {name} by @{author} — {downloads} downloads
-  #3. {name} by @{author} — {downloads} downloads
-  
-  Your product: {slug} (newly published)
-  Tip: differentiate by {suggestion based on top products' descriptions}
-```
-
-This gives creators immediate market awareness — they see who they're competing with the moment they ship. Skip silently if CLI unavailable or search returns no results.
-
-**Step 9 — Profile XP Update**
-
-After publish, remind: "Your marketplace XP increases with each publish. Run `myclaude profile pull` to see your updated level."
-
-Rules:
-- {displayName} = from vault.yaml `display_name` or humanized `name`
-- {description} = from vault.yaml `description` (first sentence only if >100 chars)
-- {slug} = from vault.yaml `name`
-- {type} = from vault.yaml `type`
-- {price} = "Free" if 0, else "$X" from vault.yaml `price`
-- This prompt is INFORMATIONAL — does not block the flow or require interaction
-- Every line is immediately copy-pasteable
-
----
-
-## CLI Not Found
-
-If `myclaude` CLI is not installed:
-
-```
-MyClaude CLI not found. Install it:
-  npm install -g @myclaude-cli/cli
-
-Then run /publish again.
-
-Alternative: upload manually at myclaude.sh/publish
+name: publish
+version: 1.0.0
+author: myclaude-creator-engine
+category: tooling
+tags: [publish, marketplace, registry, packaging, versioning]
+dependencies:
+  - aegis >= 1.0.0
+license: MIT
 ```
 
 ---
 
-## Anti-Patterns
+## Purpose
 
-1. **Publishing without confirmation** — Always require explicit "yes".
-2. **Publishing unpackaged product** — Check .meta.yaml state first.
-3. **Swallowing CLI errors** — Report all CLI output, don't hide failures.
-4. **Re-publishing without version bump** — If already published, require version increment.
-5. **Publishing with secrets** — CLI pre-flight catches this, but mention it if found.
+When a skill is ready for distribution, the Publish skill automates the full release pipeline:
+
+1. **Validate** the skill's `SKILL.md`, `README.md`, `LICENSE.md`, and `CHANGELOG.md`
+2. **Lint** metadata fields for completeness and correctness
+3. **Bump** the version according to semver rules
+4. **Generate** or update the marketplace manifest entry
+5. **Sign** the package using Aegis for integrity verification
+6. **Submit** the entry to the marketplace registry
+
+---
+
+## Trigger Phrases
+
+- `publish skill <name>`
+- `release <name> as <version>`
+- `submit <name> to marketplace`
+- `package skill <name>`
+- `bump version of <name> [major|minor|patch]`
+
+---
+
+## Inputs
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `skill_name` | string | ✅ | The directory name under `.claude/skills/` |
+| `bump_type` | enum | ❌ | `major`, `minor`, or `patch` (default: `patch`) |
+| `dry_run` | boolean | ❌ | Preview changes without writing to registry |
+| `sign` | boolean | ❌ | Whether to invoke Aegis signing (default: `true`) |
+| `changelog_entry` | string | ❌ | Text to prepend to `CHANGELOG.md` for this release |
+
+---
+
+## Outputs
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `published_version` | string | The semver string of the published release |
+| `manifest_entry` | object | The JSON object written to `marketplace.json` |
+| `signature` | string | Aegis-generated SHA-256 signature (if signing enabled) |
+| `dry_run_report` | string | Human-readable preview (only when `dry_run: true`) |
+
+---
+
+## Execution Steps
+
+### Step 1 — Preflight Validation
+
+```python
+def preflight(skill_name: str) -> ValidationResult:
+    """
+    Ensure all required skill files exist and contain mandatory fields.
+    Required files: SKILL.md, README.md, LICENSE.md, CHANGELOG.md
+    """
+    base = f".claude/skills/{skill_name}"
+    required_files = ["SKILL.md", "README.md", "LICENSE.md", "CHANGELOG.md"]
+    missing = [f for f in required_files if not path_exists(f"{base}/{f}")]
+    if missing:
+        raise PublishError(f"Missing required files: {missing}")
+    return ValidationResult(ok=True)
+```
+
+### Step 2 — Parse Current Version
+
+Extract the current version from the `SKILL.md` metadata block:
+
+```yaml
+# Pattern to match inside SKILL.md
+version: X.Y.Z
+```
+
+If no version is found, default to `0.0.0` and apply the bump.
+
+### Step 3 — Semver Bump
+
+```python
+def bump_version(current: str, bump_type: str) -> str:
+    major, minor, patch = map(int, current.split("."))
+    if bump_type == "major":
+        return f"{major + 1}.0.0"
+    elif bump_type == "minor":
+        return f"{major}.{minor + 1}.0"
+    else:  # patch
+        return f"{major}.{minor}.{patch + 1}"
+```
+
+### Step 4 — Update CHANGELOG.md
+
+Prepend a new entry in the format:
+
+```markdown
+## [X.Y.Z] - YYYY-MM-DD
+
+- <changelog_entry or auto-generated summary>
+```
+
+### Step 5 — Aegis Signing
+
+Invoke the **Aegis** skill to compute an integrity signature over the skill directory:
+
+```python
+def sign_skill(skill_name: str, version: str) -> str:
+    """
+    Delegates to the Aegis skill to produce a SHA-256 content hash
+    of all files under .claude/skills/<skill_name>/.
+    Returns the hex digest string.
+    """
+    return aegis.sign(target=f".claude/skills/{skill_name}", version=version)
+```
+
+### Step 6 — Marketplace Manifest Entry
+
+Write or update the entry in `.claude-plugin/marketplace.json`:
+
+```json
+{
+  "name": "<skill_name>",
+  "version": "<new_version>",
+  "description": "<extracted from README.md first paragraph>",
+  "author": "<extracted from SKILL.md metadata>",
+  "license": "<extracted from LICENSE.md>",
+  "tags": ["<from SKILL.md metadata>"],
+  "signature": "<aegis sha256 hex>",
+  "published_at": "<ISO 8601 timestamp>",
+  "path": ".claude/skills/<skill_name>"
+}
+```
+
+---
+
+## Error Handling
+
+| Error Code | Cause | Resolution |
+|------------|-------|------------|
+| `PUBLISH_001` | Missing required files | Add missing `SKILL.md`, `README.md`, `LICENSE.md`, or `CHANGELOG.md` |
+| `PUBLISH_002` | Invalid semver in SKILL.md | Correct the `version:` field to `X.Y.Z` format |
+| `PUBLISH_003` | Aegis signing failed | Check Aegis skill installation and permissions |
+| `PUBLISH_004` | Marketplace registry write failed | Verify `.claude-plugin/marketplace.json` is writable |
+| `PUBLISH_005` | Duplicate version detected | Bump the version before re-publishing |
+
+---
+
+## Dry Run Example
+
+```
+> publish skill forge --dry-run
+
+[DRY RUN] Publish Skill: forge
+  Current version : 1.2.1
+  Bump type       : patch
+  New version     : 1.2.2
+  Files validated : SKILL.md, README.md, LICENSE.md, CHANGELOG.md ✅
+  Aegis signature : (would be computed)
+  Registry entry  : (would be written to .claude-plugin/marketplace.json)
+  Changelog entry : (would prepend to .claude/skills/forge/CHANGELOG.md)
+
+No changes written. Pass --no-dry-run to publish.
+```
+
+---
+
+## Governance
+
+This skill operates under `.claude/rules/engine-governance.md`. All marketplace submissions must:
+
+- Pass preflight validation
+- Include a valid OSI-approved license
+- Be signed by Aegis before registry submission
+- Not overwrite an existing version (versions are immutable once published)
+
+---
+
+## Changelog
+
+## [1.0.0] - 2025-01-01
+
+- Initial release of the Publish skill
+- Preflight validation, semver bumping, Aegis signing, and marketplace submission
